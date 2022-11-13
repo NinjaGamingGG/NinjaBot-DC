@@ -1,0 +1,7 @@
+﻿{
+  "ninja-bot":
+  {
+    "token": "Your Token Here",
+    "prefix": "/"
+  }
+}

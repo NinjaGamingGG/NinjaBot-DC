@@ -15,9 +15,7 @@ public static class LoungeSystem
 
         await  Task.Run(async () =>
         {
-            DiscordChannel? newChannel = null;
-            
-            newChannel = await eventArgs.Channel.Guild.CreateVoiceChannelAsync($"╠🥳» {eventArgs.User.Username}'s Lounge",
+            var newChannel = await eventArgs.Channel.Guild.CreateVoiceChannelAsync($"╠🥳» {eventArgs.User.Username}'s Lounge",
                 eventArgs.Channel.Parent, 128000, position: 9999, user_limit: 4);
             
             if (newChannel == null)

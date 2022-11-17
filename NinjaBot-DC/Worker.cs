@@ -1,4 +1,6 @@
 using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using NinjaBot_DC.Commands;
 using NinjaBot_DC.Extensions;
 using Serilog;
 
@@ -25,7 +27,7 @@ public class Worker : BackgroundService
         {
             Token = token,
             TokenType = TokenType.Bot,
-            Intents = DiscordIntents.AllUnprivileged,
+            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents,
             LoggerFactory = logFactory
         });
     }
@@ -35,6 +37,14 @@ public class Worker : BackgroundService
         Log.Information("Registering Events");
         _discord.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
         _discord.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
+        
+        Log.Information("Registering Commands");
+        var commands = _discord.UseCommandsNext(new CommandsNextConfiguration()
+        {
+            StringPrefixes  = new []{"!"},
+        });
+
+        commands.RegisterCommands<LoungeCommandModule>();
 
         Log.Information("Starting up the Bot");
         await _discord.ConnectAsync();

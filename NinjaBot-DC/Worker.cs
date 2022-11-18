@@ -2,6 +2,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using NinjaBot_DC.Commands;
 using NinjaBot_DC.Extensions;
+using System.Data.SQLite;
 using Serilog;
 
 namespace NinjaBot_DC;
@@ -10,6 +11,8 @@ public class Worker : BackgroundService
 {
     //private readonly IConfigurationRoot _configuration;
 
+    public static SQLiteConnection SqLiteConnection = null!;
+    
     private readonly DiscordClient _discord;
 
     public Worker()
@@ -18,6 +21,8 @@ public class Worker : BackgroundService
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("config.json", optional: false, reloadOnChange: true)
             .Build();
+
+        SqLiteConnection = new SQLiteConnection("Data Source=database.sqlite;Version=3;New=True;Compress=True;");
 
         var token = configuration.GetValue<string>("ninja-bot:token");
 
@@ -34,10 +39,23 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Log.Information("Registering Events");
-        _discord.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
-        _discord.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
+        var taskList = new List<Task>() {RegisterCommands(), RegisterEvents(), InitializeDatabase()};
+        await Task.WhenAll(taskList);
         
+        Log.Information("Starting up the Bot");
+        await _discord.ConnectAsync();
+        
+        var startupTasks = new List<Task>() {LoungeSystem.StartupCleanup(_discord)};
+        await Task.WhenAll(startupTasks);
+        
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await Task.Delay(1000, stoppingToken);
+        }
+    }
+
+    private Task RegisterCommands()
+    {
         Log.Information("Registering Commands");
         var commands = _discord.UseCommandsNext(new CommandsNextConfiguration()
         {
@@ -45,13 +63,35 @@ public class Worker : BackgroundService
         });
 
         commands.RegisterCommands<LoungeCommandModule>();
+        
+        return Task.CompletedTask;
+    }
 
-        Log.Information("Starting up the Bot");
-        await _discord.ConnectAsync();
+    private Task RegisterEvents()
+    {
+        Log.Information("Registering Events");
+        _discord.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
+        _discord.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
 
-        while (!stoppingToken.IsCancellationRequested)
+        return Task.CompletedTask;
+    }
+
+    private static async Task InitializeDatabase()
+    {
+        Log.Information("Initializing Database");
+        try
         {
-            await Task.Delay(1000, stoppingToken);
+            SqLiteConnection.Open();
+
+            var sqLiteCommand = SqLiteConnection.CreateCommand();
+
+            sqLiteCommand.CommandText = "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, OwnerId INTEGER, GuildId INTEGER)";
+
+            await sqLiteCommand.ExecuteNonQueryAsync();
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Unable to open the sqlite database connection");
         }
     }
 }

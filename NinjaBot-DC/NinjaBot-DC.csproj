@@ -9,6 +9,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Dapper" Version="2.0.123" />
+        <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
         <PackageReference Include="DSharpPlus" Version="4.3.0-nightly-01185" />
         <PackageReference Include="DSharpPlus.CommandsNext" Version="4.3.0-nightly-01185" />
         <PackageReference Include="DSharpPlus.Interactivity" Version="4.3.0-nightly-01185" />
@@ -18,5 +20,6 @@
         <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00896" />
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00947" />
         <None Update="config.json" CopyToOutputDirectory="PreserveNewest" />
+        <PackageReference Include="System.Data.SQLite" Version="1.0.116" />
     </ItemGroup>
 </Project>

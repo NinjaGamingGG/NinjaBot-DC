@@ -8,18 +8,18 @@ namespace NinjaBot_DC;
 
 public class Worker : BackgroundService
 {
-    private readonly IConfigurationRoot _configuration;
+    //private readonly IConfigurationRoot _configuration;
 
     private readonly DiscordClient _discord;
 
     public Worker()
     {
-        _configuration = new ConfigurationBuilder()
+        var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("config.json", optional: false, reloadOnChange: true)
             .Build();
 
-        var token = _configuration.GetValue<string>("ninja-bot:token");
+        var token = configuration.GetValue<string>("ninja-bot:token");
 
         var logFactory = new LoggerFactory().AddSerilog();
         

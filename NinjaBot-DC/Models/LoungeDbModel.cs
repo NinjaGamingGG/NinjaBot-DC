@@ -2,12 +2,11 @@
 
 namespace NinjaBot_DC.Models;
 
-[System.ComponentModel.DataAnnotations.Schema.Table(("LoungeIndex"))]
+[Table(("LoungeIndex"))]
 public class LoungeDbModel
 {
     [ExplicitKey]
     public ulong ChannelId { get; set; }
     public ulong OwnerId { get; set; }
-    
     public ulong GuildId { get; set; }
 }

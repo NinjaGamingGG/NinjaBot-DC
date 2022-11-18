@@ -46,7 +46,7 @@ public class Worker : BackgroundService
         Log.Information("Starting up the Bot");
         await _discord.ConnectAsync();
         
-        var startupTasks = new List<Task>() {LoungeSystem.StartupCleanup(_discord)};
+        var startupTasks = new List<Task>() {LoungeSystem.StartupCleanup(_discord), ServerStats.RefreshServerStats(_discord)};
         await Task.WhenAll(startupTasks);
         
         while (!stoppingToken.IsCancellationRequested)
@@ -64,6 +64,7 @@ public class Worker : BackgroundService
         });
 
         commands.RegisterCommands<LoungeCommandModule>();
+        commands.RegisterCommands<ServerStatsCommandModule>();
         
         return Task.CompletedTask;
     }
@@ -84,11 +85,23 @@ public class Worker : BackgroundService
         {
             SqLiteConnection.Open();
 
-            var sqLiteCommand = SqLiteConnection.CreateCommand();
+            await using var sqLiteCommand = SqLiteConnection.CreateCommand();
+            {
+                sqLiteCommand.CommandText = "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, OwnerId INTEGER, GuildId INTEGER)";
+            
+                await sqLiteCommand.ExecuteNonQueryAsync();
+            }
 
-            sqLiteCommand.CommandText = "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, OwnerId INTEGER, GuildId INTEGER)";
+            await using var sqLiteCommand2 = SqLiteConnection.CreateCommand();
+            {
+                sqLiteCommand2.CommandText = "CREATE TABLE IF NOT EXISTS StatsChannelIndex (GuildId INTEGER, CategoryChannelId INTEGER, MemberCountChannelId INTEGER, TeamCountChannelId INTEGER, BotCountChannelId INTEGER)";
+            
+                await sqLiteCommand2.ExecuteNonQueryAsync();
+            }
+            
+            
 
-            await sqLiteCommand.ExecuteNonQueryAsync();
+
         }
         catch (Exception e)
         {

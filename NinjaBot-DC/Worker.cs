@@ -22,7 +22,8 @@ public class Worker : BackgroundService
             .AddJsonFile("config.json", optional: false, reloadOnChange: true)
             .Build();
 
-        SqLiteConnection = new SQLiteConnection("Data Source=database.sqlite;Version=3;New=True;Compress=True;");
+        var sqliteSource = configuration.GetValue<string>("ninja-bot:sqlite-source");
+        SqLiteConnection = new SQLiteConnection($"Data Source={sqliteSource};Version=3;New=True;Compress=True;");
 
         var token = configuration.GetValue<string>("ninja-bot:token");
 

@@ -2,6 +2,7 @@
   "ninja-bot":
   {
     "token": "Your Token Here",
-    "prefix": "/"
+    "prefix": "!",
+    "sqlite-source":  "database.sqlite"
   }
 }

@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinjaBot-DC", "NinjaBot-DC\NinjaBot-DC.csproj", "{E7284F5C-5C4E-4C25-AD78-9635C35AE44A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NinjaBot-DC", "NinjaBot-DC\NinjaBot-DC.csproj", "{D5CC8CB5-0B1F-4230-903B-0D81EFEA0E6D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -8,9 +8,9 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E7284F5C-5C4E-4C25-AD78-9635C35AE44A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7284F5C-5C4E-4C25-AD78-9635C35AE44A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E7284F5C-5C4E-4C25-AD78-9635C35AE44A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E7284F5C-5C4E-4C25-AD78-9635C35AE44A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5CC8CB5-0B1F-4230-903B-0D81EFEA0E6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5CC8CB5-0B1F-4230-903B-0D81EFEA0E6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5CC8CB5-0B1F-4230-903B-0D81EFEA0E6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5CC8CB5-0B1F-4230-903B-0D81EFEA0E6D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

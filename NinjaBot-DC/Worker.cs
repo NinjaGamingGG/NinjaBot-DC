@@ -3,6 +3,9 @@ using DSharpPlus.CommandsNext;
 using NinjaBot_DC.Commands;
 using NinjaBot_DC.Extensions;
 using System.Data.SQLite;
+using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Enums;
+using DSharpPlus.Interactivity.Extensions;
 using Serilog;
 
 namespace NinjaBot_DC;
@@ -55,6 +58,16 @@ public class Worker : BackgroundService
         }
     }
 
+    private Task SetupInteractivity()
+    {
+        _discord.UseInteractivity(new InteractivityConfiguration()
+        {
+            PollBehaviour = PollBehaviour.KeepEmojis,
+            Timeout = TimeSpan.FromSeconds(30)
+        });
+        return Task.CompletedTask;
+    }
+
     private Task RegisterCommands()
     {
         Log.Information("Registering Commands");
@@ -65,6 +78,7 @@ public class Worker : BackgroundService
 
         commands.RegisterCommands<LoungeCommandModule>();
         commands.RegisterCommands<ServerStatsCommandModule>();
+        commands.RegisterCommands<ReactionRolesCommandModule>();
         
         return Task.CompletedTask;
     }
@@ -74,6 +88,8 @@ public class Worker : BackgroundService
         Log.Information("Registering Events");
         _discord.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
         _discord.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
+        _discord.MessageReactionAdded += ReactionRoles.MessageReactionAdded; 
+        _discord.MessageReactionRemoved += ReactionRoles.MessageReactionRemoved; 
 
         return Task.CompletedTask;
     }
@@ -85,18 +101,25 @@ public class Worker : BackgroundService
         {
             SqLiteConnection.Open();
 
-            await using var sqLiteCommand = SqLiteConnection.CreateCommand();
+            await using var sqLiteLoungeTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteCommand.CommandText = "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, OwnerId INTEGER, GuildId INTEGER)";
+                sqLiteLoungeTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, OwnerId INTEGER, GuildId INTEGER)";
             
-                await sqLiteCommand.ExecuteNonQueryAsync();
+                await sqLiteLoungeTableCommand.ExecuteNonQueryAsync();
             }
 
-            await using var sqLiteCommand2 = SqLiteConnection.CreateCommand();
+            await using var sqLiteStatsTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteCommand2.CommandText = "CREATE TABLE IF NOT EXISTS StatsChannelIndex (GuildId INTEGER, CategoryChannelId INTEGER, MemberCountChannelId INTEGER, TeamCountChannelId INTEGER, BotCountChannelId INTEGER)";
+                sqLiteStatsTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS StatsChannelIndex (GuildId INTEGER, CategoryChannelId INTEGER, MemberCountChannelId INTEGER, TeamCountChannelId INTEGER, BotCountChannelId INTEGER)";
             
-                await sqLiteCommand2.ExecuteNonQueryAsync();
+                await sqLiteStatsTableCommand.ExecuteNonQueryAsync();
+            }
+            
+            await using var sqLiteReactionTableCommand = SqLiteConnection.CreateCommand();
+            {
+                sqLiteReactionTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS ReactionMessagesIndex (GuildId INTEGER, MessageId INTEGER, MessageTag VARCHAR(20))";
+            
+                await sqLiteReactionTableCommand.ExecuteNonQueryAsync();
             }
             
             

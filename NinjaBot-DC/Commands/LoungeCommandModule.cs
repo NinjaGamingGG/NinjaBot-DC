@@ -1,6 +1,8 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using Dapper.Contrib.Extensions;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Net.Models;
+using NinjaBot_DC.Models;
 
 namespace NinjaBot_DC.Commands;
 
@@ -27,21 +29,29 @@ public class LoungeCommandModule : BaseCommandModule
         if (arguments[0].ToLower() == "resize")
         {
             var parseSuccess = Int32.TryParse(arguments[1], out var newSize);
+            
+            if (newSize is > 8 or < 0)
+                return;
 
             if (parseSuccess)
                 await ResizeLounge(ctx, newSize);
+        }
+
+        if (arguments[0].ToLower() == "claim")
+        {
+            await ClaimLounge(ctx);
         }
 
 
 
     }
 
-    private static async Task RenameLounge(CommandContext ctx, string newName)
+    private static async Task RenameLounge(CommandContext context, string newName)
     {
-        if (ctx.Member == null)
+        if (context.Member == null)
             return;
         
-        var channel = ctx.Member.VoiceState.Channel;
+        var channel = context.Member.VoiceState.Channel;
         
         if (channel == null)
             return;
@@ -79,6 +89,42 @@ public class LoungeCommandModule : BaseCommandModule
         }
 
         await channel.ModifyAsync(NewEditModel);
+    }
+    
+    private static async Task ClaimLounge(CommandContext context)
+    {
+        if (context.Member == null)
+            return;
+        
+        var channel = context.Member.VoiceState.Channel;
+        
+        if (channel == null)
+            return;
+
+        var loungeModel = await Worker.SqLiteConnection.GetAsync<LoungeDbModel>(channel.Id);
+
+        if (loungeModel == null)
+            return;
+
+        var channelMembers = channel.Users;
+
+        var containsOwner = false;
+        
+        foreach (var member in channelMembers)
+        {
+            if (member.Id == loungeModel.OwnerId)
+                containsOwner = true;
+        }
+        
+        if (containsOwner == true)
+            return;
+
+        loungeModel.OwnerId = context.Member.Id;
+
+        var sqlSuccess = await Worker.SqLiteConnection.UpdateAsync(loungeModel);
+
+        if (sqlSuccess)
+            await context.Channel.SendMessageAsync($"{context.Member.DisplayName} ist nun Lounge Owner");
     }
 
 }

@@ -3,7 +3,7 @@
 namespace NinjaBot_DC.Models;
 
 [Table("StatsChannelIndex")]
-public class StatsChannelModel
+public record StatsChannelModel
 {
     [ExplicitKey]
     public ulong GuildId { get; set; }

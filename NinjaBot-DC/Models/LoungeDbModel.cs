@@ -3,7 +3,7 @@
 namespace NinjaBot_DC.Models;
 
 [Table(("LoungeIndex"))]
-public class LoungeDbModel
+public record LoungeDbModel
 {
     [ExplicitKey]
     public ulong ChannelId { get; set; }

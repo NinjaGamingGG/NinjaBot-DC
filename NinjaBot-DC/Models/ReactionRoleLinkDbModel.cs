@@ -1,9 +1,13 @@
-﻿namespace NinjaBot_DC.Models;
+﻿using Dapper.Contrib.Extensions;
 
-public class ReactionRoleLinkDbModel
+namespace NinjaBot_DC.Models;
+
+[Table("ReactionRoleIndex")]
+public record ReactionRoleLinkDbModel
 {
+    [ExplicitKey]
     public ulong GuildId { get; set; }
     public string MessageTag { get; set; }
-    public ulong ReactionEmojiId { get; set; }
+    public string ReactionEmojiTag { get; set; }
     public ulong LinkedRoleId { get; set; }
 }

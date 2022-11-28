@@ -1,5 +1,7 @@
-﻿using Dapper.Contrib.Extensions;
+﻿using Dapper;
+using Dapper.Contrib.Extensions;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using NinjaBot_DC.Models;
 
@@ -10,38 +12,43 @@ public static class ReactionRoles
     public static async Task MessageReactionAdded(DiscordClient client, MessageReactionAddEventArgs eventArgs)
     {
         var reactionMessages = await Worker.SqLiteConnection.GetAllAsync<ReactionMessageDbModel>();
-        
-        foreach (var reactionMessageDbModel in reactionMessages)
-        {
-            await HandleAddedReactionAsync(reactionMessageDbModel, eventArgs.Message.Id);
-        }
 
-        //eventArgs.Emoji.Id
-        
+        var reactionMessageAsList = reactionMessages.ToList();
+
+        for (var i = 0; i < reactionMessageAsList.Count; i++)
+        {
+            var reactionMessage = reactionMessageAsList[i];
+            
+            await HandleAddedReactionAsync(reactionMessage,client, eventArgs);
+        }
     }
 
-    public static async Task HandleAddedReactionAsync(ReactionMessageDbModel reactionMessageDbModel, ulong eventMessageId)
+    private static async Task HandleAddedReactionAsync(ReactionMessageDbModel reactionMessageDbModel,DiscordClient client,  MessageReactionAddEventArgs eventArgs)
     {
-        if (reactionMessageDbModel.MessageId != eventMessageId)
+        if (reactionMessageDbModel.MessageId != eventArgs.Message.Id)
             return;
         
-        switch (reactionMessageDbModel.MessageTag)
+        var roles = await Worker.SqLiteConnection.QueryAsync<ReactionRoleLinkDbModel>
+            ($"SELECT * FROM ReactionRoleIndex WHERE (GuildId = {eventArgs.Guild.Id} " +
+             $"AND ReactionEmojiTag = '{eventArgs.Emoji.GetDiscordName()}'" +
+             $"AND MessageTag = '{reactionMessageDbModel.MessageTag}')");
+
+        var rolesAsList = roles.ToList();
+        
+        for (var i = 0; i < rolesAsList.Count; i++)
         {
-            case ("ttv-yt"):
-            {
-                    
-            }
-                break;
+            var role = rolesAsList[i];
+            var discordGuild = await client.GetGuildAsync(role.GuildId);
+
+            var member = await discordGuild.GetMemberAsync(eventArgs.User.Id);
+
+            var newRole = discordGuild.GetRole(role.LinkedRoleId);
+
+            await member.GrantRoleAsync(newRole);
+
         }
     }
-
-    public static async Task HandleTwitchYoutubeReaction()
-    {
-        
-    }
     
-    
-
     public static async Task MessageReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs eventArgs)
     {
         

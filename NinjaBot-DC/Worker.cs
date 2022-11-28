@@ -115,14 +115,21 @@ public class Worker : BackgroundService
                 await sqLiteStatsTableCommand.ExecuteNonQueryAsync();
             }
             
-            await using var sqLiteReactionTableCommand = SqLiteConnection.CreateCommand();
+            await using var sqLiteReactionMessageTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS ReactionMessagesIndex (GuildId INTEGER, MessageId INTEGER, MessageTag VARCHAR(20))";
+                sqLiteReactionMessageTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS ReactionMessagesIndex (GuildId INTEGER, MessageId INTEGER, MessageTag VARCHAR(20))";
             
-                await sqLiteReactionTableCommand.ExecuteNonQueryAsync();
+                await sqLiteReactionMessageTableCommand.ExecuteNonQueryAsync();
             }
-            
-            
+
+            await using var sqLiteReactionRoleCommand = SqLiteConnection.CreateCommand();
+            {
+                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS ReactionRoleIndex(GuildId INTEGER, MessageTag VARCHAR(50),ReactionEmojiTag VARCHAR(50),LinkedRoleId INTEGER)";
+
+                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+            }
+
+
 
 
         }

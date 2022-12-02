@@ -3,7 +3,7 @@
 namespace NinjaBot_DC.Models;
 
 [Table("TwitchCreatorSocialMediaChannelIndex")]
-public record TwitchCreatorSocialMediaChannelModel
+public record TwitchCreatorSocialMediaChannelDbModel
 {
     public ulong GuildId { get; set; }  //The id of the discord guild
     

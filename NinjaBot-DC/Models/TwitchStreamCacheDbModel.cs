@@ -3,7 +3,7 @@
 namespace NinjaBot_DC.Models;
 
 [System.ComponentModel.DataAnnotations.Schema.Table("TwitchStreamCacheIndex")]
-public record TwitchStreamCacheModel
+public record TwitchStreamCacheDbModel
 {
     [ExplicitKey]
     public string Id { get; set; }//Id of the Twitch Stream or vod

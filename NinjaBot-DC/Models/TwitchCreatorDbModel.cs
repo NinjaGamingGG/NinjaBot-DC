@@ -3,7 +3,7 @@
 namespace NinjaBot_DC.Models;
 
 [Table("TwitchCreatorIndex")]
-public record TwitchCreatorModel
+public record TwitchCreatorDbModel
 {
     [ExplicitKey]
     public ulong GuildId { get; set; }//The id of the Discord guild

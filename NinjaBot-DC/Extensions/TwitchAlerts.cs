@@ -47,7 +47,7 @@ public static class TwitchAlerts
         {
             //Query all registered creator channels from sqlite db
             var creatorChannels = 
-               await Worker.SqLiteConnection.QueryAsync<TwitchCreatorSocialMediaChannelModel>(
+               await Worker.SqLiteConnection.QueryAsync<TwitchCreatorSocialMediaChannelDbModel>(
                     "SELECT * FROM TwitchCreatorSocialMediaChannelIndex WHERE Platform = 'twitch'");
 
             //Convert to list so we can iterate trough it wit for loop
@@ -70,7 +70,7 @@ public static class TwitchAlerts
         }
     }
 
-    private static async Task HandleChannelData(TwitchChannelStatusModel channelData, TwitchCreatorSocialMediaChannelModel creatorChannel)
+    private static async Task HandleChannelData(TwitchChannelStatusModel channelData, TwitchCreatorSocialMediaChannelDbModel creatorChannelDb)
     {
         //Iterate trough channel Data
         for (var i = 0; i < channelData.Data.Count; i++)
@@ -85,7 +85,7 @@ public static class TwitchAlerts
             var channelId = channelData.Data[i].UserId;
 
             //Create cache Record
-            var streamCacheRecord = new TwitchStreamCacheModel()
+            var streamCacheRecord = new TwitchStreamCacheDbModel()
                 {Id = streamId, ChannelId = channelId, ChannelName = channelName};
 
             //Check if Record Exists
@@ -100,18 +100,18 @@ public static class TwitchAlerts
             await Worker.SqLiteConnection.InsertAsync(streamCacheRecord);
 
             //push the notification
-            await PushDiscordNotification(channelData.Data[i], creatorChannel);
+            await PushDiscordNotification(channelData.Data[i], creatorChannelDb);
         }
     }
 
-    private static async Task PushDiscordNotification(ChannelData channelData,TwitchCreatorSocialMediaChannelModel creatorChannel)
+    private static async Task PushDiscordNotification(ChannelData channelData,TwitchCreatorSocialMediaChannelDbModel creatorChannelDb)
     {
         //Create local variables
-        var guildId = creatorChannel.GuildId;
-        var roleTag = creatorChannel.RoleTag;
+        var guildId = creatorChannelDb.GuildId;
+        var roleTag = creatorChannelDb.RoleTag;
             
         //Get a list of linked output channels for this guild and role-tag
-        var outPutChannels = await Worker.SqLiteConnection.QueryAsync<TwitchDiscordChannelModel>($"SELECT * FROM TwitchDiscordChannelIndex WHERE (GuildId = {guildId}) AND RoleTag = '{roleTag}'");
+        var outPutChannels = await Worker.SqLiteConnection.QueryAsync<TwitchDiscordChannelDbModel>($"SELECT * FROM TwitchDiscordChannelIndex WHERE (GuildId = {guildId}) AND RoleTag = '{roleTag}'");
 
         //Convert to list so we can loop over with for
         var outPutChannelsAsList = outPutChannels.ToList();
@@ -134,7 +134,7 @@ public static class TwitchAlerts
 
             //Push the message to the Channel
             // ReSharper disable once StringLiteralTypo
-            await channel.SendMessageAsync($"Hey {roleMention}, {channelData.UserName} ist jetzt live! Schaut doch mal vorbei: https://twitch.tv/{creatorChannel.SocialMediaChannel}");
+            await channel.SendMessageAsync($"Hey {roleMention}, {channelData.UserName} ist jetzt live! Schaut doch mal vorbei: https://twitch.tv/{creatorChannelDb.SocialMediaChannel}");
         }
 
     }

@@ -51,7 +51,7 @@ public class TwitchAlertsCommandModule : BaseCommandModule
         }
         
         //Create new Record for the database and Insert it
-        var creatorModel = new TwitchCreatorModel() {GuildId = context.Guild.Id, UserId = user.Id, RoleTag = roleTag};
+        var creatorModel = new TwitchCreatorDbModel() {GuildId = context.Guild.Id, UserId = user.Id, RoleTag = roleTag};
         await Worker.SqLiteConnection.InsertAsync(creatorModel);
         
         //Get the guild from Command context
@@ -194,7 +194,7 @@ public class TwitchAlertsCommandModule : BaseCommandModule
     private static async Task CreatorAddSocialMediaChannel(CommandContext context, DiscordUser user, string roleTag, string socialMediaChannel, string platform)
     {
         //Create record for db
-        var creatorSocialMediaModel = new TwitchCreatorSocialMediaChannelModel()
+        var creatorSocialMediaModel = new TwitchCreatorSocialMediaChannelDbModel()
         {
             GuildId = context.Guild.Id, UserId = user.Id, RoleTag = roleTag, SocialMediaChannel = socialMediaChannel,
             Platform = platform
@@ -259,7 +259,7 @@ public class TwitchAlertsCommandModule : BaseCommandModule
     private static async Task LinkDiscordChannel(CommandContext context, DiscordChannel channel, string roleTag)
     {
         //Create Record for database
-        var twitchDiscordChannel = new TwitchDiscordChannelModel()
+        var twitchDiscordChannel = new TwitchDiscordChannelDbModel()
             {GuildId = context.Guild.Id, ChannelId = channel.Id, RoleTag = roleTag};
 
         //Try to insert the record

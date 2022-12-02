@@ -3,7 +3,7 @@
 namespace NinjaBot_DC.Models;
 
 [Table("TwitchDiscordChannelIndex")]
-public record TwitchDiscordChannelModel
+public record TwitchDiscordChannelDbModel
 {
     public ulong GuildId { get; set; }  //The Id of the Discord Guild
     

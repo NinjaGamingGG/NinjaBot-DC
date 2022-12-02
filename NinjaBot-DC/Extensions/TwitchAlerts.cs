@@ -42,12 +42,15 @@ public static class TwitchAlerts
 
     private static async Task UpdateCreators()
     {
+
+        var sqlite = Worker.GetServiceSqLiteConnection();
+        
         //Wait for next task execution
         while (await StreamerRoleUpdateTimer.WaitForNextTickAsync())
         {
             //Query all registered creator channels from sqlite db
             var creatorChannels = 
-               await Worker.SqLiteConnection.QueryAsync<TwitchCreatorSocialMediaChannelDbModel>(
+               await sqlite.QueryAsync<TwitchCreatorSocialMediaChannelDbModel>(
                     "SELECT * FROM TwitchCreatorSocialMediaChannelIndex WHERE Platform = 'twitch'");
 
             //Convert to list so we can iterate trough it wit for loop
@@ -72,6 +75,8 @@ public static class TwitchAlerts
 
     private static async Task HandleChannelData(TwitchChannelStatusModel channelData, TwitchCreatorSocialMediaChannelDbModel creatorChannelDb)
     {
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        
         //Iterate trough channel Data
         for (var i = 0; i < channelData.Data.Count; i++)
         {
@@ -89,7 +94,7 @@ public static class TwitchAlerts
                 {Id = streamId, ChannelId = channelId, ChannelName = channelName};
 
             //Check if Record Exists
-            var recordExists = await Worker.SqLiteConnection.QueryAsync(
+            var recordExists = await sqLite.QueryAsync(
                 $"SELECT * FROM TwitchStreamCacheIndex WHERE (ChannelId = {channelId} AND Id = {streamId} AND ChannelName = '{channelName}')");
             
             //If yes we already pushed a notification and can just continue
@@ -97,7 +102,7 @@ public static class TwitchAlerts
                 continue;
 
             //If not the channel just went live and we have to Insert into sqlite db and push a notification
-            await Worker.SqLiteConnection.InsertAsync(streamCacheRecord);
+            await sqLite.InsertAsync(streamCacheRecord);
 
             //push the notification
             await PushDiscordNotification(channelData.Data[i], creatorChannelDb);
@@ -109,9 +114,10 @@ public static class TwitchAlerts
         //Create local variables
         var guildId = creatorChannelDb.GuildId;
         var roleTag = creatorChannelDb.RoleTag;
-            
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        
         //Get a list of linked output channels for this guild and role-tag
-        var outPutChannels = await Worker.SqLiteConnection.QueryAsync<TwitchDiscordChannelDbModel>($"SELECT * FROM TwitchDiscordChannelIndex WHERE (GuildId = {guildId}) AND RoleTag = '{roleTag}'");
+        var outPutChannels = await sqLite.QueryAsync<TwitchDiscordChannelDbModel>($"SELECT * FROM TwitchDiscordChannelIndex WHERE (GuildId = {guildId}) AND RoleTag = '{roleTag}'");
 
         //Convert to list so we can loop over with for
         var outPutChannelsAsList = outPutChannels.ToList();

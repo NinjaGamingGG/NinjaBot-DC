@@ -14,7 +14,7 @@ public class Worker : BackgroundService
 {
     //private readonly IConfigurationRoot _configuration;
 
-    public static readonly SQLiteConnection SqLiteConnection;
+    private static readonly SQLiteConnection SqLiteConnection;
     
     private static readonly DiscordClient DiscordClient;
 
@@ -44,6 +44,11 @@ public class Worker : BackgroundService
     public static DiscordClient GetServiceDiscordClient()
     {
         return DiscordClient;
+    }
+
+    public static SQLiteConnection GetServiceSqLiteConnection()
+    {
+        return SqLiteConnection;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

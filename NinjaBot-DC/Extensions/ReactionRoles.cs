@@ -11,7 +11,8 @@ public static class ReactionRoles
 {
     public static async Task MessageReactionAdded(DiscordClient client, MessageReactionAddEventArgs eventArgs)
     {
-        var reactionMessages = await Worker.SqLiteConnection.GetAllAsync<ReactionMessageDbModel>();
+        var sqlite = Worker.GetServiceSqLiteConnection();
+        var reactionMessages = await sqlite.GetAllAsync<ReactionMessageDbModel>();
 
         var reactionMessageAsList = reactionMessages.ToList();
 
@@ -27,8 +28,10 @@ public static class ReactionRoles
     {
         if (reactionMessageDbModel.MessageId != eventArgs.Message.Id)
             return;
+
+        var sqlite = Worker.GetServiceSqLiteConnection();
         
-        var roles = await Worker.SqLiteConnection.QueryAsync<ReactionRoleLinkDbModel>
+        var roles = await sqlite.QueryAsync<ReactionRoleLinkDbModel>
             ($"SELECT * FROM ReactionRoleIndex WHERE (GuildId = {eventArgs.Guild.Id} " +
              $"AND ReactionEmojiTag = '{eventArgs.Emoji.GetDiscordName()}'" +
              $"AND MessageTag = '{reactionMessageDbModel.MessageTag}')");

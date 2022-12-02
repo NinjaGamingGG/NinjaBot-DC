@@ -58,7 +58,9 @@ public class ReactionRolesCommandModule : BaseCommandModule
                 var reactionRoleLinkDbModel = new ReactionRoleLinkDbModel()
                     {GuildId = context.Guild.Id, MessageTag = messageTag, LinkedRoleId = discordRole.Id, ReactionEmojiTag = emojiTag};
 
-                await Worker.SqLiteConnection.InsertAsync(reactionRoleLinkDbModel);
+
+                var sqLite = Worker.GetServiceSqLiteConnection();
+                await sqLite.InsertAsync(reactionRoleLinkDbModel);
             }
                 break;
 
@@ -78,10 +80,12 @@ public class ReactionRolesCommandModule : BaseCommandModule
     }
     private static async Task UnLinkRole(CommandContext context, string messageTag, DiscordRole discordRole)
     {
-        await Worker.SqLiteConnection.ExecuteAsync("DELETE FROM ReactionRoleIndex WHERE " +
-                                                   $"(GuildId = {context.Guild.Id} " +
-                                                   $"AND LinkedRoleId = {discordRole.Id} " +
-                                                   $"AND MessageTag = '{messageTag}')");
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        
+        await sqLite.ExecuteAsync("DELETE FROM ReactionRoleIndex WHERE " +
+                                  $"(GuildId = {context.Guild.Id} " +
+                                  $"AND LinkedRoleId = {discordRole.Id} " +
+                                  $"AND MessageTag = '{messageTag}')");
     }
 
     private static async Task SetupStreamMessage(CommandContext ctx, string messageTag)
@@ -110,16 +114,18 @@ public class ReactionRolesCommandModule : BaseCommandModule
         var reactionMessageDbModel = new ReactionMessageDbModel()
             {GuildId = ctx.Guild.Id, MessageId = msg.Id, MessageTag = messageTag};
 
-
-        var updates = await Worker.SqLiteConnection.ExecuteAsync($"UPDATE ReactionMessagesIndex SET MessageId = {msg.Id} WHERE (GuildId = {ctx.Guild.Id} AND MessageTag = '{messageTag}')");
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        var updates = await sqLite.ExecuteAsync($"UPDATE ReactionMessagesIndex SET MessageId = {msg.Id} WHERE (GuildId = {ctx.Guild.Id} AND MessageTag = '{messageTag}')");
         
         if (updates == 0)
-            await Worker.SqLiteConnection.InsertAsync(reactionMessageDbModel);
+            await sqLite.InsertAsync(reactionMessageDbModel);
     }
 
     private static async Task<bool> CheckIfRoleClear(CommandContext context, DiscordRole discordRole)
     {
-        var roleCount = await Worker.SqLiteConnection.QueryAsync(
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        
+        var roleCount = await sqLite.QueryAsync(
                 $"SELECT * FROM ReactionRoleIndex WHERE (GuildId = {context.Guild.Id} AND LinkedRoleId = {discordRole.Id})");
 
         if (roleCount.Count() == 1)
@@ -130,8 +136,8 @@ public class ReactionRolesCommandModule : BaseCommandModule
 
     private static async Task CreateRoleBasedReaction(CommandContext context, string messageTag, DiscordMessage message)
     {
-        //var roles = await Worker.SqLiteConnection.GetAllAsync<ReactionRoleLinkDbModel>();
-        var roles = await Worker.SqLiteConnection.QueryAsync<ReactionRoleLinkDbModel>(
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        var roles = await sqLite.QueryAsync<ReactionRoleLinkDbModel>(
             $"SELECT * FROM ReactionRoleIndex WHERE (GuildId = {context.Guild.Id} AND MessageTag = MessageTag)");
         var rolesAsArray = roles.ToArray();
 

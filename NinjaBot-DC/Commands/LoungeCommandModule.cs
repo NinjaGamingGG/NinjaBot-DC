@@ -101,7 +101,8 @@ public class LoungeCommandModule : BaseCommandModule
         if (channel == null)
             return;
 
-        var loungeModel = await Worker.SqLiteConnection.GetAsync<LoungeDbModel>(channel.Id);
+        var sqlite = Worker.GetServiceSqLiteConnection();
+        var loungeModel = await sqlite.GetAsync<LoungeDbModel>(channel.Id);
 
         if (loungeModel == null)
             return;
@@ -121,7 +122,7 @@ public class LoungeCommandModule : BaseCommandModule
 
         loungeModel.OwnerId = context.Member.Id;
 
-        var sqlSuccess = await Worker.SqLiteConnection.UpdateAsync(loungeModel);
+        var sqlSuccess = await sqlite.UpdateAsync(loungeModel);
 
         if (sqlSuccess)
             await context.Channel.SendMessageAsync($"{context.Member.DisplayName} ist nun Lounge Owner");

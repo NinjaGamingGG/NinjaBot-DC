@@ -11,9 +11,11 @@ public static class ServerStats
 
     public static async Task RefreshServerStats(DiscordClient discordClient)
     {
+        var sqlite = Worker.GetServiceSqLiteConnection();
+        
         while (await ChannelInfoRefreshTimer.WaitForNextTickAsync())
         {
-            var serverStatsModels = await Worker.SqLiteConnection.GetAllAsync<StatsChannelModel>();
+            var serverStatsModels = await sqlite.GetAllAsync<StatsChannelModel>();
 
             foreach (var serverStatsModel in serverStatsModels)
             {

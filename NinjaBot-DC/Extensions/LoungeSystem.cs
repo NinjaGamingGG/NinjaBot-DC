@@ -26,8 +26,10 @@ public static class LoungeSystem
             return;
         
         var newModel = new LoungeDbModel {ChannelId = newChannel.Id, OwnerId =discordMember.Id, GuildId = eventArgs.Guild.Id};
+
+        var sqlite = Worker.GetServiceSqLiteConnection();
         
-        var updated = await Worker.SqLiteConnection.InsertAsync(newModel);
+        var updated = await sqlite.InsertAsync(newModel);
 
         if (updated == 0)
         {
@@ -68,10 +70,10 @@ public static class LoungeSystem
     {
         if ( eventArgs.Before == null)
             return;
-        
 
+        var sqlite = Worker.GetServiceSqLiteConnection();
 
-        var loungeList = await Worker.SqLiteConnection.GetAllAsync<LoungeDbModel>();
+        var loungeList = await sqlite.GetAllAsync<LoungeDbModel>();
 
         foreach (var loungeDbModel in loungeList)
         {
@@ -90,7 +92,8 @@ public static class LoungeSystem
 
     public static async Task StartupCleanup(DiscordClient discordClient)
     {
-        var loungeDbModels = await Worker.SqLiteConnection.GetAllAsync<LoungeDbModel>();
+        var sqlite = Worker.GetServiceSqLiteConnection();
+        var loungeDbModels = await sqlite.GetAllAsync<LoungeDbModel>();
 
         foreach (var loungeDbModel in loungeDbModels)
         {
@@ -100,12 +103,14 @@ public static class LoungeSystem
 
     private static async Task HandleLounge(DiscordClient discordClient, LoungeDbModel loungeDbModel)
     {
+
+        var sqlite = Worker.GetServiceSqLiteConnection();
                     
         var channelExits  = await IsChannelInGuildAsync(discordClient, loungeDbModel.ChannelId, loungeDbModel.GuildId);
 
         if (channelExits == false)
         {
-            var sqlSuccess0 = await Worker.SqLiteConnection.DeleteAsync(loungeDbModel);
+            var sqlSuccess0 = await sqlite.DeleteAsync(loungeDbModel);
                 
             if (sqlSuccess0 == false)
                 Log.Error("Unable to delete the Sql Record for Lounge with the Id {LoungeId} in Guild {GuildId}",loungeDbModel.ChannelId, loungeDbModel.GuildId);
@@ -130,7 +135,7 @@ public static class LoungeSystem
         }
 
 
-        var sqlSuccess = await Worker.SqLiteConnection.DeleteAsync(loungeDbModel);
+        var sqlSuccess = await sqlite.DeleteAsync(loungeDbModel);
                 
         if (sqlSuccess == false)
             Log.Error("Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",loungeChannel.Name, loungeDbModel.ChannelId, loungeDbModel.GuildId);

@@ -44,9 +44,11 @@ public class ServerStatsCommandModule : BaseCommandModule
             TeamCountChannelId = teamCountChannel.Id
         };
 
-        var hasUpdated = await Worker.SqLiteConnection.UpdateAsync(statsChannelModel);
+        var sqLite = Worker.GetServiceSqLiteConnection();
+
+        var hasUpdated = await sqLite.UpdateAsync(statsChannelModel);
 
         if (hasUpdated == false)
-            await Worker.SqLiteConnection.InsertAsync(statsChannelModel);
+            await sqLite.InsertAsync(statsChannelModel);
     }
 }

@@ -39,7 +39,8 @@ public class TwitchAlertsCommandModule : BaseCommandModule
     private static async Task AddCreator(CommandContext context, DiscordUser user, string roleTag)
     {
         //Check if selected role exists
-        var alertRoleModel = await Worker.SqLiteConnection.QueryAsync<TwitchAlertRoleDbModel>(
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        var alertRoleModel = await sqLite.QueryAsync<TwitchAlertRoleDbModel>(
             $"SELECT * FROM TwitchAlertRoleIndex WHERE (GuildId = {context.Guild.Id} AND RoleTag = '{roleTag}')");
         
         //Convert to list so we can later iterate over it. If it is Empty return
@@ -52,7 +53,7 @@ public class TwitchAlertsCommandModule : BaseCommandModule
         
         //Create new Record for the database and Insert it
         var creatorModel = new TwitchCreatorDbModel() {GuildId = context.Guild.Id, UserId = user.Id, RoleTag = roleTag};
-        await Worker.SqLiteConnection.InsertAsync(creatorModel);
+        await sqLite.InsertAsync(creatorModel);
         
         //Get the guild from Command context
         var guild = context.Guild;
@@ -75,11 +76,12 @@ public class TwitchAlertsCommandModule : BaseCommandModule
     private static async Task RemoveCreator(CommandContext context, DiscordUser user, string roleTag)
     {
         //Delete record from db
-        var deleteSuccess = await Worker.SqLiteConnection.ExecuteAsync(
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        var deleteSuccess = await sqLite.ExecuteAsync(
             $"DELETE FROM TwitchCreatorIndex WHERE (GuildId = {context.Guild.Id} AND UserId = {user.Id} AND RoleTag = '{roleTag}')");
         
         //Get the roles associated with role tag so we can remove user from them
-        var alertRoleModel = await Worker.SqLiteConnection.QueryAsync<TwitchAlertRoleDbModel>(
+        var alertRoleModel = await sqLite.QueryAsync<TwitchAlertRoleDbModel>(
             $"SELECT * FROM TwitchAlertRoleIndex WHERE (GuildId = {context.Guild.Id} AND RoleTag = '{roleTag}')");
         
         //Convert to list so we can iterate over it. Return if list is Empty
@@ -136,7 +138,8 @@ public class TwitchAlertsCommandModule : BaseCommandModule
             {GuildId = context.Guild.Id, RoleId = role.Id, RoleTag = roleTag};
 
         //Try to Insert
-        var success = await Worker.SqLiteConnection.InsertAsync(roleModel);
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        var success = await sqLite.InsertAsync(roleModel);
 
         //If insert was successfully return with positive reaction
         if (success == 1)
@@ -152,9 +155,10 @@ public class TwitchAlertsCommandModule : BaseCommandModule
     private static async Task UnlinkRole(CommandContext context, DiscordRole role, string roleTag)
     {
         //Try to delete the role from the db
-        var success = await Worker.SqLiteConnection.ExecuteAsync("DELETE FROM TwitchAlertRoleIndex WHERE " +
-                                                                 $"(GuildId = {context.Guild.Id} " +
-                                                                 $"AND RoleTag = '{roleTag}')");
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        var success = await sqLite.ExecuteAsync("DELETE FROM TwitchAlertRoleIndex WHERE " +
+                                                $"(GuildId = {context.Guild.Id} " +
+                                                $"AND RoleTag = '{roleTag}')");
 
         //If delete was successfully respond with positive reaction and return
         if (success == 1)
@@ -201,7 +205,8 @@ public class TwitchAlertsCommandModule : BaseCommandModule
         };
 
         //Try to insert the record
-        var insertSuccess = await Worker.SqLiteConnection.InsertAsync(creatorSocialMediaModel);
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        var insertSuccess = await sqLite.InsertAsync(creatorSocialMediaModel);
 
         //If insert was successfully respond positive to message and return
         if (insertSuccess == 0)
@@ -218,7 +223,8 @@ public class TwitchAlertsCommandModule : BaseCommandModule
     private static async Task CreatorRemoveSocialMediaChannel(CommandContext context, DiscordUser user, string roleTag, string socialMediaChannel, string platform)
     {
         //Try to delete record from database
-        var deleteSuccess = await Worker.SqLiteConnection.ExecuteAsync(
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        var deleteSuccess = await sqLite.ExecuteAsync(
             $"DELETE FROM TwitchCreatorSocialMediaChannelIndex WHERE (GuildId = {context.Guild.Id} AND UserId = {user.Id} AND  RoleTag = '{roleTag}' AND SocialMediaChannel = '{socialMediaChannel}' AND Platform = '{platform}')");
 
         //If delete was successfully Respond with Error Message and return
@@ -263,7 +269,8 @@ public class TwitchAlertsCommandModule : BaseCommandModule
             {GuildId = context.Guild.Id, ChannelId = channel.Id, RoleTag = roleTag};
 
         //Try to insert the record
-        var insertSuccess = await Worker.SqLiteConnection.InsertAsync(twitchDiscordChannel);
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        var insertSuccess = await sqLite.InsertAsync(twitchDiscordChannel);
 
         //If insert was unsuccessful respond with error message and return
         if (insertSuccess == 0)
@@ -279,7 +286,8 @@ public class TwitchAlertsCommandModule : BaseCommandModule
     private static async Task UnlinkDiscordChannel(CommandContext context, DiscordChannel channel, string roleTag)
     {
         //Try to delete the record from the db
-        var deleteSuccess = await Worker.SqLiteConnection.ExecuteAsync(
+        var sqLite = Worker.GetServiceSqLiteConnection();
+        var deleteSuccess = await sqLite.ExecuteAsync(
             $"DELETE FROM TwitchDiscordChannelIndex WHERE (GuildId = {context.Guild.Id} AND ChannelId = {channel.Id} AND  RoleTag = '{roleTag}')");
 
         //if delete was unsuccessful respond with error message and return

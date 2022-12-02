@@ -12,7 +12,7 @@ namespace NinjaBot_DC;
 
 public class Worker : BackgroundService
 {
-    //private readonly IConfigurationRoot _configuration;
+    private static readonly IConfigurationRoot Configuration;
 
     private static readonly SQLiteConnection SqLiteConnection;
     
@@ -20,15 +20,12 @@ public class Worker : BackgroundService
 
     static Worker()
     {
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("config.json", optional: false, reloadOnChange: true)
-            .Build();
+        Configuration = LoadServiceConfig();
 
-        var sqliteSource = configuration.GetValue<string>("ninja-bot:sqlite-source");
+        var sqliteSource = Configuration.GetValue<string>("ninja-bot:sqlite-source");
         SqLiteConnection = new SQLiteConnection($"Data Source={sqliteSource};Version=3;New=True;Compress=True;");
 
-        var token = configuration.GetValue<string>("ninja-bot:token");
+        var token = Configuration.GetValue<string>("ninja-bot:token");
 
         var logFactory = new LoggerFactory().AddSerilog();
         
@@ -40,6 +37,33 @@ public class Worker : BackgroundService
             LoggerFactory = logFactory
         });
     }
+
+    private static IConfigurationRoot LoadServiceConfig()
+    {
+        //Check if there are any env variables set by loading the most mandatory variable
+        var testLoad = Environment.GetEnvironmentVariable("ninja-bot:token");
+        
+        //If none are found try to read from config files
+        if (testLoad == null)
+        {
+            return new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("config.json", optional: false, reloadOnChange: true)
+                .Build();
+        }
+
+        var builder = new ConfigurationBuilder();
+        builder.AddEnvironmentVariables();
+        
+        //If env vars are set load them
+        return builder.Build();
+    }
+
+    public static IConfigurationRoot GetServiceConfig()
+    {
+        return Configuration;
+    }
+    
 
     public static DiscordClient GetServiceDiscordClient()
     {

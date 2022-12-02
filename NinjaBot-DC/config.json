@@ -4,5 +4,10 @@
     "token": "Your Token Here",
     "prefix": "!",
     "sqlite-source":  "database.sqlite"
+  },
+  "twitch-extension":
+  {
+    "clientId": "ClientId",
+    "authKey": "Twitch Oauth Key"
   }
 }

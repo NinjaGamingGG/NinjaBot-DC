@@ -4,7 +4,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Net.Models;
 using NinjaBot_DC.Models;
 
-namespace NinjaBot_DC.Commands;
+namespace NinjaBot_DC.CommandModules;
 
 
 

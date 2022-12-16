@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Dapper;
+﻿using Dapper;
 using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -7,8 +6,9 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using NinjaBot_DC.Models;
 
-namespace NinjaBot_DC.Commands;
+namespace NinjaBot_DC.CommandModules;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public class ReactionRolesCommandModule : BaseCommandModule
 {
     [Command("ReactionMessage")]

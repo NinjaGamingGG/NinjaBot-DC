@@ -6,6 +6,7 @@ using System.Data.SQLite;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
+using NinjaBot_DC.CommandModules;
 using Serilog;
 
 namespace NinjaBot_DC;
@@ -131,8 +132,11 @@ public class Worker : BackgroundService
     private Task RegisterEvents()
     {
         Log.Information("Registering Events");
+        //Lounge System Events
         DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
         DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
+        
+        //Reaction Role Events
         DiscordClient.MessageReactionAdded += ReactionRoles.MessageReactionAdded; 
         DiscordClient.MessageReactionRemoved += ReactionRoles.MessageReactionRemoved; 
 

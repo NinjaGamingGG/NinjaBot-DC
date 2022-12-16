@@ -4,9 +4,10 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using NinjaBot_DC.Models;
+
 // ReSharper disable ForCanBeConvertedToForeach
 
-namespace NinjaBot_DC.Commands;
+namespace NinjaBot_DC.CommandModules;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public class TwitchAlertsCommandModule : BaseCommandModule

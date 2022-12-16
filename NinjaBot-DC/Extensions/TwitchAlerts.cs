@@ -1,9 +1,13 @@
-﻿using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Dapper;
 using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using Newtonsoft.Json;
 using NinjaBot_DC.Models;
+using Serilog;
+
+// ReSharper disable ForCanBeConvertedToForeach
 
 
 namespace NinjaBot_DC.Extensions;
@@ -22,10 +26,7 @@ public static class TwitchAlerts
     static TwitchAlerts()
     {
         //Load ClientId & AuthKey from Settings File
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("config.json", optional: false, reloadOnChange: true)
-            .Build();
+        var configuration = Worker.GetServiceConfig();
         
         ClientId = configuration.GetValue<string>("twitch-extension:clientId");
         AuthKey = configuration.GetValue<string>("twitch-extension:authKey");
@@ -36,6 +37,9 @@ public static class TwitchAlerts
     
     public static async Task InitExtensionAsync()
     {
+        if (ClientId == null || AuthKey == null)
+            return;
+        
         //Start the main task of this Extension
         await UpdateCreators();
     }
@@ -109,6 +113,7 @@ public static class TwitchAlerts
         }
     }
 
+    [SuppressMessage("ReSharper", "StringLiteralTypo")]
     private static async Task PushDiscordNotification(ChannelData channelData,TwitchCreatorSocialMediaChannelDbModel creatorChannelDb)
     {
         //Create local variables
@@ -139,7 +144,7 @@ public static class TwitchAlerts
             var roleMention = discordGuild.GetRole(1041099026717745222).Mention;
 
             //Push the message to the Channel
-            // ReSharper disable once StringLiteralTypo
+
             await channel.SendMessageAsync($"Hey {roleMention}, {channelData.UserName} ist jetzt live! Schaut doch mal vorbei: https://twitch.tv/{creatorChannelDb.SocialMediaChannel}");
         }
 
@@ -148,30 +153,31 @@ public static class TwitchAlerts
     private static async Task<TwitchChannelStatusModel?> IsTwitchChannelOnline(string channelName)
     {
         //Create new HttpClient from Handle
-        using (var httpClient = new HttpClient(HcHandle, false))
-        {
-            //Set Request Headers and Timeout
-            httpClient.DefaultRequestHeaders.Add("Client-ID", ClientId);
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthKey);
-            httpClient.Timeout = TimeSpan.FromSeconds(5);
+        using var httpClient = new HttpClient(HcHandle, false);
+        
+        //Set Request Headers and Timeout
+        httpClient.DefaultRequestHeaders.Add("Client-ID", ClientId);
+        httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthKey);
+        httpClient.Timeout = TimeSpan.FromSeconds(5);
             
-            //Get the Response
-            using (var response = await httpClient.GetAsync($"https://api.twitch.tv/helix/streams?user_login={channelName}"))
-            {
-                //If we get a bad response return
-                if (response.StatusCode != HttpStatusCode.OK)
-                    return null;
+        //Get the Response
+        using var response = await httpClient.GetAsync($"https://api.twitch.tv/helix/streams?user_login={channelName}");
+        //If we get a bad response return
+        if (response.StatusCode != HttpStatusCode.OK)
+        {
+            Log.Error("Twitch-Alert Extension | Http Error: {HttpStatusCode}. Unable to Retrieve Channel Data for {ChannelName}", response.StatusCode, channelName);
+            return null;
+        }
+            
                 
-                //Get the Response Content
-                var jsonString = await response.Content.ReadAsStringAsync();
+        //Get the Response Content
+        var jsonString = await response.Content.ReadAsStringAsync();
                 
-                //Deserialize the json Response
-                var myDeserializedClass = JsonConvert.DeserializeObject<TwitchChannelStatusModel>(jsonString);
+        //Deserialize the json Response
+        var myDeserializedClass = JsonConvert.DeserializeObject<TwitchChannelStatusModel>(jsonString);
                 
 
-                //Return the Result
-                return myDeserializedClass;
-            }
-        }
+        //Return the Result
+        return myDeserializedClass;
     }
 }

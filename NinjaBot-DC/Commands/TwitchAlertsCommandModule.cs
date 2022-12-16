@@ -4,6 +4,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using NinjaBot_DC.Models;
+// ReSharper disable ForCanBeConvertedToForeach
 
 namespace NinjaBot_DC.Commands;
 
@@ -77,7 +78,7 @@ public class TwitchAlertsCommandModule : BaseCommandModule
     {
         //Delete record from db
         var sqLite = Worker.GetServiceSqLiteConnection();
-        var deleteSuccess = await sqLite.ExecuteAsync(
+        await sqLite.ExecuteAsync(
             $"DELETE FROM TwitchCreatorIndex WHERE (GuildId = {context.Guild.Id} AND UserId = {user.Id} AND RoleTag = '{roleTag}')");
         
         //Get the roles associated with role tag so we can remove user from them
@@ -120,7 +121,7 @@ public class TwitchAlertsCommandModule : BaseCommandModule
 
             case ("unlink-role"):
             {
-                await UnlinkRole(context, role, roleTag);
+                await UnlinkRole(context, roleTag);
             } break;
 
             default:
@@ -134,7 +135,7 @@ public class TwitchAlertsCommandModule : BaseCommandModule
     private static async Task LinkRole(CommandContext context, DiscordRole role, string roleTag)
     {
         //Create new record for database
-        var roleModel = new Models.TwitchAlertRoleDbModel()
+        var roleModel = new TwitchAlertRoleDbModel()
             {GuildId = context.Guild.Id, RoleId = role.Id, RoleTag = roleTag};
 
         //Try to Insert
@@ -152,7 +153,7 @@ public class TwitchAlertsCommandModule : BaseCommandModule
         await context.Message.RespondAsync("❌ Error | Unable to Link the Role");
     }
     
-    private static async Task UnlinkRole(CommandContext context, DiscordRole role, string roleTag)
+    private static async Task UnlinkRole(CommandContext context, string roleTag)
     {
         //Try to delete the role from the db
         var sqLite = Worker.GetServiceSqLiteConnection();
@@ -176,12 +177,12 @@ public class TwitchAlertsCommandModule : BaseCommandModule
     {
         switch (action.ToLower())
         {
-            case ("creator-addchannel"):
+            case ("creator-add-channel"):
             {
                 await CreatorAddSocialMediaChannel(context, user, roleTag, socialMediaChannel, platform);
             } break;
 
-            case ("creator-removechannel"):
+            case ("creator-remove-channel"):
             {
                 await CreatorRemoveSocialMediaChannel(context, user, roleTag, socialMediaChannel, platform);
             } break;
@@ -315,8 +316,8 @@ public class TwitchAlertsCommandModule : BaseCommandModule
                                  "!twitch-alerts remove-creator <@user> <role-tag>      Unlink the creator from provided role tag\n" +
                                  "!twitch-alerts link-role <@role> <role-tag>       Link role and a role-tag\n" +
                                  "!twitch-alerts unlink-role <@role> <role-tag>     Unlink role and a role-tag\n" +
-                                 "!twitch-alerts creator-addChannel <@user> <role-tag> <social-media-channel> <platform>        Adds Social Media Channel & Platform to a user under given role tag\n" +
-                                 "!twitch-alerts creator-removeChannel <@user> <role-tag> <social-media-channel> <platform>     Removes Social Media Channel & Platform from a user under given role tag\n" +
+                                 "!twitch-alerts creator-add-Channel <@user> <role-tag> <social-media-channel> <platform>        Adds Social Media Channel & Platform to a user under given role tag\n" +
+                                 "!twitch-alerts creator-remove-Channel <@user> <role-tag> <social-media-channel> <platform>     Removes Social Media Channel & Platform from a user under given role tag\n" +
                                  "!twitch-alerts link-discord-channel <#discord-channel> <role-tag>     Link a discord channel where live notifications get pushed\n" +
                                  "!twitch-alerts unlink-discord-channel <#discord-channel> <role-tag>       Unlink a discord channel from live notification pushes\n");
 

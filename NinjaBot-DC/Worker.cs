@@ -84,7 +84,11 @@ public class Worker : BackgroundService
         Log.Information("Starting up the Bot");
         await DiscordClient.ConnectAsync();
         
-        var startupTasks = new List<Task>() {LoungeSystem.StartupCleanup(DiscordClient), ServerStats.RefreshServerStats(DiscordClient), TwitchAlerts.InitExtensionAsync()};
+        var startupTasks = new List<Task>() {
+                LoungeSystem.StartupCleanup(DiscordClient), 
+                ServerStats.RefreshServerStats(DiscordClient), 
+                TwitchAlerts.InitExtensionAsync()};
+        
         await Task.WhenAll(startupTasks);
         
         while (!stoppingToken.IsCancellationRequested)
@@ -92,9 +96,13 @@ public class Worker : BackgroundService
             await Task.Delay(1000, stoppingToken);
         }
         
+        //If Cancellation was requested dispose (disconnect) the discord-client
+        DiscordClient.Dispose();
+        Log.Information("Bot is shutting down...");
+
     }
 
-    private Task SetupInteractivity()
+    private static Task SetupInteractivity()
     {
         DiscordClient.UseInteractivity(new InteractivityConfiguration()
         {

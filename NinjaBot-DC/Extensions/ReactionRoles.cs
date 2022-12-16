@@ -1,9 +1,9 @@
 ﻿using Dapper;
 using Dapper.Contrib.Extensions;
 using DSharpPlus;
-using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using NinjaBot_DC.Models;
+// ReSharper disable All
 
 namespace NinjaBot_DC.Extensions;
 

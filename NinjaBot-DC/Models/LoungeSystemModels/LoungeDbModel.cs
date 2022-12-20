@@ -1,6 +1,6 @@
 ﻿using Dapper.Contrib.Extensions;
 
-namespace NinjaBot_DC.Models;
+namespace NinjaBot_DC.Models.LoungeSystemModels;
 
 [Table(("LoungeIndex"))]
 public record LoungeDbModel

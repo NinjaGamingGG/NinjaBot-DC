@@ -3,7 +3,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using NinjaBot_DC.Models;
-
+using NinjaBot_DC.Models.StatChannelModels;
 namespace NinjaBot_DC.CommandModules;
 
 // ReSharper disable once ClassNeverInstantiated.Global

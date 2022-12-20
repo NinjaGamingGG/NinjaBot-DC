@@ -2,6 +2,7 @@
 using DSharpPlus;
 using DSharpPlus.Net.Models;
 using NinjaBot_DC.Models;
+using NinjaBot_DC.Models.StatChannelModels;
 
 namespace NinjaBot_DC.Extensions;
 

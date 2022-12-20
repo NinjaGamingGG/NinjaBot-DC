@@ -1,6 +1,6 @@
 ﻿using Dapper.Contrib.Extensions;
 
-namespace NinjaBot_DC.Models;
+namespace NinjaBot_DC.Models.ReactionRoleModels;
 
 [Table("ReactionRoleIndex")]
 public record ReactionRoleLinkDbModel

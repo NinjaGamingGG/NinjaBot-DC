@@ -3,6 +3,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Net.Models;
 using NinjaBot_DC.Models;
+using NinjaBot_DC.Models.LoungeSystemModels;
 
 namespace NinjaBot_DC.CommandModules;
 

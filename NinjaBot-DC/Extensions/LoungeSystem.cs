@@ -3,6 +3,7 @@ using DSharpPlus;
 
 using DSharpPlus.EventArgs;
 using NinjaBot_DC.Models;
+using NinjaBot_DC.Models.LoungeSystemModels;
 using Serilog;
 
 namespace NinjaBot_DC.Extensions;
@@ -13,8 +14,8 @@ public static class LoungeSystem
     {
         if ( eventArgs.Channel == null || eventArgs.Channel.Name != "╠🛬»Join 2 Create")
             return;
-
-
+        
+        
         var newChannel = await eventArgs.Channel.Guild.CreateVoiceChannelAsync($"╠🥳» {eventArgs.User.Username}'s Lounge",
             eventArgs.Channel.Parent, 128000, position: 9999, user_limit: 4);
             

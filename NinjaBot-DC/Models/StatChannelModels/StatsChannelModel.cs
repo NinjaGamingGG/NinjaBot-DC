@@ -1,6 +1,6 @@
 ﻿using Dapper.Contrib.Extensions;
 
-namespace NinjaBot_DC.Models;
+namespace NinjaBot_DC.Models.StatChannelModels;
 
 [Table("StatsChannelIndex")]
 public record StatsChannelModel

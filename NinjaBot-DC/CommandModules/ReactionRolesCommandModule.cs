@@ -5,6 +5,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using NinjaBot_DC.Models;
+using NinjaBot_DC.Models.ReactionRoleModels;
 
 namespace NinjaBot_DC.CommandModules;
 

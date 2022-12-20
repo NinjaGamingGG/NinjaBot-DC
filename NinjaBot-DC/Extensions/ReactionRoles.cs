@@ -3,6 +3,8 @@ using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using NinjaBot_DC.Models;
+using NinjaBot_DC.Models.ReactionRoleModels;
+
 // ReSharper disable All
 
 namespace NinjaBot_DC.Extensions;

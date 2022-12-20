@@ -1,6 +1,6 @@
 ﻿using Dapper.Contrib.Extensions;
 
-namespace NinjaBot_DC.Models;
+namespace NinjaBot_DC.Models.TwitchAlertModels;
 
 [Table("TwitchAlertRoleIndex")]
 public record TwitchAlertRoleDbModel
@@ -10,5 +10,5 @@ public record TwitchAlertRoleDbModel
     
     public ulong RoleId { get; set; }   //The Id of the Discord Role
     
-    public string RoleTag { get; set; }     //The tag of the role
+    public string RoleTag { get; set; } = string.Empty;     //The tag of the role
 }

@@ -4,6 +4,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using NinjaBot_DC.Models;
+using NinjaBot_DC.Models.TwitchAlertModels;
 
 // ReSharper disable ForCanBeConvertedToForeach
 

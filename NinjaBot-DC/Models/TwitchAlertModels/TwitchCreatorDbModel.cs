@@ -1,6 +1,6 @@
 ﻿using Dapper.Contrib.Extensions;
 
-namespace NinjaBot_DC.Models;
+namespace NinjaBot_DC.Models.TwitchAlertModels;
 
 [Table("TwitchCreatorIndex")]
 public record TwitchCreatorDbModel
@@ -10,5 +10,5 @@ public record TwitchCreatorDbModel
     
     public ulong UserId { get; set; }//The Id of the Discord user
     
-    public string RoleTag { get; set; }//The tag of the Role
+    public string RoleTag { get; set; } = string.Empty;//The tag of the Role
 }

@@ -10,5 +10,5 @@ public record ReactionMessageDbModel
     
     public ulong MessageId { get; set; }
     
-    public string MessageTag { get; init; }
+    public string MessageTag { get; init; } = string.Empty;
 }

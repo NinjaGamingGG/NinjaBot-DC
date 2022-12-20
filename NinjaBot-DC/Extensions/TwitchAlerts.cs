@@ -5,6 +5,7 @@ using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using Newtonsoft.Json;
 using NinjaBot_DC.Models;
+using NinjaBot_DC.Models.TwitchAlertModels;
 using Serilog;
 
 // ReSharper disable ForCanBeConvertedToForeach

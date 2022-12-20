@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace NinjaBot_DC.Models;
+namespace NinjaBot_DC.Models.TwitchAlertModels;
 
 public record ChannelData(
     [property: JsonProperty("id")] string Id,   //Id of the Twitch Stream or vod

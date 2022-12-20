@@ -113,12 +113,14 @@ public class Worker : BackgroundService
         return Task.CompletedTask;
     }
 
-    private Task RegisterCommands()
+    private static Task RegisterCommands()
     {
+        var stringPrefix = Configuration.GetValue<string>("ninja-bot:prefix");
+        
         Log.Information("Registering Commands");
         var commands = DiscordClient.UseCommandsNext(new CommandsNextConfiguration()
         {
-            StringPrefixes  = new []{"!"},
+            StringPrefixes  = new []{stringPrefix},
         });
 
         commands.RegisterCommands<LoungeCommandModule>();

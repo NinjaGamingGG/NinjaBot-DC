@@ -37,6 +37,9 @@ public static class TwitchAlerts
     
     public static async Task InitExtensionAsync()
     {
+        if (ClientId == string.Empty || AuthKey == string.Empty)
+            return;
+        
         //Start the main task of this Extension
         await UpdateCreators();
     }

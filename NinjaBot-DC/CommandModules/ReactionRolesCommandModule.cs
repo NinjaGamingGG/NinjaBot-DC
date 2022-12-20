@@ -1,10 +1,10 @@
-﻿using Dapper;
+﻿using System.Diagnostics.CodeAnalysis;
+using Dapper;
 using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using NinjaBot_DC.Models;
 using NinjaBot_DC.Models.ReactionRoleModels;
 
 namespace NinjaBot_DC.CommandModules;
@@ -89,12 +89,13 @@ public class ReactionRolesCommandModule : BaseCommandModule
                                   $"AND MessageTag = '{messageTag}')");
     }
 
+    [SuppressMessage("ReSharper", "StringLiteralTypo")]
     private static async Task SetupStreamMessage(CommandContext ctx, string messageTag)
     {
-        var ttvSuccess = ctx.Guild.Roles.TryGetValue(1041099026717745222, out var ttvRole);
-        var ytSuccess = ctx.Guild.Roles.TryGetValue(1041099366687064184, out var ytRole);
-        
-        if (ttvSuccess == false || ytSuccess == false)
+        ctx.Guild.Roles.TryGetValue(1041099026717745222, out var ttvRole);
+        ctx.Guild.Roles.TryGetValue(1041099366687064184, out var ytRole);
+
+        if(ttvRole == null || ytRole == null)
             return;
         
         var embed = new DiscordEmbedBuilder()
@@ -139,7 +140,7 @@ public class ReactionRolesCommandModule : BaseCommandModule
     {
         var sqLite = Worker.GetServiceSqLiteConnection();
         var roles = await sqLite.QueryAsync<ReactionRoleLinkDbModel>(
-            $"SELECT * FROM ReactionRoleIndex WHERE (GuildId = {context.Guild.Id} AND MessageTag = MessageTag)");
+            $"SELECT * FROM ReactionRoleIndex WHERE (GuildId = {context.Guild.Id} AND MessageTag = {messageTag})");
         var rolesAsArray = roles.ToArray();
 
         for (var i = 0; i < rolesAsArray.Length; i++)

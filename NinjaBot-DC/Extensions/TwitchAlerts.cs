@@ -4,7 +4,6 @@ using Dapper;
 using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using Newtonsoft.Json;
-using NinjaBot_DC.Models;
 using NinjaBot_DC.Models.TwitchAlertModels;
 using Serilog;
 
@@ -38,9 +37,6 @@ public static class TwitchAlerts
     
     public static async Task InitExtensionAsync()
     {
-        if (ClientId == null || AuthKey == null)
-            return;
-        
         //Start the main task of this Extension
         await UpdateCreators();
     }

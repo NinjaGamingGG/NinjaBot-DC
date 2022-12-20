@@ -2,7 +2,6 @@
 using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
-using NinjaBot_DC.Models;
 using NinjaBot_DC.Models.ReactionRoleModels;
 
 // ReSharper disable All
@@ -54,8 +53,8 @@ public static class ReactionRoles
         }
     }
     
-    public static async Task MessageReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs eventArgs)
+    /*public static async Task MessageReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs eventArgs)
     {
         
-    }
+    }*/
 }

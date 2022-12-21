@@ -34,7 +34,7 @@ public class Worker : BackgroundService
         {
             Token = token,
             TokenType = TokenType.Bot,
-            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents,
+            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | DiscordIntents.GuildMembers | DiscordIntents.GuildPresences,
             LoggerFactory = logFactory
         });
     }
@@ -88,7 +88,10 @@ public class Worker : BackgroundService
         var startupTasks = new List<Task>() {
                 LoungeSystem.StartupCleanup(DiscordClient), 
                 ServerStats.RefreshServerStats(DiscordClient), 
-                TwitchAlerts.InitExtensionAsync()};
+                TwitchAlerts.InitExtensionAsync(),
+                RankSystem.UpdateVoiceActivity()
+        };
+                
         
         await Task.WhenAll(startupTasks);
         
@@ -131,7 +134,7 @@ public class Worker : BackgroundService
         return Task.CompletedTask;
     }
 
-    private Task RegisterEvents()
+    private static Task RegisterEvents()
     {
         Log.Information("Registering Events");
         //Lounge System Events
@@ -140,8 +143,12 @@ public class Worker : BackgroundService
         
         //Reaction Role Events
         DiscordClient.MessageReactionAdded += ReactionRoles.MessageReactionAdded; 
-        DiscordClient.MessageReactionRemoved += ReactionRoles.MessageReactionRemoved; 
-
+        //DiscordClient.MessageReactionRemoved += ReactionRoles.MessageReactionRemoved;
+        
+        //Rank-system Events
+        DiscordClient.MessageCreated += RankSystem.MessageCreatedEvent;
+        DiscordClient.MessageReactionAdded += RankSystem.ReactionAddedEvent;
+            
         return Task.CompletedTask;
     }
 

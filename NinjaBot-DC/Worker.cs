@@ -1,6 +1,5 @@
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using NinjaBot_DC.Commands;
 using NinjaBot_DC.Extensions;
 using System.Data.SQLite;
 using DSharpPlus.Interactivity;

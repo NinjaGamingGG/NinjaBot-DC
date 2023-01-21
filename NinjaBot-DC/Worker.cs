@@ -6,17 +6,21 @@ using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using NinjaBot_DC.CommandModules;
+using NinjaBot_DC.PluginLoader;
+using PluginBase;
 using Serilog;
 
 namespace NinjaBot_DC;
 
-public class Worker : BackgroundService
+public sealed class Worker : BackgroundService
 {
     private static readonly IConfigurationRoot Configuration;
 
     private static readonly SQLiteConnection SqLiteConnection;
     
     private static readonly DiscordClient DiscordClient;
+
+    private static IPlugin[]? _loadedPluginsArray; 
 
     static Worker()
     {
@@ -78,7 +82,7 @@ public class Worker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
 
-        var taskList = new List<Task>() {RegisterCommands(), RegisterEvents(), InitializeDatabase()};
+        var taskList = new List<Task>() {RegisterCommands(), RegisterEvents(), InitializeDatabase(), LoadPlugins()};
         await Task.WhenAll(taskList);
         
         Log.Information("Starting up the Bot");
@@ -99,10 +103,62 @@ public class Worker : BackgroundService
             await Task.Delay(1000, stoppingToken);
         }
         
+        Log.Information("Bot is shutting down...");
+        
         //If Cancellation was requested dispose (disconnect) the discord-client
         DiscordClient.Dispose();
-        Log.Information("Bot is shutting down...");
 
+        var unloadTasks = new List<Task>()
+        {
+            UnloadDatabase(),
+            UnloadPlugins()
+        };
+        
+        await Task.WhenAll(unloadTasks);
+
+
+    }
+
+    private static Task LoadPlugins()
+    {
+        var pluginFolder = Path.Combine(Environment.GetFolderPath(
+            Environment.SpecialFolder.ApplicationData), "ExtensionTest" ,"Plugins");
+    
+        Directory.CreateDirectory(pluginFolder);
+    
+        var pluginPaths = Directory.GetFiles(pluginFolder, "*.dll");
+    
+
+        var pluginsArray = pluginPaths.SelectMany(pluginPath =>
+        {
+            var pluginAssembly = LoadPlugin.LoadPluginFromPath(pluginPath);
+            return CreatePlugin.CreateFromAssembly(pluginAssembly);
+        }).ToArray();
+        
+        for (var i = 0; i < pluginsArray.Length; i++)
+        {
+            var plugin = pluginsArray.ElementAt(i);
+            plugin.Initialize();
+        }
+
+        _loadedPluginsArray = pluginsArray;
+        
+        return Task.CompletedTask;
+    }
+
+    private static Task UnloadPlugins()
+    {
+        if (_loadedPluginsArray == null) 
+            return Task.CompletedTask;
+
+        var pluginsArray = _loadedPluginsArray;
+
+        for (var i = 0; i < pluginsArray.Length; i++)
+        {
+            pluginsArray[i].Unload();
+        }
+        
+        return Task.CompletedTask;
     }
 
     private static Task SetupInteractivity()
@@ -226,5 +282,11 @@ public class Worker : BackgroundService
         {
             Log.Error(e, "Unable to open the sqlite database connection");
         }
+    }
+    
+    private static Task UnloadDatabase()
+    {
+        SqLiteConnection.Close();
+        return Task.CompletedTask;
     }
 }

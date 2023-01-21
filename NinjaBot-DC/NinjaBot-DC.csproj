@@ -23,4 +23,8 @@
         <None Update="config.json" CopyToOutputDirectory="PreserveNewest" />
         <PackageReference Include="System.Data.SQLite" Version="1.0.116" />
     </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PluginBase\PluginBase.csproj" />
+    </ItemGroup>
 </Project>

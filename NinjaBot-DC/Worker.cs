@@ -92,7 +92,7 @@ public sealed class Worker : BackgroundService
                 LoungeSystem.StartupCleanup(DiscordClient), 
                 ServerStats.RefreshServerStats(DiscordClient), 
                 TwitchAlerts.InitExtensionAsync(),
-                RankSystem.UpdateVoiceActivity()
+                //RankSystem.UpdateVoiceActivity()
         };
                 
         
@@ -121,8 +121,7 @@ public sealed class Worker : BackgroundService
 
     private static Task LoadPlugins()
     {
-        var pluginFolder = Path.Combine(Environment.GetFolderPath(
-            Environment.SpecialFolder.ApplicationData), "ExtensionTest" ,"Plugins");
+        var pluginFolder = Path.Combine(Directory.GetCurrentDirectory() ,"Plugins");
     
         Directory.CreateDirectory(pluginFolder);
     
@@ -138,7 +137,8 @@ public sealed class Worker : BackgroundService
         for (var i = 0; i < pluginsArray.Length; i++)
         {
             var plugin = pluginsArray.ElementAt(i);
-            plugin.Initialize();
+            Log.Information("Loading Plugin: {PluginName}", plugin.Name);
+            plugin.OnLoad();
         }
 
         _loadedPluginsArray = pluginsArray;
@@ -155,7 +155,7 @@ public sealed class Worker : BackgroundService
 
         for (var i = 0; i < pluginsArray.Length; i++)
         {
-            pluginsArray[i].Unload();
+            pluginsArray[i].OnUnload();
         }
         
         return Task.CompletedTask;
@@ -201,8 +201,8 @@ public sealed class Worker : BackgroundService
         //DiscordClient.MessageReactionRemoved += ReactionRoles.MessageReactionRemoved;
         
         //Rank-system Events
-        DiscordClient.MessageCreated += RankSystem.MessageCreatedEvent;
-        DiscordClient.MessageReactionAdded += RankSystem.ReactionAddedEvent;
+        //DiscordClient.MessageCreated += RankSystem.MessageCreatedEvent;
+        //DiscordClient.MessageReactionAdded += RankSystem.ReactionAddedEvent;
             
         return Task.CompletedTask;
     }

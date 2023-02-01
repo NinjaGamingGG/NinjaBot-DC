@@ -82,8 +82,11 @@ public sealed class Worker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
 
-        var taskList = new List<Task>() {RegisterCommands(), RegisterEvents(), InitializeDatabase(), LoadPlugins()};
+        
+        var taskList = new List<Task>() {RegisterCommands(), RegisterEvents(), InitializeDatabase()};
         await Task.WhenAll(taskList);
+        
+        await LoadPlugins();
         
         Log.Information("Starting up the Bot");
         await DiscordClient.ConnectAsync();

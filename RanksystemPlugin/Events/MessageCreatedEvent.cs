@@ -1,6 +1,6 @@
 ﻿using DSharpPlus;
 using DSharpPlus.EventArgs;
-using Ranksystem;
+using RankSystem;
 
 namespace PluginBase.Events;
 
@@ -24,20 +24,20 @@ public static class MessageCreatedEvent
         var user = await guild.GetMemberAsync(eventArgs.Author.Id);
 
         //Check if member is in any blacklisted groups
-        if(RanksystemPlugin.CheckUserGroupsForBlacklisted(user.Roles.ToArray()))
+        if(RankSystemPlugin.CheckUserGroupsForBlacklisted(user.Roles.ToArray(), eventArgs.Guild))
             return;
 
         //Check if message was send in blacklisted channel
-        if (RanksystemPlugin.BlacklistedChannels.Contains(eventArgs.Channel.Id))
+        if (RankSystemPlugin.BlacklistedChannels.Contains(eventArgs.Channel.Id))
             return;
         //Check if parent channel is blacklisted (most likely a category)
-        if(RanksystemPlugin.BlacklistedChannels.Contains(eventArgs.Channel.Parent.Id))
+        if(RankSystemPlugin.BlacklistedChannels.Contains(eventArgs.Channel.Parent.Id))
             return;
         
         //Apply exp rewards
-        var logChannel = eventArgs.Guild.GetChannel(RanksystemPlugin.LogChannel);
-        await RanksystemPlugin.AddUserPoints(client, RanksystemPlugin.PointsPerVoiceActivity, 
-            $"User {user.Mention} earned {RanksystemPlugin.PointsPerVoiceActivity}xp for creating message {eventArgs.Message.Id} in Channel {eventArgs.Channel.Mention}",
-            RanksystemPlugin.ERankSystemReason.ChannelMessageAdded);
+        var logChannel = eventArgs.Guild.GetChannel(RankSystemPlugin.LogChannel);
+        await RankSystemPlugin.AddUserPoints(client, RankSystemPlugin.PointsPerVoiceActivity, 
+            $"User {user.Mention} earned {RankSystemPlugin.PointsPerVoiceActivity}xp for creating message {eventArgs.Message.Id} in Channel {eventArgs.Channel.Mention}",
+            RankSystemPlugin.ERankSystemReason.ChannelMessageAdded);
     }
 }

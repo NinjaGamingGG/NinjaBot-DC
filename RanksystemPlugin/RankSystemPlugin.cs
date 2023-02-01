@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Dapper;
 using DSharpPlus;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using NinjaBot_DC;
 using PluginBase;
 using PluginBase.Events;
+using RankSystem.Commands;
 using Serilog;
 
 // ReSharper disable once IdentifierTypo
@@ -20,7 +22,13 @@ public class RankSystemPlugin : IPlugin
 
     public void OnLoad()
     {
-        var client = NinjaBot_DC.Worker.GetServiceDiscordClient();
+        var client = Worker.GetServiceDiscordClient();
+
+        var commands = client.GetCommandsNext();
+        
+        commands.RegisterCommands<RankSystemCommandModule>();
+
+        InitializeSqLiteTables();
 
         client.MessageCreated += MessageCreatedEvent.MessageCreated;
         client.MessageReactionAdded += MessageReactionAddedEvent.MessageReactionAdded;

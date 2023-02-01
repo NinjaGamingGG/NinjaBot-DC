@@ -1,6 +1,6 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
-using Ranksystem;
+using RankSystem;
 
 namespace PluginBase;
 
@@ -25,21 +25,21 @@ public static class UpdateVoiceActivity
                     continue;
                 
                 //Check if member is in any blacklisted groups
-                if(RanksystemPlugin.CheckUserGroupsForBlacklisted(membersAsArray[i].Roles.ToArray()))
+                if(RankSystemPlugin.CheckUserGroupsForBlacklisted(membersAsArray[i].Roles.ToArray(), guild))
                     continue;
 
                 var userChannel = membersAsArray[i].VoiceState.Channel;
-                if (RanksystemPlugin.BlacklistedChannels.Contains(userChannel.Id))
+                if (RankSystemPlugin.BlacklistedChannels.Contains(userChannel.Id))
                     continue;
                 
                 //Check if parent channel is blacklisted (most likely a category)
-                if(RanksystemPlugin.BlacklistedChannels.Contains(userChannel.Parent.Id))
+                if(RankSystemPlugin.BlacklistedChannels.Contains(userChannel.Parent.Id))
                     continue;
 
                 var user = membersAsArray[i];
-                await RanksystemPlugin.AddUserPoints(client, RanksystemPlugin.PointsPerVoiceActivity, 
-                    $"User {user.Mention} earned {RanksystemPlugin.PointsPerVoiceActivity}xp for being active in voiceChannel {userChannel.Mention}", 
-                    RanksystemPlugin.ERankSystemReason.ChannelVoiceActivity);
+                await RankSystemPlugin.AddUserPoints(client, RankSystemPlugin.PointsPerVoiceActivity, 
+                    $"User {user.Mention} earned {RankSystemPlugin.PointsPerVoiceActivity}xp for being active in voiceChannel {userChannel.Mention}", 
+                    RankSystemPlugin.ERankSystemReason.ChannelVoiceActivity);
             }
         }
     }

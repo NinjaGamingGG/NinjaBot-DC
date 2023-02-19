@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Dapper.Contrib.Extensions;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
@@ -7,12 +8,19 @@ using NinjaBot_DC;
 using RankSystem.Models;
 
 namespace RankSystem.Commands;
+// ReSharper disable once ClassNeverInstantiated.Global
 
 public class RankSystemCommandModule: BaseCommandModule
 {
     [Command("ranksystem")]
     public async Task BlackListedChannelCommand(CommandContext context, string action, DiscordChannel channel, bool blacklistParent = false)
     {
+        if(context.Member == null)
+           return;
+        
+        if (!context.Member.Permissions.HasPermission(Permissions.Administrator))
+            return;
+        
         switch (action)
         {
             case ("blacklist-channels-add"):
@@ -25,8 +33,8 @@ public class RankSystemCommandModule: BaseCommandModule
         }
 
     }
-    
-    public async Task AddBlackListedChannel(CommandContext context, DiscordChannel channel, bool blacklistParent = false)
+
+    private static async Task AddBlackListedChannel(CommandContext context, DiscordChannel channel, bool blacklistParent = false)
     {
         var sqLiteConnection = Worker.GetServiceSqLiteConnection();
         
@@ -51,8 +59,8 @@ public class RankSystemCommandModule: BaseCommandModule
         
         await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client,":white_check_mark:"));
     }
-    
-    public async Task RemoveBlackListedChannel(CommandContext context, DiscordChannel channel, bool blacklistParent = false)
+
+    private static async Task RemoveBlackListedChannel(CommandContext context, DiscordChannel channel, bool blacklistParent = false)
     {
         var sqLiteConnection = Worker.GetServiceSqLiteConnection();
         
@@ -79,6 +87,12 @@ public class RankSystemCommandModule: BaseCommandModule
     [Command("ranksystem")]
     public async Task BlackListedRoleCommand(CommandContext context, string action, DiscordRole role)
     {
+        if(context.Member == null)
+            return;
+        
+        if (!context.Member.Permissions.HasPermission(Permissions.Administrator))
+            return;
+        
         switch (action)
         {
             case ("blacklist-roles-add"):

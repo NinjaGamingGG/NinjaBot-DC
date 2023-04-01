@@ -81,8 +81,6 @@ public sealed class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-
-        
         var taskList = new List<Task>() {RegisterCommands(), RegisterEvents(), InitializeDatabase()};
         await Task.WhenAll(taskList);
         

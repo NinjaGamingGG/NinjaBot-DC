@@ -1,8 +1,8 @@
 ﻿using DSharpPlus;
-using DSharpPlus.Entities;
 using RankSystem;
+using Ranksystem.Ranksystem;
 
-namespace PluginBase;
+namespace Ranksystem;
 
 public static class UpdateVoiceActivity
 {
@@ -25,7 +25,7 @@ public static class UpdateVoiceActivity
                     continue;
                 
                 //Check if member is in any blacklisted groups
-                if(RankSystemPlugin.CheckUserGroupsForBlacklisted(membersAsArray[i].Roles.ToArray(), guild))
+                if(Blacklist.CheckUserGroups(membersAsArray[i].Roles.ToArray(), guild))
                     continue;
 
                 var userChannel = membersAsArray[i].VoiceState.Channel;

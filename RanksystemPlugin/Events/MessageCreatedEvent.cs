@@ -1,8 +1,9 @@
 ﻿using DSharpPlus;
 using DSharpPlus.EventArgs;
 using RankSystem;
+using Ranksystem.Ranksystem;
 
-namespace PluginBase.Events;
+namespace Ranksystem.Events;
 
 
 
@@ -24,7 +25,7 @@ public static class MessageCreatedEvent
         var user = await guild.GetMemberAsync(eventArgs.Author.Id);
 
         //Check if member is in any blacklisted groups
-        if(RankSystemPlugin.CheckUserGroupsForBlacklisted(user.Roles.ToArray(), eventArgs.Guild))
+        if(Blacklist.CheckUserGroups(user.Roles.ToArray(), eventArgs.Guild))
             return;
 
         //Check if message was send in blacklisted channel

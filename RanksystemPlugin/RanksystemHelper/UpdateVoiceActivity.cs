@@ -1,8 +1,7 @@
 ﻿using DSharpPlus;
 using RankSystem;
-using Ranksystem.Ranksystem;
 
-namespace Ranksystem;
+namespace Ranksystem.RanksystemHelper;
 
 public static class UpdateVoiceActivity
 {
@@ -38,7 +37,7 @@ public static class UpdateVoiceActivity
 
                 var user = membersAsArray[i];
                 await RankSystemPlugin.AddUserPoints(client, RankSystemPlugin.PointsPerVoiceActivity, 
-                    $"User {user.Mention} earned {RankSystemPlugin.PointsPerVoiceActivity}xp for being active in voiceChannel {userChannel.Mention}", 
+                    $"User {user.Mention} earned {RankSystemPlugin.PointsPerVoiceActivity} xp for being active in voiceChannel {userChannel.Mention}", 
                     RankSystemPlugin.ERankSystemReason.ChannelVoiceActivity);
             }
         }

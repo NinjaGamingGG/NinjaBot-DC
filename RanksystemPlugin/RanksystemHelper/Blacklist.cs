@@ -2,9 +2,9 @@
 using DSharpPlus.Entities;
 using NinjaBot_DC;
 
-namespace Ranksystem.Ranksystem;
+namespace Ranksystem.RanksystemHelper;
 
-public class Blacklist
+public static class Blacklist
 {
     public static bool CheckUserGroups(DiscordRole[] userRolesAsArray, DiscordGuild guild)
     {
@@ -12,14 +12,8 @@ public class Blacklist
 
         var blacklistedRoles = sqliteConnection.Query($"SELECT RoleId FROM BlacklistedRolesIndex WHERE GuildId = {guild.Id} ").ToArray();
         
-        var blacklistedRolesIds = new List<ulong>();
-
-        for (var i = 0; i < blacklistedRoles.Length; i++)
-        {
-            blacklistedRolesIds.Add((ulong)blacklistedRoles[i].RoleId); 
-        }
+        var blacklistedRolesIds = blacklistedRoles.Select(t => (ulong) t.RoleId).ToArray();
         
-
         for (var r = 0; r < userRolesAsArray.Length; r++)
         {
 

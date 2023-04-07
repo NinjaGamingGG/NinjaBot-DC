@@ -8,6 +8,7 @@ using PluginBase;
 using Ranksystem;
 using RankSystem.Commands;
 using Ranksystem.Events;
+using Ranksystem.RanksystemHelper;
 using Serilog;
 
 // ReSharper disable once IdentifierTypo
@@ -35,6 +36,8 @@ public class RankSystemPlugin : IPlugin
         client.MessageReactionAdded += MessageReactionAddedEvent.MessageReactionAdded;
 
         Log.Information("Hello From Ranksystem Plugin!");
+
+        Task.Run(async () => await UpdateVoiceActivity.Update(client));
 
     }
 

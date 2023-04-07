@@ -26,6 +26,14 @@ public static class InitializeSqLiteTables
             sqLiteBlackListedRoleTableCommand.ExecuteNonQuery();
         }
         
+        using var sqLiteRewardRoleTableCommand = sqLiteConnection.CreateCommand();
+        {
+            sqLiteRewardRoleTableCommand.CommandText =
+                "CREATE TABLE IF NOT EXISTS RewardRolesIndex (GuildId INTEGER, RoleId INTEGER, RequiredPoints INTEGER)";
+
+            sqLiteRewardRoleTableCommand.ExecuteNonQuery();
+        }
+        
         
 
 

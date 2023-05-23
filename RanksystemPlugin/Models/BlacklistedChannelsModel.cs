@@ -2,7 +2,7 @@
 
 namespace RankSystem.Models;
 
-[Table("BlacklistedChannelsIndex")]
+[Table("RanksystemBlacklistedChannelsIndex")]
 public record BlacklistedChannelsModel
 {
     public ulong GuildId { get; set; }

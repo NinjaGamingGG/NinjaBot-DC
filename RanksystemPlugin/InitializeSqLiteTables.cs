@@ -13,7 +13,7 @@ public static class InitializeSqLiteTables
         using var sqLiteBlackListedChannelTableCommand = sqLiteConnection.CreateCommand();
         {
             sqLiteBlackListedChannelTableCommand.CommandText =
-                "CREATE TABLE IF NOT EXISTS BlacklistedChannelsIndex (GuildId INTEGER, ChannelId INTEGER)";
+                "CREATE TABLE IF NOT EXISTS RanksystemBlacklistedChannelsIndex (GuildId INTEGER, ChannelId INTEGER)";
 
             sqLiteBlackListedChannelTableCommand.ExecuteNonQuery();
         }
@@ -21,7 +21,7 @@ public static class InitializeSqLiteTables
         using var sqLiteBlackListedRoleTableCommand = sqLiteConnection.CreateCommand();
         {
             sqLiteBlackListedRoleTableCommand.CommandText =
-                "CREATE TABLE IF NOT EXISTS BlacklistedRolesIndex (GuildId INTEGER, RoleId INTEGER)";
+                "CREATE TABLE IF NOT EXISTS RanksystemBlacklistedRolesIndex (GuildId INTEGER, RoleId INTEGER)";
 
             sqLiteBlackListedRoleTableCommand.ExecuteNonQuery();
         }
@@ -29,11 +29,26 @@ public static class InitializeSqLiteTables
         using var sqLiteRewardRoleTableCommand = sqLiteConnection.CreateCommand();
         {
             sqLiteRewardRoleTableCommand.CommandText =
-                "CREATE TABLE IF NOT EXISTS RewardRolesIndex (GuildId INTEGER, RoleId INTEGER, RequiredPoints INTEGER)";
+                "CREATE TABLE IF NOT EXISTS RanksystemRewardRolesIndex (GuildId INTEGER, RoleId INTEGER, RequiredPoints INTEGER)";
 
             sqLiteRewardRoleTableCommand.ExecuteNonQuery();
         }
         
+        using var sqliteRanksystemConfigurationTableCommand = sqLiteConnection.CreateCommand();
+        {
+            sqliteRanksystemConfigurationTableCommand.CommandText =
+                "CREATE TABLE IF NOT EXISTS RanksystemConfigurationIndex (GuildId INTEGER, PointsPerMessage INTEGER, PointsPerReaction INTEGER, PointsPerVoiceActivity INTEGER, LogChannelId INTEGER)";
+
+            sqliteRanksystemConfigurationTableCommand.ExecuteNonQuery();
+        }
+        
+        using var sqLiteUserPointTableCommand = sqLiteConnection.CreateCommand();
+        {
+            sqLiteUserPointTableCommand.CommandText =
+                "CREATE TABLE IF NOT EXISTS RankSystemUserPointsIndex (Id INTEGER ,GuildId INTEGER, UserId INTEGER, Points INTEGER)";
+
+            sqLiteUserPointTableCommand.ExecuteNonQuery();
+        }
         
 
 

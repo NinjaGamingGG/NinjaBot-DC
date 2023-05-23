@@ -1,4 +1,5 @@
 ﻿using DSharpPlus;
+using DSharpPlus.Entities;
 using RankSystem;
 
 namespace Ranksystem.RanksystemHelper;
@@ -11,35 +12,47 @@ public static class UpdateVoiceActivity
     
     public static async Task Update(DiscordClient client)
     {
-        var guild = await client.GetGuildAsync(1039518370015490169);
 
         while (await ChannelActivityUpdateTimer.WaitForNextTickAsync())
         {
-            var members = await guild.GetAllMembersAsync();
-            var membersAsArray = members.ToArray();
+            var guilds = client.Guilds;
 
-            for (var i = 0; i < membersAsArray.Length; i++)
+            foreach (var guild in guilds)
             {
-                if (membersAsArray[i].VoiceState == null)
-                    continue;
                 
-                //Check if member is in any blacklisted groups
-                if(Blacklist.CheckUserGroups(membersAsArray[i].Roles.ToArray(), guild))
-                    continue;
+                await UpdateForGuild(guild, client);
 
-                var userChannel = membersAsArray[i].VoiceState.Channel;
-                if (RankSystemPlugin.BlacklistedChannels.Contains(userChannel.Id))
-                    continue;
-                
-                //Check if parent channel is blacklisted (most likely a category)
-                if(RankSystemPlugin.BlacklistedChannels.Contains(userChannel.Parent.Id))
-                    continue;
-
-                var user = membersAsArray[i];
-                await RankSystemPlugin.AddUserPoints(client, RankSystemPlugin.PointsPerVoiceActivity, 
-                    $"User {user.Mention} earned {RankSystemPlugin.PointsPerVoiceActivity} xp for being active in voiceChannel {userChannel.Mention}", 
-                    RankSystemPlugin.ERankSystemReason.ChannelVoiceActivity);
             }
+        }
+    }
+
+    private static async Task UpdateForGuild(KeyValuePair<ulong, DiscordGuild> guild, DiscordClient client)
+    {
+        var members = await guild.Value.GetAllMembersAsync();
+        var membersAsArray = members.ToArray();
+
+        for (var i = 0; i < membersAsArray.Length; i++)
+        {
+            if (membersAsArray[i].VoiceState == null)
+                continue;
+                
+            //Check if member is in any blacklisted groups
+            if(Blacklist.CheckUserGroups(membersAsArray[i].Roles.ToArray(), guild.Value))
+                continue;
+
+            var userChannel = membersAsArray[i].VoiceState.Channel;
+            if (Blacklist.CheckUserChannel(userChannel))
+                continue;
+                
+            //Check if parent channel is blacklisted (most likely a category)
+            if (Blacklist.CheckUserChannel(userChannel.Parent))
+                continue;
+
+            var user = membersAsArray[i];
+            await UpdateUserPoints.Add(client,guild.Key ,user, 
+                RankSystemPlugin.ERankSystemReason.ChannelVoiceActivity);
+
+            await UpdateRewardRole.ForUserAsync(client, guild.Key, user.Id);
         }
     }
     

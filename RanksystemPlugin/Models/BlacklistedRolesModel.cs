@@ -2,7 +2,7 @@
 
 namespace RankSystem.Models;
 
-[Table("BlacklistedRolesIndex")]
+[Table("RanksystemBlacklistedRolesIndex")]
 public record BlacklistedRolesModel
 {
     [ExplicitKey]

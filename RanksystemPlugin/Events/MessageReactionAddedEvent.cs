@@ -22,17 +22,15 @@ public static class MessageReactionAddedEvent
             return;
         
         //Check if message was send in blacklisted channel
-        if (RankSystemPlugin.BlacklistedChannels.Contains(eventArgs.Channel.Id))
+        if (Blacklist.CheckUserChannel(eventArgs.Channel))
             return;
 
         //Check if parent channel is blacklisted (most likely a category)
-        if(RankSystemPlugin.BlacklistedChannels.Contains(eventArgs.Channel.Parent.Id))
+        if (Blacklist.CheckUserChannel(eventArgs.Channel.Parent))
             return;
-        
+
         //Apply exp rewards
-        var logChannel = eventArgs.Guild.GetChannel(RankSystemPlugin.LogChannel);
-        await RankSystemPlugin.AddUserPoints(client, RankSystemPlugin.PointsPerVoiceActivity, 
-            $"User {user.Mention} earned {RankSystemPlugin.PointsPerReaction}xp for reacting to message {eventArgs.Message.Id} in Channel {eventArgs.Channel.Mention}",
+        await UpdateUserPoints.Add(client,eventArgs.Guild.Id, user,
             RankSystemPlugin.ERankSystemReason.MessageReactionAdded);
         
     }

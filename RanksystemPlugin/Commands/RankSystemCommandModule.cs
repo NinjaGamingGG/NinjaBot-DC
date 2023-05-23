@@ -7,6 +7,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using NinjaBot_DC;
 using RankSystem.Models;
+using Serilog;
 
 namespace RankSystem.Commands;
 // ReSharper disable once ClassNeverInstantiated.Global
@@ -31,6 +32,7 @@ public class RankSystemCommandModule: BaseCommandModule
             case ("blacklist-channels-remove"):
                 await RemoveBlackListedChannel(context, channel, blacklistParent);
                 break;
+            //ToDo: Add Blacklist Channels List
         }
 
     }
@@ -41,7 +43,7 @@ public class RankSystemCommandModule: BaseCommandModule
         
         var channelId = channel.Id;
 
-        if (blacklistParent == true)
+        if (blacklistParent)
             channelId = channel.Parent.Id;
         
         var blackListedChannel = new BlacklistedChannelsModel()
@@ -67,11 +69,11 @@ public class RankSystemCommandModule: BaseCommandModule
         
         var channelId = channel.Id;
 
-        if (blacklistParent == true)
+        if (blacklistParent)
             channelId = channel.Parent.Id;
         
         var deleteSuccess = await sqLiteConnection.ExecuteAsync(
-            $"DELETE FROM BlacklistedChannelsIndex WHERE GuildId = {context.Guild.Id} AND ChannelId = {channelId}");
+            $"DELETE FROM RanksystemBlacklistedChannelsIndex WHERE GuildId = {context.Guild.Id} AND ChannelId = {channelId}");
         
         if (deleteSuccess == 0)
         {
@@ -103,6 +105,7 @@ public class RankSystemCommandModule: BaseCommandModule
             case ("blacklist-roles-remove"):
                 await RemoveBlackListedRole(context, role);
                 break;
+            //ToDo: Add Blacklist Roles List
         }
     }
 
@@ -111,7 +114,7 @@ public class RankSystemCommandModule: BaseCommandModule
         var sqLiteConnection = Worker.GetServiceSqLiteConnection();
         
         var deleteSuccess = await sqLiteConnection.ExecuteAsync(
-            $"DELETE FROM BlacklistedRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+            $"DELETE FROM RanksystemBlacklistedRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
         if (deleteSuccess == 0)
         {
@@ -144,7 +147,7 @@ public class RankSystemCommandModule: BaseCommandModule
     }
     
     [Command("ranksystem")]
-    public async Task RewardRoleCommand(CommandContext context, string action, DiscordRole role = null, int requiredPoints = 0)
+    public async Task RewardRoleCommand(CommandContext context, string action, DiscordRole role, int requiredPoints)
     {
         if(context.Member == null)
             return;
@@ -172,11 +175,17 @@ public class RankSystemCommandModule: BaseCommandModule
         }
     }
     
-    private static async Task AddRewardRole(CommandContext context, DiscordRole role, int requiredPoints)
+    private static async Task AddRewardRole(CommandContext context, DiscordRole? role, int requiredPoints)
     {
         var sqLiteConnection = Worker.GetServiceSqLiteConnection();
+
+        if (role == null)
+        {
+            await context.Message.RespondAsync($"❌ Error | Reward Role Invalid");
+            return;
+        }
         
-        var alreadyExists = await sqLiteConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+        var alreadyExists = await sqLiteConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
         if (alreadyExists != 0)
         {
@@ -184,7 +193,7 @@ public class RankSystemCommandModule: BaseCommandModule
             return;
         }
         
-        var rewardRole = new RewardRoleModel()
+        var rewardRole = new RanksystemRewardRoleModel()
         {
             GuildId = context.Guild.Id,
             RoleId = role.Id,
@@ -202,12 +211,18 @@ public class RankSystemCommandModule: BaseCommandModule
         await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
     }
     
-    private static async Task RemoveRewardRole(CommandContext context, DiscordRole role)
+    private static async Task RemoveRewardRole(CommandContext context, DiscordRole? role)
     {
+        if (role == null)
+        {
+            await context.Message.RespondAsync($"❌ Error | Reward Role Invalid");
+            return;
+        }
+        
         var sqLiteConnection = Worker.GetServiceSqLiteConnection();
         
         var deleteSuccess = await sqLiteConnection.ExecuteAsync(
-            $"DELETE FROM RewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+            $"DELETE FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
         if (deleteSuccess == 0)
         {
@@ -218,12 +233,18 @@ public class RankSystemCommandModule: BaseCommandModule
         await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
     }
     
-    private static async Task UpdateRewardRole(CommandContext context, DiscordRole role, int requiredPoints)
+    private static async Task UpdateRewardRole(CommandContext context, DiscordRole? role, int requiredPoints)
     {
+        if (role == null)
+        {
+            await context.Message.RespondAsync($"❌ Error | Reward Role Invalid");
+            return;
+        }
+        
         var sqLiteConnection = Worker.GetServiceSqLiteConnection();
         
         var updateSuccess = await sqLiteConnection.ExecuteAsync(
-            $"UPDATE RewardRolesIndex SET RequiredPoints = {requiredPoints} WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+            $"UPDATE RanksystemRewardRolesIndex SET RequiredPoints = {requiredPoints} WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
         if (updateSuccess == 0)
         {
@@ -238,7 +259,7 @@ public class RankSystemCommandModule: BaseCommandModule
     {
         var sqLiteConnection = Worker.GetServiceSqLiteConnection();
         
-        var rewardRoles = await sqLiteConnection.GetAllAsync<RewardRoleModel>();
+        var rewardRoles = await sqLiteConnection.GetAllAsync<RanksystemRewardRoleModel>();
 
         var rewardRoleModels = rewardRoles.ToList();
 
@@ -261,5 +282,130 @@ public class RankSystemCommandModule: BaseCommandModule
         await context.Message.RespondAsync(rewardRolesString.ToString());
     }
     
-    
+    [Command("ranksystem")]
+    public async Task RanksystemConfigCommand(CommandContext context,string action, int pointsPerMessage, int pointsPerReaction, int pointsPerVoiceActivity, DiscordChannel? logChannel)
+    {
+        if(context.Member == null)
+            return;
+        
+        if (!context.Member.Permissions.HasPermission(Permissions.Administrator))
+            return;
+        
+        switch (action)
+        {
+            case ("config-add"):
+                if (logChannel != null)
+                    await AddRewardConfig(context, pointsPerMessage, pointsPerReaction, pointsPerVoiceActivity,
+                        logChannel);
+                break;
+            
+            case ("config-remove"):
+                await RemoveRewardConfig(context);
+                break;
+            
+            case ("config-update"):
+                if (logChannel != null)
+                    await UpdateRewardConfig(context, pointsPerMessage, pointsPerReaction, pointsPerVoiceActivity,
+                        logChannel);
+                break;
+            
+            case ("config-list"):
+                await ListRewardConfig(context);
+                break;
+        }
+    }
+
+    private async Task ListRewardConfig(CommandContext context)
+    {
+        var sqLiteConnection = Worker.GetServiceSqLiteConnection();
+
+        RanksystemConfigurationModel rewardConfig;
+        
+        try
+        { 
+            rewardConfig = await sqLiteConnection.QueryFirstAsync<RanksystemConfigurationModel>("SELECT * FROM RanksystemConfigurationIndex WHERE GuildId = @GuildId", new { GuildId = context.Guild.Id });
+        }
+        catch (System.InvalidOperationException e)
+        {
+            Log.Error(e, "Error while getting reward config");
+            
+            await context.Message.RespondAsync($"❌ Error | No Reward Config Found");
+            return;
+        }
+
+        var rewardConfigString = new StringBuilder();
+        
+        rewardConfigString.AppendLine("There are the following Reward Config:");
+        rewardConfigString.AppendLine($"Points Per Message: {rewardConfig.PointsPerMessage}");
+        rewardConfigString.AppendLine($"Points Per Reaction: {rewardConfig.PointsPerReaction}");
+        rewardConfigString.AppendLine($"Points Per Voice Activity: {rewardConfig.PointsPerVoiceActivity}");
+        rewardConfigString.AppendLine($"Log Channel: {context.Guild.GetChannel(rewardConfig.LogChannelId).Mention}");
+        
+        await context.Message.RespondAsync(rewardConfigString.ToString());
+
+    }
+
+    private async Task UpdateRewardConfig(CommandContext context, int pointsPerMessage, int pointsPerReaction, int pointsPerVoiceActivity, DiscordChannel logChannel)
+    {
+        var sqLiteConnection = Worker.GetServiceSqLiteConnection();
+        
+        var updateSuccess = await sqLiteConnection.ExecuteAsync(
+            $"UPDATE RanksystemConfigurationIndex SET PointsPerMessage = {pointsPerMessage}, PointsPerReaction = {pointsPerReaction}, PointsPerVoiceActivity = {pointsPerVoiceActivity}, LogChannelId = {logChannel.Id} WHERE GuildId = {context.Guild.Id}");
+
+        if (updateSuccess == 0)
+        {
+            await context.Message.RespondAsync($"❌ Error | Unable to Update Reward Role");
+            return;
+        }
+        
+        await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
+    }
+
+    private static async Task RemoveRewardConfig(CommandContext context)
+    {
+        var sqLiteConnection = Worker.GetServiceSqLiteConnection();
+        
+        var deleteSuccess = await sqLiteConnection.ExecuteAsync(
+            $"DELETE FROM RanksystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
+        
+        if (deleteSuccess == 0)
+        {
+            await context.Message.RespondAsync($"❌ Error | Unable to Remove Reward Role");
+            return;
+        }
+        
+        await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
+    }
+
+    private static async Task AddRewardConfig(CommandContext context, int pointsPerMessage, int pointsPerReaction, int pointsPerVoiceActivity, DiscordChannel logChannel)
+    {
+        var sqLiteConnection = Worker.GetServiceSqLiteConnection();
+        
+        var alreadyExists = await sqLiteConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
+
+        if (alreadyExists != 0)
+        {
+            await context.Message.RespondAsync($"❌ Error | Reward Config Already Exists");
+            return;
+        }
+        
+        var rewardConfig = new RanksystemConfigurationModel()
+        {
+            GuildId = context.Guild.Id,
+            PointsPerMessage = pointsPerMessage,
+            PointsPerReaction = pointsPerReaction,
+            PointsPerVoiceActivity = pointsPerVoiceActivity,
+            LogChannelId = logChannel.Id
+        };
+        
+        var insertSuccess = await sqLiteConnection.InsertAsync(rewardConfig);
+        
+        if (insertSuccess == 0)
+        {
+            await context.Message.RespondAsync($"❌ Error | Unable to Add Reward Config");
+            return;
+        }
+        
+        await context.Message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
+    }
 }

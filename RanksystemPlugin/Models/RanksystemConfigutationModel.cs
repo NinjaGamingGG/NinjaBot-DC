@@ -2,7 +2,7 @@
 
 namespace RankSystem.Models;
 
-[Table(("RanksystemConfiguration"))]
+[Table(("RanksystemConfigurationIndex"))]
 public record RanksystemConfigurationModel
 {
     [ExplicitKey]
@@ -10,5 +10,5 @@ public record RanksystemConfigurationModel
     public int PointsPerMessage { get; set; }
     public int PointsPerReaction { get; set; }
     public float PointsPerVoiceActivity { get; set; }
-    public ulong LogChannel { get; set; }
+    public ulong LogChannelId { get; set; }
 }

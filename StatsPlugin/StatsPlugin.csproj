@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PluginBase\PluginBase.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="DSharpPlus.CommandsNext" Version="4.3.0-nightly-01185" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Events\" />
+      <Folder Include="Models\" />
+      <Folder Include="PluginHelper\" />
+    </ItemGroup>
+
+</Project>

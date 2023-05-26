@@ -10,6 +10,7 @@ public static class LoggingBuilderExtensions
             .ReadFrom.Configuration(configuration)
             .MinimumLevel.Debug()
             .WriteTo.Console()
+            .WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "service.log"))
             .CreateLogger();
 
         return loggingBuilder;

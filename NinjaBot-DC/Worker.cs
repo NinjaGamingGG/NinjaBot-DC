@@ -74,6 +74,7 @@ public sealed class Worker : BackgroundService
         return DiscordClient;
     }
 
+    [Obsolete]
     public static SQLiteConnection GetServiceSqLiteConnection()
     {
         return SqLiteConnection;

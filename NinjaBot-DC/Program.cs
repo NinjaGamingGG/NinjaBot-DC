@@ -29,7 +29,7 @@ public static class Program
 
     private static IHostBuilder CreateHostBuilder(string[] args)
     {
-        return Host.CreateDefaultBuilder(args).ConfigureServices((hostContext, services) => 
+        return Host.CreateDefaultBuilder(args).ConfigureServices((_, services) => 
         {
             services.AddHostedService<Worker>();
 
@@ -39,20 +39,3 @@ public static class Program
         }).UseSerilog();
     }
 }
-
-/*Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .MinimumLevel.Debug()
-    .MinimumLevel.Override("Microsoft",LogEventLevel.Warning)
-    .WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "service.log"))
-    .WriteTo.Console()
-    .CreateLogger();
-
-var host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices(services =>
-    {
-        services.AddHostedService<Worker>();
-    })
-    .Build();
-
-await host.RunAsync();*/

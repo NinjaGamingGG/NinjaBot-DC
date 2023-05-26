@@ -1,23 +1,26 @@
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using NinjaBot_DC.Commands;
 using NinjaBot_DC.Extensions;
 using System.Data.SQLite;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using NinjaBot_DC.CommandModules;
+using NinjaBot_DC.PluginLoader;
+using PluginBase;
 using Serilog;
 
 namespace NinjaBot_DC;
 
-public class Worker : BackgroundService
+public sealed class Worker : BackgroundService
 {
     private static readonly IConfigurationRoot Configuration;
 
     private static readonly SQLiteConnection SqLiteConnection;
     
     private static readonly DiscordClient DiscordClient;
+
+    private static IPlugin[]? _loadedPluginsArray; 
 
     static Worker()
     {
@@ -34,7 +37,7 @@ public class Worker : BackgroundService
         {
             Token = token,
             TokenType = TokenType.Bot,
-            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents,
+            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | DiscordIntents.GuildMembers | DiscordIntents.GuildPresences,
             LoggerFactory = logFactory
         });
     }
@@ -78,9 +81,10 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-
         var taskList = new List<Task>() {RegisterCommands(), RegisterEvents(), InitializeDatabase()};
         await Task.WhenAll(taskList);
+        
+        await LoadPlugins();
         
         Log.Information("Starting up the Bot");
         await DiscordClient.ConnectAsync();
@@ -88,7 +92,10 @@ public class Worker : BackgroundService
         var startupTasks = new List<Task>() {
                 LoungeSystem.StartupCleanup(DiscordClient), 
                 ServerStats.RefreshServerStats(DiscordClient), 
-                TwitchAlerts.InitExtensionAsync()};
+                TwitchAlerts.InitExtensionAsync(),
+                //RankSystem.UpdateVoiceActivity()
+        };
+                
         
         await Task.WhenAll(startupTasks);
         
@@ -97,10 +104,62 @@ public class Worker : BackgroundService
             await Task.Delay(1000, stoppingToken);
         }
         
+        Log.Information("Bot is shutting down...");
+        
         //If Cancellation was requested dispose (disconnect) the discord-client
         DiscordClient.Dispose();
-        Log.Information("Bot is shutting down...");
 
+        var unloadTasks = new List<Task>()
+        {
+            UnloadDatabase(),
+            UnloadPlugins()
+        };
+        
+        await Task.WhenAll(unloadTasks);
+
+
+    }
+
+    private static Task LoadPlugins()
+    {
+        var pluginFolder = Path.Combine(Directory.GetCurrentDirectory() ,"Plugins");
+    
+        Directory.CreateDirectory(pluginFolder);
+    
+        var pluginPaths = Directory.GetFiles(pluginFolder, "*.dll");
+    
+
+        var pluginsArray = pluginPaths.SelectMany(pluginPath =>
+        {
+            var pluginAssembly = LoadPlugin.LoadPluginFromPath(pluginPath);
+            return CreatePlugin.CreateFromAssembly(pluginAssembly);
+        }).ToArray();
+        
+        for (var i = 0; i < pluginsArray.Length; i++)
+        {
+            var plugin = pluginsArray.ElementAt(i);
+            Log.Information("Loading Plugin: {PluginName}", plugin.Name);
+            plugin.OnLoad();
+        }
+
+        _loadedPluginsArray = pluginsArray;
+        
+        return Task.CompletedTask;
+    }
+
+    private static Task UnloadPlugins()
+    {
+        if (_loadedPluginsArray == null) 
+            return Task.CompletedTask;
+
+        var pluginsArray = _loadedPluginsArray;
+
+        for (var i = 0; i < pluginsArray.Length; i++)
+        {
+            pluginsArray[i].OnUnload();
+        }
+        
+        return Task.CompletedTask;
     }
 
     private static Task SetupInteractivity()
@@ -131,7 +190,7 @@ public class Worker : BackgroundService
         return Task.CompletedTask;
     }
 
-    private Task RegisterEvents()
+    private static Task RegisterEvents()
     {
         Log.Information("Registering Events");
         //Lounge System Events
@@ -140,8 +199,12 @@ public class Worker : BackgroundService
         
         //Reaction Role Events
         DiscordClient.MessageReactionAdded += ReactionRoles.MessageReactionAdded; 
-        DiscordClient.MessageReactionRemoved += ReactionRoles.MessageReactionRemoved; 
-
+        //DiscordClient.MessageReactionRemoved += ReactionRoles.MessageReactionRemoved;
+        
+        //Rank-system Events
+        //DiscordClient.MessageCreated += RankSystem.MessageCreatedEvent;
+        //DiscordClient.MessageReactionAdded += RankSystem.ReactionAddedEvent;
+            
         return Task.CompletedTask;
     }
 
@@ -220,5 +283,11 @@ public class Worker : BackgroundService
         {
             Log.Error(e, "Unable to open the sqlite database connection");
         }
+    }
+    
+    private static Task UnloadDatabase()
+    {
+        SqLiteConnection.Close();
+        return Task.CompletedTask;
     }
 }

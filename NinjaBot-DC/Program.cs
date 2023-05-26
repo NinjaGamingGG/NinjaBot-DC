@@ -1,8 +1,46 @@
-using NinjaBot_DC;
 using Serilog;
-using Serilog.Events;
 
-Log.Logger = new LoggerConfiguration()
+namespace NinjaBot_DC;
+
+public static class Program
+{
+    public static async Task Main(string[] args)
+    {
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateBootstrapLogger();
+
+        try
+        {
+            var host = CreateHostBuilder(args)
+                .Build();
+            
+            await host.RunAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Worker service failed initiation. See exception for more details");
+        }
+        finally
+        {
+            await Log.CloseAndFlushAsync();
+        }
+    }
+
+    private static IHostBuilder CreateHostBuilder(string[] args)
+    {
+        return Host.CreateDefaultBuilder(args).ConfigureServices((hostContext, services) => 
+        {
+            services.AddHostedService<Worker>();
+
+        }).ConfigureLogging((hostContext, builder) =>
+        {
+            builder.ConfigureSerilog(hostContext.Configuration);
+        }).UseSerilog();
+    }
+}
+
+/*Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .MinimumLevel.Debug()
     .MinimumLevel.Override("Microsoft",LogEventLevel.Warning)
@@ -17,4 +55,4 @@ var host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
-await host.RunAsync();
+await host.RunAsync();*/

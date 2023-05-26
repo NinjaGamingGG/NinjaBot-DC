@@ -13,6 +13,9 @@ FROM build AS publish
 RUN dotnet publish "NinjaBot-DC.csproj" -c Release -o /app/publish
 
 FROM base AS final
-WORKDIR /app
+
+#If this application is run via docker the sqlite data source has to be changed to /ninjabot_dc/<your_sqlite_source_here>
+VOLUME /ninjabot_dc
+
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "NinjaBot-DC.dll"]

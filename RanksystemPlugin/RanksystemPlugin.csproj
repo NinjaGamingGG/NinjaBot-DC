@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Ranksystem</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\NinjaBot-DC\NinjaBot-DC.csproj" />
+      <ProjectReference Include="..\PluginBase\PluginBase.csproj" />
+    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="copy &quot;$(TargetDir)$(AssemblyName)$(TargetExt)&quot; &quot;$(ProjectDir)..\NinjaBot-DC\plugins&quot;  " />
+    </Target>
+
+</Project>

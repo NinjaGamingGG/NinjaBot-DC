@@ -2,6 +2,8 @@
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
+using DSharpPlus.Net.Models;
 using NinjaBot_DC.Models;
 using NinjaBot_DC.Models.StatChannelModels;
 namespace NinjaBot_DC.CommandModules;
@@ -30,6 +32,23 @@ public class ServerStatsCommandModule : BaseCommandModule
         
         if (newCategory == null)
             return;
+        
+        void NewEditModel(ChannelEditModel editModel)
+        {
+            editModel.PermissionOverwrites = new List<DiscordOverwriteBuilder>()
+            {
+                new DiscordOverwriteBuilder(guild.EveryoneRole)
+                    .Deny(Permissions.SendMessages)
+                    .Deny(Permissions.UseVoice)
+                    .Deny(Permissions.SendMessages)
+                    .Deny(Permissions.CreatePublicThreads)
+                    .Deny(Permissions.CreatePrivateThreads)
+                    .Deny(Permissions.ManageThreads)
+                    .For(guild.EveryoneRole)
+            };
+        }
+
+        await newCategory.ModifyAsync(NewEditModel);
 
         var memberCountChannel = await guild.CreateChannelAsync("╔😎～Mitglieder:", ChannelType.Voice, newCategory);
         var botCountChannel = await guild.CreateChannelAsync("╠🤖～Bot Count:", ChannelType.Voice, newCategory);

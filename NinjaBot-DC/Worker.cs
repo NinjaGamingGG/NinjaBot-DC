@@ -2,6 +2,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using NinjaBot_DC.Extensions;
 using System.Data.SQLite;
+using System.Reflection;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
@@ -139,7 +140,18 @@ public sealed class Worker : BackgroundService
         for (var i = 0; i < pluginsArray.Length; i++)
         {
             var plugin = pluginsArray.ElementAt(i);
+
             Log.Information("Loading Plugin: {PluginName}", plugin.Name);
+            
+            var pluginAssembly = Assembly.GetAssembly(plugin.GetType());
+            
+            if (pluginAssembly == null)
+                continue;
+            
+            var pluginDirectory = Path.Combine(Path.GetDirectoryName(pluginAssembly.Location)!, pluginAssembly.GetName().Name!);
+            Directory.CreateDirectory(pluginDirectory);
+            plugin.PluginDirectory = pluginDirectory;
+            
             plugin.OnLoad();
         }
 
@@ -201,10 +213,7 @@ public sealed class Worker : BackgroundService
         //Reaction Role Events
         DiscordClient.MessageReactionAdded += ReactionRoles.MessageReactionAdded; 
         //DiscordClient.MessageReactionRemoved += ReactionRoles.MessageReactionRemoved;
-        
-        //Rank-system Events
-        //DiscordClient.MessageCreated += RankSystem.MessageCreatedEvent;
-        //DiscordClient.MessageReactionAdded += RankSystem.ReactionAddedEvent;
+
             
         return Task.CompletedTask;
     }

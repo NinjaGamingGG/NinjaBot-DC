@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using DSharpPlus.CommandsNext;
 using NinjaBot_DC;
 using PluginBase;
@@ -18,6 +19,8 @@ public class RankSystemPlugin : IPlugin
 {
     public string Name => "Ranksystem Plugin";
     public string Description => "Simple Discord Ranksystem.";
+    public string? PluginDirectory { get; set; }
+    
 
     public void OnLoad()
     {

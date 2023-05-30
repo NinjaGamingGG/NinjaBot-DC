@@ -7,17 +7,24 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\NinjaBot-DC\NinjaBot-DC.csproj" />
       <ProjectReference Include="..\PluginBase\PluginBase.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="DSharpPlus.CommandsNext" Version="4.3.0-nightly-01185" />
+      <PackageReference Include="Dapper" Version="2.0.123" />
+      <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
+      <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01579" />
+      <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01579" />
+      <PackageReference Include="System.Data.SQLite" Version="1.0.117" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Events\" />
-      <Folder Include="Models\" />
-      <Folder Include="PluginHelper\" />
     </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="copy &quot;$(TargetDir)$(AssemblyName)$(TargetExt)&quot; &quot;$(ProjectDir)..\NinjaBot-DC\plugins&quot;  " />
+    </Target>
 
 </Project>

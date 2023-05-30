@@ -1,8 +1,5 @@
-﻿using Dapper.Contrib.Extensions;
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.Net.Models;
-using NinjaBot_DC.Models;
-using NinjaBot_DC.Models.StatChannelModels;
 
 namespace NinjaBot_DC.Extensions;
 
@@ -16,6 +13,7 @@ public static class ServerStats
         
         while (await ChannelInfoRefreshTimer.WaitForNextTickAsync())
         {
+            /*
             var serverStatsModels = await sqlite.GetAllAsync<StatsChannelModel>();
 
             foreach (var serverStatsModel in serverStatsModels)
@@ -57,6 +55,7 @@ public static class ServerStats
                 
                 await Task.WhenAll(editTaskList);
             }
+            */
         }
         
     }

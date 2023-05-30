@@ -195,8 +195,7 @@ public sealed class Worker : BackgroundService
             StringPrefixes  = new []{stringPrefix},
         });
 
-        commands.RegisterCommands<LoungeCommandModule>();
-        commands.RegisterCommands<ServerStatsCommandModule>();
+        commands.RegisterCommands<LoungeCommandModule>(); 
         commands.RegisterCommands<ReactionRolesCommandModule>();
         commands.RegisterCommands<TwitchAlertsCommandModule>();
         
@@ -232,13 +231,6 @@ public sealed class Worker : BackgroundService
                 await sqLiteLoungeTableCommand.ExecuteNonQueryAsync();
             }
 
-            await using var sqLiteStatsTableCommand = SqLiteConnection.CreateCommand();
-            {
-                sqLiteStatsTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS StatsChannelIndex (GuildId INTEGER, CategoryChannelId INTEGER, MemberCountChannelId INTEGER, TeamCountChannelId INTEGER, BotCountChannelId INTEGER)";
-            
-                await sqLiteStatsTableCommand.ExecuteNonQueryAsync();
-            }
-            
             await using var sqLiteReactionMessageTableCommand = SqLiteConnection.CreateCommand();
             {
                 sqLiteReactionMessageTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS ReactionMessagesIndex (GuildId INTEGER, MessageId INTEGER, MessageTag VARCHAR(20))";

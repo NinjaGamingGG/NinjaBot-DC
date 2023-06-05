@@ -40,11 +40,11 @@ public static class SqLiteConnectionHelper
             return;
         }
         
-        using var sqLiteLoungeTableCommand = _sqLiteConnection.CreateCommand();
+        using var sqLiteChannelsIndexTableCommand = _sqLiteConnection.CreateCommand();
         {
-            sqLiteLoungeTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS StatsChannelsIndex (GuildId INTEGER, CategoryChannelId INTEGER, MemberCountChannelId INTEGER, TeamCountChannelId INTEGER, BotCountChannelId INTEGER)";
+            sqLiteChannelsIndexTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS StatsChannelsIndex (GuildId INTEGER, CategoryChannelId INTEGER, MemberCountChannelId INTEGER, TeamCountChannelId INTEGER, BotCountChannelId INTEGER)";
             
-            sqLiteLoungeTableCommand.ExecuteNonQuery();
+            sqLiteChannelsIndexTableCommand.ExecuteNonQuery();
         }
     }
     

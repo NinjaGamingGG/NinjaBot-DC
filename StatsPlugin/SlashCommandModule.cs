@@ -61,7 +61,8 @@ public class SlashCommandModule : ApplicationCommandModule
         if (hasUpdated == false)
             await sqlite.InsertAsync(statsChannelModel);
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Done!"));
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+        
     }
 
     [SlashCommand("link", "Links Stats Channel")]
@@ -71,43 +72,61 @@ public class SlashCommandModule : ApplicationCommandModule
 ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-        
+
         var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
 
-        string channelHandleInDb;
+        var channelHandleInDb = DatabaseHandleHelper.GetHandleFromEnum(channelHandle);
         
-        switch (channelHandle)
+        if (channelHandleInDb == "NoChannel")
         {
-            case ChannelHandleEnum.CategoryChannel:
-                channelHandleInDb = "CategoryChannelId";
-                break;
-            
-            case ChannelHandleEnum.MemberChannel:
-                channelHandleInDb = "MemberCountChannelId";
-                break;
-            
-            case ChannelHandleEnum.BotChannel:
-                channelHandleInDb = "BotCountChannelId";
-                break;
-            
-            case ChannelHandleEnum.TeamChannel:
-                channelHandleInDb = "TeamCountChannelId";
-                break;
-            
-            case ChannelHandleEnum.NoChannel:
-            default:
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Error, Invalid Channel Handle!"));
-                return;
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Invalid Channel Handle!"));
+            return;
+        }
+        
+        var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelsIndex SET " + channelHandleInDb + " = @ChannelId WHERE GuildId = @GuildId", new { ChannelId = channel.Id, GuildId = ctx.Guild.Id });
 
+        if (hasUpdated == 0)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Unable to Update Channel in Database!"));
+            return;
         }
 
-        var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelsIndex SET " + channelHandleInDb + " = @ChannelId WHERE GuildId = @GuildId", new { ChannelId = channel.Id, GuildId = ctx.Guild.Id });
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+    }
+    
+    [SlashCommand("rename","Set a custom name for the specified channel")]
+    [SuppressMessage("Performance", "CA1822:Member als statisch markieren")]
+    public async Task RenameChannelCommand(InteractionContext ctx, [Option("Channel-Handle", "Handle of the Channel you want to Link")] ChannelHandleEnum channelHandle, [Option("Name", "New Name for the Channel")] string name)
+    {
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        
+        var channelHandleInDb = DatabaseHandleHelper.GetHandleFromEnum(channelHandle);
+        
+        if (channelHandleInDb == "NoChannel")
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Invalid Channel Handle!"));
+            return;
+        }
+        
+        var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
+        
+        var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelsIndex SET " + channelHandleInDb + " = @Name WHERE GuildId = @GuildId", new { Name = name, GuildId = ctx.Guild.Id });
         
         if (hasUpdated == 0)
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Error, Unable to Update Channel in Database!"));
-        
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Done!"));
+        {
+            var renameRecord = new StatsChannelCustomNamesIndex()
+            {
+                GuildId = ctx.Guild.Id,
+                ChannelHandle = channelHandleInDb,
+                CustomName = name
+            };
 
+            await sqlite.InsertAsync(renameRecord);
+        }
+
+
+        
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
     }
 
     public enum ChannelHandleEnum

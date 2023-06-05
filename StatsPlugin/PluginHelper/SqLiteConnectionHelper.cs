@@ -46,6 +46,14 @@ public static class SqLiteConnectionHelper
             
             sqLiteChannelsIndexTableCommand.ExecuteNonQuery();
         }
+
+        using var sqliteCustomNamesTableCommand = _sqLiteConnection.CreateCommand();
+        {
+            sqliteCustomNamesTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS StatsChannelCustomNamesIndex (GuildId INTEGER, ChannelHandle TEXT, CustomName TEXT)";
+            
+            sqliteCustomNamesTableCommand.ExecuteNonQuery();
+
+        }
     }
     
     

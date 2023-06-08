@@ -25,11 +25,12 @@ public class StatsPlugin : IPlugin
         SqLiteConnectionHelper.OpenSqLiteConnection(PluginDirectory!);
 
         SqLiteConnectionHelper.InitializeSqliteTables();
-        
 
         var slashCommands = client.UseSlashCommands();
         
         slashCommands.RegisterCommands<SlashCommandModule>();
+
+        RefreshServerStats.Execute(client);
         
         Console.WriteLine("[Stats Plugin] Plugin Loaded!");
     }

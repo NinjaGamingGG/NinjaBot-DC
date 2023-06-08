@@ -9,7 +9,7 @@ namespace StatsPlugin.PluginHelper;
 
 public static class RefreshServerStats
 {
-    private static readonly PeriodicTimer RefreshTimer = new(TimeSpan.FromSeconds(10));
+    private static readonly PeriodicTimer RefreshTimer = new(TimeSpan.FromSeconds(60));
     
     public static async Task Execute(DiscordClient discordClient)
     {
@@ -53,6 +53,7 @@ public static class RefreshServerStats
                 
                 var taskList = new List<Task>()
                 {
+                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.CategoryChannel, serverStatsModel, memberCount, botCount, teamCount),
                     GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.MemberChannel, serverStatsModel, memberCount, botCount, teamCount),
                     GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.BotChannel, serverStatsModel, memberCount, botCount, teamCount),
                     GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.TeamChannel, serverStatsModel, memberCount, botCount, teamCount),
@@ -70,33 +71,28 @@ public static class RefreshServerStats
         var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
         
          var channelHandleAsString = DatabaseHandleHelper.GetHandleFromEnum(channelEnum);
-            IEnumerable<StatsChannelCustomNamesIndex> customNameRecord;
+            var customNameRecord = await sqlite.QueryAsync<StatsChannelCustomNamesIndex>(
+                "SELECT CustomName FROM StatsChannelCustomNamesIndex WHERE GuildId = @GuildId and ChannelHandle = @ChannelHandle",
+                new {serverStatsModel.GuildId, ChannelHandle = channelHandleAsString});
 
             switch (channelEnum)
             {
                 case SlashCommandModule.ChannelHandleEnum.MemberChannel:
-                    customNameRecord = await sqlite.QueryAsync<StatsChannelCustomNamesIndex>(
-                        "SELECT CustomName FROM StatsChannelCustomNamesIndex WHERE GuildId = @GuildId and ChannelHandle = @ChannelHandle",
-                        new {serverStatsModel.GuildId, ChannelHandle = channelHandleAsString});
-                    
                     await HandleCustomNameRecord(discordClient, serverStatsModel, memberCount, customNameRecord, "Members {count}", serverStatsModel.MemberCountChannelId);
                     break;
 
                 case SlashCommandModule.ChannelHandleEnum.BotChannel:
-                    customNameRecord = await sqlite.QueryAsync<StatsChannelCustomNamesIndex>(
-                        "SELECT CustomName FROM StatsChannelCustomNamesIndex WHERE GuildId = @GuildId and ChannelHandle = @ChannelHandle",
-                        new {serverStatsModel.GuildId, ChannelHandle = channelHandleAsString});
                     await HandleCustomNameRecord(discordClient, serverStatsModel, botCount, customNameRecord, "Bots {count}", serverStatsModel.BotCountChannelId);
                     break;
 
                 case SlashCommandModule.ChannelHandleEnum.TeamChannel:
-                    customNameRecord = await sqlite.QueryAsync<StatsChannelCustomNamesIndex>(
-                        "SELECT CustomName FROM StatsChannelCustomNamesIndex WHERE GuildId = @GuildId and ChannelHandle = @ChannelHandle",
-                        new {serverStatsModel.GuildId, ChannelHandle = channelHandleAsString});
                     await HandleCustomNameRecord(discordClient, serverStatsModel, teamCount, customNameRecord, "Team {count}", serverStatsModel.TeamCountChannelId);
                     break;
 
                 case SlashCommandModule.ChannelHandleEnum.CategoryChannel:
+                    await HandleCustomNameRecord(discordClient, serverStatsModel, 0, customNameRecord, "-Stats-", serverStatsModel.CategoryChannelId);
+                    break;
+                
                 case SlashCommandModule.ChannelHandleEnum.NoChannel:
                 default:
                     return;
@@ -135,7 +131,7 @@ public static class RefreshServerStats
     {
         var channel = await discordClient.GetChannelAsync(channelId);
         
-        if (newChanelName.Contains($"{count}"))
+        if (newChanelName.Contains("{count}"))
                 newChanelName = newChanelName.Replace("{count}", count.ToString());
         
         

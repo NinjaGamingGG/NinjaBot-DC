@@ -110,7 +110,7 @@ ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
         
         var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
         
-        var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelsIndex SET " + channelHandleInDb + " = @Name WHERE GuildId = @GuildId", new { Name = name, GuildId = ctx.Guild.Id });
+        var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelCustomNamesIndex SET CustomName = @Name WHERE GuildId = @GuildId AND ChannelHandle = @ChannelHandle", new { Name = name, GuildId = ctx.Guild.Id, ChannelHandle = channelHandleInDb });
         
         if (hasUpdated == 0)
         {

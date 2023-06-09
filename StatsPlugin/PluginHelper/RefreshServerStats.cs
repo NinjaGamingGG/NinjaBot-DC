@@ -59,10 +59,10 @@ public static class RefreshServerStats
                 
                 var taskList = new List<Task>()
                 {
-                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.CategoryChannel, serverStatsModel, memberCount, botCount, teamCount),
-                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.MemberChannel, serverStatsModel, memberCount, botCount, teamCount),
-                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.BotChannel, serverStatsModel, memberCount, botCount, teamCount),
-                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.TeamChannel, serverStatsModel, memberCount, botCount, teamCount),
+                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.CategoryChannel, serverStatsModel, memberCount, botCount, teamCount, guild.Id),
+                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.MemberChannel, serverStatsModel, memberCount, botCount, teamCount, guild.Id),
+                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.BotChannel, serverStatsModel, memberCount, botCount, teamCount, guild.Id),
+                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.TeamChannel, serverStatsModel, memberCount, botCount, teamCount, guild.Id),
                 };
 
                 await Task.WhenAll(taskList);
@@ -72,7 +72,7 @@ public static class RefreshServerStats
         
     }
 
-    private static async Task GetChannelNameFromEnum(DiscordClient discordClient, SlashCommandModule.ChannelHandleEnum channelEnum, StatsChannelIndexModel serverStatsModel, int memberCount, int botCount, int teamCount)
+    private static async Task GetChannelNameFromEnum(DiscordClient discordClient, SlashCommandModule.ChannelHandleEnum channelEnum, StatsChannelIndexModel serverStatsModel, int memberCount, int botCount, int teamCount, ulong guildId)
     {
         var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
         
@@ -84,19 +84,19 @@ public static class RefreshServerStats
             switch (channelEnum)
             {
                 case SlashCommandModule.ChannelHandleEnum.MemberChannel:
-                    await HandleCustomNameRecord(discordClient, serverStatsModel, memberCount, customNameRecord, "Members {count}", serverStatsModel.MemberCountChannelId);
+                    await HandleCustomNameRecord(discordClient, serverStatsModel, memberCount, customNameRecord, "Members {count}", serverStatsModel.MemberCountChannelId, guildId);
                     break;
 
                 case SlashCommandModule.ChannelHandleEnum.BotChannel:
-                    await HandleCustomNameRecord(discordClient, serverStatsModel, botCount, customNameRecord, "Bots {count}", serverStatsModel.BotCountChannelId);
+                    await HandleCustomNameRecord(discordClient, serverStatsModel, botCount, customNameRecord, "Bots {count}", serverStatsModel.BotCountChannelId, guildId);
                     break;
 
                 case SlashCommandModule.ChannelHandleEnum.TeamChannel:
-                    await HandleCustomNameRecord(discordClient, serverStatsModel, teamCount, customNameRecord, "Team {count}", serverStatsModel.TeamCountChannelId);
+                    await HandleCustomNameRecord(discordClient, serverStatsModel, teamCount, customNameRecord, "Team {count}", serverStatsModel.TeamCountChannelId, guildId);
                     break;
 
                 case SlashCommandModule.ChannelHandleEnum.CategoryChannel:
-                    await HandleCustomNameRecord(discordClient, serverStatsModel, 0, customNameRecord, "-Stats-", serverStatsModel.CategoryChannelId);
+                    await HandleCustomNameRecord(discordClient, serverStatsModel, 0, customNameRecord, "-Stats-", serverStatsModel.CategoryChannelId, guildId);
                     break;
                 
                 case SlashCommandModule.ChannelHandleEnum.NoChannel:
@@ -107,7 +107,7 @@ public static class RefreshServerStats
     }
 
     private static async Task HandleCustomNameRecord(DiscordClient discordClient, StatsChannelIndexModel serverStatsModel,
-        int memberCount, IEnumerable<StatsChannelCustomNamesIndex> customNameRecord, string defaultName, ulong channelId)
+        int memberCount, IEnumerable<StatsChannelCustomNamesIndex> customNameRecord, string defaultName, ulong channelId, ulong guildId)
      {
         var recordAsList = customNameRecord.ToList();
 
@@ -118,7 +118,7 @@ public static class RefreshServerStats
             channelName = defaultName;
 
             await EditChannelName(discordClient, memberCount, channelId,
-                channelName);
+                channelName, guildId);
 
             return;
         }
@@ -130,30 +130,34 @@ public static class RefreshServerStats
 
 
         await EditChannelName(discordClient, memberCount, serverStatsModel.MemberCountChannelId,
-            channelName);
+            channelName, guildId);
     }
 
-    private static async Task EditChannelName(DiscordClient discordClient, int count, ulong channelId, string newChanelName)
+    private static async Task EditChannelName(DiscordClient discordClient, int count, ulong channelId, string newChanelName, ulong guildId)
     {
-        var channel = await discordClient.GetChannelAsync(channelId);
-        
-        if (newChanelName.Contains("{count}"))
+        try
+        {
+            var channel = await discordClient.GetChannelAsync(channelId);
+            
+            if (newChanelName.Contains("{count}"))
                 newChanelName = newChanelName.Replace("{count}", count.ToString());
         
         
-        if (channel.Name == newChanelName)
-        {
-            return;
-        }
+            if (channel.Name == newChanelName)
+            {
+                return;
+            }
 
-        void NewEditModel(ChannelEditModel editModel)
-        {
-            editModel.Name = newChanelName;
-        }
+            void NewEditModel(ChannelEditModel editModel)
+            {
+                editModel.Name = newChanelName;
+            }
 
-        await channel.ModifyAsync(NewEditModel);
+            await channel.ModifyAsync(NewEditModel);
+        }
+        catch (DSharpPlus.Exceptions.NotFoundException e)
+        {
+            Log.Fatal(e,"[Server Stats] Channel not found while trying to edit channel name: {ChannelName} ChannelId: {ChannelId} on Guild {GuildId}",newChanelName, channelId , guildId);
+        }
     }
-    
-    
-    
 }

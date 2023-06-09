@@ -5,6 +5,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Net.Models;
 using DSharpPlus.SlashCommands;
+using Serilog;
 using StatsPlugin.Models;
 using StatsPlugin.PluginHelper;
 
@@ -165,6 +166,77 @@ ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
         }
 
 
+        
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+    }
+    
+    [SlashCommand("disable","Disables the functionality on this server")]
+    [SuppressMessage("Performance", "CA1822:Member als statisch markieren")]
+    public async Task DisableCommand(InteractionContext ctx)
+    {
+
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        
+        var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
+        
+        var entry = await sqlite.GetAsync<StatsChannelIndexModel>(ctx.Guild.Id);
+        
+        if (entry == null)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("This functionality is already disabled!"));
+            return;
+        }
+
+        try
+        {
+            await ctx.Guild.GetChannel(entry.MemberCountChannelId).DeleteAsync();
+            await ctx.Guild.GetChannel(entry.BotCountChannelId).DeleteAsync();
+            await ctx.Guild.GetChannel(entry.TeamCountChannelId).DeleteAsync();
+            await ctx.Guild.GetChannel(entry.CategoryChannelId).DeleteAsync();
+        }
+        catch (Exception e)
+        {
+            Log.Fatal(e,"Unable to delete Stat-Channels on Guild:{GuildId}",ctx.Guild.Id);
+        }
+
+        
+        var hasUpdated = await sqlite.ExecuteAsync("DELETE FROM StatsChannelsIndex WHERE GuildId = @GuildId", new { GuildId = ctx.Guild.Id });
+        
+        if (hasUpdated == 0)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Unable to disable this functionality. Please contact an bot operator!"));
+        }
+        
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+    }
+    
+    [SlashCommand("unlink-role","Unlinks the role from the specified handle")]
+    [SuppressMessage("Performance", "CA1822:Member als statisch markieren")]
+    public async Task UnlinkRoleCommand(InteractionContext ctx,[Option("role","Role to unlink")] DiscordRole role,
+        [Option("Role-Handle", "Handle of the Role you want to Link")] RoleHandleEnum roleHandle = RoleHandleEnum.NoRole)
+    {
+
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        
+        var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
+
+        int hasUpdated;
+        
+        if (roleHandle == RoleHandleEnum.NoRole)
+        {
+            hasUpdated = await sqlite.ExecuteAsync("DELETE FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleId = @RoleId", new { GuildId = ctx.Guild.Id, RoleId = role.Id });
+        }
+        else
+        {
+            var roleHandleInDb = DatabaseHandleHelper.GetRoleHandleFromEnum(roleHandle);
+            hasUpdated = await sqlite.ExecuteAsync("DELETE FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleId = @RoleId AND RoleHandle = @RoleHandle", new { GuildId = ctx.Guild.Id, RoleId = role.Id, RoleHandle = roleHandleInDb });
+        }
+
+        if (hasUpdated == 0)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Unable to disable this functionality. Please contact an bot operator!"));
+            return;
+        }
         
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
     }

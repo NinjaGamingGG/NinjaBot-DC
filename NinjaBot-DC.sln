@@ -8,6 +8,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{AFB4
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RanksystemPlugin", "RanksystemPlugin\RanksystemPlugin.csproj", "{C9DF0200-4821-491C-AE70-B2FCEC49238E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatsPlugin", "StatsPlugin\StatsPlugin.csproj", "{894D1152-9B30-4F8D-9727-6DDD7EB8531A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,8 +28,13 @@ Global
 		{C9DF0200-4821-491C-AE70-B2FCEC49238E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C9DF0200-4821-491C-AE70-B2FCEC49238E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C9DF0200-4821-491C-AE70-B2FCEC49238E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{894D1152-9B30-4F8D-9727-6DDD7EB8531A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{894D1152-9B30-4F8D-9727-6DDD7EB8531A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{894D1152-9B30-4F8D-9727-6DDD7EB8531A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{894D1152-9B30-4F8D-9727-6DDD7EB8531A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C9DF0200-4821-491C-AE70-B2FCEC49238E} = {AFB40CC2-BAF6-47D7-9128-F7A9A44CCCAE}
+		{894D1152-9B30-4F8D-9727-6DDD7EB8531A} = {AFB40CC2-BAF6-47D7-9128-F7A9A44CCCAE}
 	EndGlobalSection
 EndGlobal

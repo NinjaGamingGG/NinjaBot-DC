@@ -1,9 +1,9 @@
 ﻿using Dapper.Contrib.Extensions;
 
-namespace NinjaBot_DC.Models.StatChannelModels;
+namespace StatsPlugin.Models;
 
-[Table("StatsChannelIndex")]
-public record StatsChannelModel
+[Table("StatsChannelsIndex")]
+public record StatsChannelIndexModel
 {
     [ExplicitKey]
     public ulong GuildId { get; set; }

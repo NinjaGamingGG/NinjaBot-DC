@@ -93,9 +93,7 @@ public sealed class Worker : BackgroundService
         
         var startupTasks = new List<Task>() {
                 LoungeSystem.StartupCleanup(DiscordClient), 
-                ServerStats.RefreshServerStats(DiscordClient), 
                 TwitchAlerts.InitExtensionAsync(),
-                //RankSystem.UpdateVoiceActivity()
         };
                 
         

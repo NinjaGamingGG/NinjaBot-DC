@@ -65,7 +65,7 @@ public class SlashCommandModule : ApplicationCommandModule
         
     }
 
-    [SlashCommand("link", "Links Stats Channel")]
+    [SlashCommand("Link-Channel", "Links Stats Channel")]
     [SuppressMessage("Performance", "CA1822:Member als statisch markieren")]
     public async Task LinkChannelCommand(InteractionContext ctx, [Option("Channel", "Target Channel to Link")] DiscordChannel channel, 
         [Option("Channel-Handle", "Handle of the Channel you want to Link")]
@@ -73,34 +73,74 @@ ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-        var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
+            var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
 
-        var channelHandleInDb = DatabaseHandleHelper.GetHandleFromEnum(channelHandle);
+            var channelHandleInDb = DatabaseHandleHelper.GetChannelHandleFromEnum(channelHandle);
         
-        if (channelHandleInDb == "NoChannel")
-        {
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Invalid Channel Handle!"));
-            return;
-        }
+            if (channelHandleInDb == "NoChannel")
+            {
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Invalid Channel Handle!"));
+                return;
+            }
         
-        var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelsIndex SET " + channelHandleInDb + " = @ChannelId WHERE GuildId = @GuildId", new { ChannelId = channel.Id, GuildId = ctx.Guild.Id });
+            var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelsIndex SET " + channelHandleInDb + " = @ChannelId WHERE GuildId = @GuildId", new { ChannelId = channel.Id, GuildId = ctx.Guild.Id });
 
-        if (hasUpdated == 0)
+            if (hasUpdated == 0)
+            {
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Unable to Update Channel in Database!"));
+                return;
+            }
+
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+        } 
+        
+        [SlashCommand("Link-Role", "Links Stats Role")]
+        [SuppressMessage("Performance", "CA1822:Member als statisch markieren")] 
+        public async Task LinkRoleCommand(InteractionContext ctx, [Option("role", "Target role to Link")] DiscordRole role, 
+            [Option("Role-Handle", "Handle of the Role you want to Link")]
+            RoleHandleEnum roleHandle = RoleHandleEnum.NoRole)
         {
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Unable to Update Channel in Database!"));
-            return;
+            await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+
+            var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
+
+            var roleHandleInDb = DatabaseHandleHelper.GetRoleHandleFromEnum(roleHandle);
+        
+            if (roleHandleInDb == "NoRole")
+            {
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Invalid Role Handle!"));
+                return;
+            }
+        
+            var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelLinkedRolesIndex SET RoleId = @RoleId, RoleHandle = @RoleHandle WHERE GuildId = @GuildId", new { RoleId = role.Id, GuildId = ctx.Guild.Id , RoleHandle = roleHandleInDb});
+        
+            if (hasUpdated == 1)
+            {
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+                return;
+            }
+
+            var hasInserted = await sqlite.ExecuteAsync("INSERT INTO StatsChannelLinkedRolesIndex (GuildId, RoleId, RoleHandle) VALUES (@GuildId, @RoleId, @RoleHandle)", new { RoleId = role.Id, GuildId = ctx.Guild.Id , RoleHandle = roleHandleInDb});
+
+            if (hasInserted == 0)
+            {
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Unable to Update Role in Database!"));
+                return;
+            }
+            
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+
+            
+
         }
 
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
-    }
-    
     [SlashCommand("rename","Set a custom name for the specified channel")]
     [SuppressMessage("Performance", "CA1822:Member als statisch markieren")]
     public async Task RenameChannelCommand(InteractionContext ctx, [Option("Channel-Handle", "Handle of the Channel you want to Link")] ChannelHandleEnum channelHandle, [Option("Name", "New Name for the Channel")] string name)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
         
-        var channelHandleInDb = DatabaseHandleHelper.GetHandleFromEnum(channelHandle);
+        var channelHandleInDb = DatabaseHandleHelper.GetChannelHandleFromEnum(channelHandle);
         
         if (channelHandleInDb == "NoChannel")
         {
@@ -140,6 +180,15 @@ ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
         [ChoiceName("Team Counter Channel")]
         TeamChannel,
         NoChannel
+    }
+    
+    public enum RoleHandleEnum
+    {
+        [ChoiceName("Team Role")]
+        TeamRole,
+        [ChoiceName("Bot Role")]
+        BotRole,
+        NoRole
     }
 
 }

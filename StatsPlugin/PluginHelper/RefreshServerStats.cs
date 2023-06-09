@@ -31,23 +31,29 @@ public static class RefreshServerStats
 
                 var botCount = 0;
                 var teamCount = 0;
+
+                var teamHandle = DatabaseHandleHelper.GetRoleHandleFromEnum(SlashCommandModule.RoleHandleEnum.TeamRole);
+                var botHandle = DatabaseHandleHelper.GetRoleHandleFromEnum(SlashCommandModule.RoleHandleEnum.BotRole);
                 
-                
+                var teamRoles = await sqlite.QueryAsync<StatsChannelLinkedRoleIndex>("SELECT * FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleHandle = @RoleHandle", new {serverStatsModel.GuildId, RoleHandle = teamHandle});
+                var botRoles = await sqlite.QueryAsync<StatsChannelLinkedRoleIndex>("SELECT * FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleHandle = @RoleHandle", new {serverStatsModel.GuildId, RoleHandle = botHandle});
+
+                var teamRoleIdsAsList = teamRoles.Select(role => role.RoleId).ToArray();
+                var botRoleIdsAsList = botRoles.Select(role => role.RoleId).ToArray();
+
+
                 foreach (var member in allGuildMembers)
                 {
                     var roles = member.Roles;
 
                     foreach (var role in roles)
                     {
-                        switch (role.Name)
-                        {
-                            case "🥷​ Team":
-                                teamCount++;
-                                break;
-                            case "🤖​ Bot":
-                                botCount++;
-                                break;
-                        }
+                        if (teamRoleIdsAsList.Contains(role.Id))
+                            teamCount++;
+                        
+                        if (botRoleIdsAsList.Contains(role.Id))
+                            botCount++;
+                        
                     }
                 }
                 
@@ -70,7 +76,7 @@ public static class RefreshServerStats
     {
         var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
         
-         var channelHandleAsString = DatabaseHandleHelper.GetHandleFromEnum(channelEnum);
+         var channelHandleAsString = DatabaseHandleHelper.GetChannelHandleFromEnum(channelEnum);
             var customNameRecord = await sqlite.QueryAsync<StatsChannelCustomNamesIndex>(
                 "SELECT CustomName FROM StatsChannelCustomNamesIndex WHERE GuildId = @GuildId and ChannelHandle = @ChannelHandle",
                 new {serverStatsModel.GuildId, ChannelHandle = channelHandleAsString});

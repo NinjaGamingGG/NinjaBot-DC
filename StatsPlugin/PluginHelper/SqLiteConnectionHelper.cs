@@ -54,6 +54,13 @@ public static class SqLiteConnectionHelper
             sqliteCustomNamesTableCommand.ExecuteNonQuery();
 
         }
+
+        using var sqliteLinkedRolesCommand = _sqLiteConnection.CreateCommand();
+        {
+            sqliteLinkedRolesCommand.CommandText = "CREATE TABLE IF NOT EXISTS StatsChannelLinkedRolesIndex (GuildId INTEGER, RoleId INTEGER, RoleHandle TEXT)";
+            
+            sqliteLinkedRolesCommand.ExecuteNonQuery();
+        }
     }
     
     

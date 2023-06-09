@@ -1,10 +1,8 @@
-﻿using DSharpPlus.Entities;
-
-namespace StatsPlugin.PluginHelper;
+﻿namespace StatsPlugin.PluginHelper;
 
 public static class DatabaseHandleHelper
 {
-    public static string GetHandleFromEnum(SlashCommandModule.ChannelHandleEnum handle)
+    public static string GetChannelHandleFromEnum(SlashCommandModule.ChannelHandleEnum handle)
     {
 
         switch (handle)
@@ -24,6 +22,24 @@ public static class DatabaseHandleHelper
             case SlashCommandModule.ChannelHandleEnum.NoChannel:
             default:
                 return "NoChannel";
+
+        }
+    }
+    
+    public static string GetRoleHandleFromEnum(SlashCommandModule.RoleHandleEnum handle)
+    {
+
+        switch (handle)
+        {
+            case SlashCommandModule.RoleHandleEnum.TeamRole:
+                return "TeamRole";
+
+            case SlashCommandModule.RoleHandleEnum.BotRole:
+                return "BotRole";
+
+            case SlashCommandModule.RoleHandleEnum.NoRole:
+            default:
+                return "NoRole";
 
         }
     }

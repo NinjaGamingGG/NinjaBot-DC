@@ -1,16 +1,15 @@
 ﻿using Dapper;
 using DSharpPlus;
-using NinjaBot_DC;
 using RankSystem.Models;
 using Serilog;
 
-namespace Ranksystem.RanksystemHelper;
+namespace Ranksystem.PluginHelper;
 
 public static class UpdateRewardRole
 {
     public static async Task ForUserAsync(DiscordClient client, ulong  guildId, ulong userId)
     {
-        var sqlite = Worker.GetServiceSqLiteConnection();
+        var sqlite = SqLiteHelper.GetSqLiteConnection();
         
         var userPointsForGuild = await sqlite.QueryFirstOrDefaultAsync<int>("SELECT Points FROM RankSystemUserPointsIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = guildId, UserId = userId});
 
@@ -27,7 +26,7 @@ public static class UpdateRewardRole
                 
                 var role = guild.GetRole(rewardRole.RoleId);
                 
-                if (role == null)
+                if (ReferenceEquals(role, null))
                 {
                     Log.Error("Role {RoleId} not found for Guild {GuildId}!", rewardRole.RoleId, guildId);
                     continue;
@@ -35,7 +34,7 @@ public static class UpdateRewardRole
                 
                 var user = await guild.GetMemberAsync(userId);
                 
-                if (user == null)
+                if (ReferenceEquals(user, null))
                 {
                     Log.Error("User {UserId} not found for Guild {GuildId}!", userId, guildId);
                     continue;

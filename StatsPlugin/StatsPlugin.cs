@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.SlashCommands;
 using NinjaBot_DC;
 using PluginBase;
+using Serilog;
 using StatsPlugin.PluginHelper;
 
 namespace StatsPlugin;
@@ -26,17 +27,23 @@ public class StatsPlugin : IPlugin
 
         SqLiteConnectionHelper.InitializeSqliteTables();
 
-        var slashCommands = client.UseSlashCommands();
+        var slashCommands = Worker.GetServiceSlashCommandsExtension();
         
         slashCommands.RegisterCommands<SlashCommandModule>();
 
-        RefreshServerStats.Execute(client);
+
         
-        Console.WriteLine("[Stats Plugin] Plugin Loaded!");
+        Task.Run(async () =>
+        {
+            await RefreshServerStats.Execute(client);
+        });
+        
+        Log.Information("[Stats Plugin] Plugin Loaded!");
     }
 
     public void OnUnload()
     {
-        Console.WriteLine("Goodbye World!");
+        SqLiteConnectionHelper.CloseSqLiteConnection();
+        Log.Information("[Stats Plugin] Plugin Unloaded!");
     }
 }

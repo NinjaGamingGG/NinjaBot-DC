@@ -6,6 +6,7 @@ using System.Reflection;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.SlashCommands;
 using NinjaBot_DC.CommandModules;
 using NinjaBot_DC.PluginLoader;
 using PluginBase;
@@ -21,6 +22,8 @@ public sealed class Worker : BackgroundService
     
     private static readonly DiscordClient DiscordClient;
 
+    private static readonly SlashCommandsExtension SlashCommandsExtension;
+
     private static IPlugin[]? _loadedPluginsArray; 
 
     static Worker()
@@ -33,7 +36,7 @@ public sealed class Worker : BackgroundService
         var token = Configuration.GetValue<string>("ninja-bot:token");
 
         var logFactory = new LoggerFactory().AddSerilog();
-        
+
         DiscordClient = new DiscordClient(new DiscordConfiguration()
         {
             Token = token,
@@ -41,6 +44,8 @@ public sealed class Worker : BackgroundService
             Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | DiscordIntents.GuildMembers | DiscordIntents.GuildPresences,
             LoggerFactory = logFactory
         });
+
+        SlashCommandsExtension = DiscordClient.UseSlashCommands();
     }
 
     private static IConfigurationRoot LoadServiceConfig()
@@ -80,6 +85,11 @@ public sealed class Worker : BackgroundService
     {
         return SqLiteConnection;
     }
+    
+    public static SlashCommandsExtension GetServiceSlashCommandsExtension()
+    {
+        return SlashCommandsExtension;
+    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -93,9 +103,7 @@ public sealed class Worker : BackgroundService
         
         var startupTasks = new List<Task>() {
                 LoungeSystem.StartupCleanup(DiscordClient), 
-                ServerStats.RefreshServerStats(DiscordClient), 
                 TwitchAlerts.InitExtensionAsync(),
-                //RankSystem.UpdateVoiceActivity()
         };
                 
         

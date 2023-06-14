@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using DSharpPlus.Entities;
-using NinjaBot_DC;
 
 namespace Ranksystem.PluginHelper;
 
@@ -8,7 +7,7 @@ public static class Blacklist
 {
     public static bool CheckUserGroups(DiscordRole[] userRolesAsArray, DiscordGuild guild)
     {
-        var sqliteConnection = Worker.GetServiceSqLiteConnection();
+        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
 
         var blacklistedRoles = sqliteConnection.Query($"SELECT RoleId FROM RanksystemBlacklistedRolesIndex WHERE GuildId = {guild.Id} ").ToArray();
         
@@ -28,7 +27,7 @@ public static class Blacklist
     {
         
         
-        var sqliteConnection = Worker.GetServiceSqLiteConnection();
+        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
 
         var blacklistedChannels = sqliteConnection.Query($"SELECT ChannelId FROM RanksystemBlacklistedChannelsIndex WHERE GuildId = {userChannel.GuildId} ").ToArray();
         

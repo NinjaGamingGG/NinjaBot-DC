@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using DSharpPlus;
 using DSharpPlus.Entities;
-using NinjaBot_DC;
 using RankSystem;
 using RankSystem.Models;
 using Serilog;
@@ -12,7 +11,7 @@ public static class UpdateUserPoints
 {
     public static async Task Add(DiscordClient client,ulong guildId,DiscordUser user, RankSystemPlugin.ERankSystemReason reason)
     {
-        var sqlite = Worker.GetServiceSqLiteConnection();
+        var sqlite = SqLiteHelper.GetSqLiteConnection();
         
         var config = await sqlite.QueryFirstOrDefaultAsync<RanksystemConfigurationModel>("SELECT * FROM RanksystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
         

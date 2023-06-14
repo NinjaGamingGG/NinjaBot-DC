@@ -34,10 +34,26 @@ public static class SqLiteHelper
 
     public static void InitializeSqliteTables()
     {
-        if (_sqLiteConnection == null)
+        if (ReferenceEquals(_sqLiteConnection, null))
         {
             Log.Error("[LoungeSystem Plugin] SQLite connection is null, cannot initialize tables");
             return;
+        }
+        
+        using var sqLiteLoungeSystemConfigurationTableCommand = _sqLiteConnection.CreateCommand();
+        {
+            sqLiteLoungeSystemConfigurationTableCommand.CommandText =
+                "CREATE TABLE IF NOT EXISTS LoungeSystemConfigurationIndex (Id INTEGER PRIMARY KEY AUTOINCREMENT, GuildId INTEGER, TargetChannelId INTEGER, InterfaceChannelId INTEGER, LoungeNamePattern TEXT)";
+
+            sqLiteLoungeSystemConfigurationTableCommand.ExecuteNonQuery();
+        }
+        
+        using var sqLiteLoungeSystemLoungeTableCommand = _sqLiteConnection.CreateCommand();
+        {
+            sqLiteLoungeSystemLoungeTableCommand.CommandText =
+                "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, GuildId INTEGER, OwnerId INTEGER)";
+
+            sqLiteLoungeSystemLoungeTableCommand.ExecuteNonQuery();
         }
 
     }

@@ -1,4 +1,6 @@
-﻿using NinjaBot_DC;
+﻿using LoungeSystemPlugin.Events;
+using LoungeSystemPlugin.PluginHelper;
+using NinjaBot_DC;
 using PluginBase;
 using Serilog;
 
@@ -11,18 +13,40 @@ public class LoungeSystemPlugin : IPlugin
     public string? PluginDirectory { get; set; }
     public void OnLoad()
     {
-        var client = Worker.GetServiceDiscordClient();
-        
         if(ReferenceEquals(PluginDirectory, null))
             OnUnload();
 
-        Directory.CreateDirectory(PluginDirectory!);
+        SqLiteHelper.OpenSqLiteConnection(PluginDirectory!);
+        SqLiteHelper.InitializeSqliteTables();
+
+        var slashCommands = Worker.GetServiceSlashCommandsExtension();
+        slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>();
+
+        var client = Worker.GetServiceDiscordClient();
         
+        client.VoiceStateUpdated += VoiceStateUpdated.ChannelEnter;
+        client.VoiceStateUpdated += VoiceStateUpdated.ChannelLeave;
+        
+        
+        Directory.CreateDirectory(PluginDirectory!);
+
+        Task.Run(async () =>
+        {
+            await StartupCleanup.Execute();
+        });
+
         Log.Information("[{Name}] Plugin Loaded", Name);
     }
 
     public void OnUnload()
     {
+        var client = Worker.GetServiceDiscordClient();
+        
+        client.VoiceStateUpdated -= VoiceStateUpdated.ChannelEnter;
+        client.VoiceStateUpdated -= VoiceStateUpdated.ChannelLeave;
+        
+        SqLiteHelper.CloseSqLiteConnection();
+        
         Log.Information("[{Name}] Plugin Unloaded", Name);
     }
 }

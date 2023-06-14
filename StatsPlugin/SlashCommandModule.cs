@@ -20,7 +20,7 @@ public class SlashCommandModule : ApplicationCommandModule
     public async Task SetupChannelCommand(InteractionContext ctx)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-        
+
         var guild = ctx.Guild;
         var newCategory = await guild.CreateChannelCategoryAsync(@"· • ●  📊 Stats 📊 ● • ·");
 

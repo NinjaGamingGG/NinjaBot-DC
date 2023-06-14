@@ -214,8 +214,8 @@ public sealed class Worker : BackgroundService
     {
         Log.Information("Registering Events");
         //Lounge System Events
-        DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
-        DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
+        //DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
+        //DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
         
         //Reaction Role Events
         DiscordClient.MessageReactionAdded += ReactionRoles.MessageReactionAdded; 

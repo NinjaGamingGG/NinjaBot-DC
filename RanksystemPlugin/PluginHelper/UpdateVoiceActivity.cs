@@ -6,7 +6,7 @@ namespace Ranksystem.PluginHelper;
 
 public static class UpdateVoiceActivity
 {
-    private static readonly PeriodicTimer ChannelActivityUpdateTimer = new(TimeSpan.FromSeconds(5));
+    private static readonly PeriodicTimer ChannelActivityUpdateTimer = new(TimeSpan.FromMinutes(1));
     
 
     

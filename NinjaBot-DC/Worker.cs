@@ -22,7 +22,7 @@ public sealed class Worker : BackgroundService
     
     private static readonly DiscordClient DiscordClient;
 
-    private static SlashCommandsExtension SlashCommandsExtension;
+    private static readonly SlashCommandsExtension SlashCommandsExtension;
 
     private static IPlugin[]? _loadedPluginsArray; 
 

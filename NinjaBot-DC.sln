@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RanksystemPlugin", "Ranksys
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatsPlugin", "StatsPlugin\StatsPlugin.csproj", "{894D1152-9B30-4F8D-9727-6DDD7EB8531A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoungeSystemPlugin", "LoungeSystemPlugin\LoungeSystemPlugin.csproj", "{BC9E0D6F-C679-48CA-B7F5-FB7AD84D9CC1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,9 +34,14 @@ Global
 		{894D1152-9B30-4F8D-9727-6DDD7EB8531A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{894D1152-9B30-4F8D-9727-6DDD7EB8531A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{894D1152-9B30-4F8D-9727-6DDD7EB8531A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC9E0D6F-C679-48CA-B7F5-FB7AD84D9CC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC9E0D6F-C679-48CA-B7F5-FB7AD84D9CC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC9E0D6F-C679-48CA-B7F5-FB7AD84D9CC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC9E0D6F-C679-48CA-B7F5-FB7AD84D9CC1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C9DF0200-4821-491C-AE70-B2FCEC49238E} = {AFB40CC2-BAF6-47D7-9128-F7A9A44CCCAE}
 		{894D1152-9B30-4F8D-9727-6DDD7EB8531A} = {AFB40CC2-BAF6-47D7-9128-F7A9A44CCCAE}
+		{BC9E0D6F-C679-48CA-B7F5-FB7AD84D9CC1} = {AFB40CC2-BAF6-47D7-9128-F7A9A44CCCAE}
 	EndGlobalSection
 EndGlobal

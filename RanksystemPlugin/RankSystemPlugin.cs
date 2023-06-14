@@ -1,12 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using DSharpPlus.CommandsNext;
+
 using NinjaBot_DC;
 using PluginBase;
 using Ranksystem;
-using RankSystem.Commands;
 using Ranksystem.Events;
-using Ranksystem.RanksystemHelper;
+using Ranksystem.PluginHelper;
 using Serilog;
 
 // ReSharper disable once IdentifierTypo
@@ -25,17 +23,18 @@ public class RankSystemPlugin : IPlugin
     public void OnLoad()
     {
         var client = Worker.GetServiceDiscordClient();
-
-        var commands = client.GetCommandsNext();
         
-        commands.RegisterCommands<RankSystemCommandModule>();
+        SqLiteHelper.OpenSqLiteConnection(PluginDirectory!);
+        SqLiteHelper.InitializeSqliteTables();
+        
 
-        InitializeSqLiteTables.Init();
-
+        var slashCommands = Worker.GetServiceSlashCommandsExtension();
+        slashCommands.RegisterCommands<RanksystemSubGroupContainer>();
+        
         client.MessageCreated += MessageCreatedEvent.MessageCreated;
         client.MessageReactionAdded += MessageReactionAddedEvent.MessageReactionAdded;
 
-        Log.Information("Hello From Ranksystem Plugin!");
+        Log.Information("[{Name}] Plugin Loaded", Name);
 
         Task.Run(async () => await UpdateVoiceActivity.Update(client));
 
@@ -45,6 +44,7 @@ public class RankSystemPlugin : IPlugin
 
     public void OnUnload()
     {
-        Console.WriteLine("Goodbye World!");
+        SqLiteHelper.CloseSqLiteConnection();
+        Log.Information("[{Name}] Plugin Unloaded", Name);
     }
 }

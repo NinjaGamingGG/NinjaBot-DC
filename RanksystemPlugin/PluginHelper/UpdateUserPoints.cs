@@ -6,7 +6,7 @@ using RankSystem;
 using RankSystem.Models;
 using Serilog;
 
-namespace Ranksystem.RanksystemHelper;
+namespace Ranksystem.PluginHelper;
 
 public static class UpdateUserPoints
 {

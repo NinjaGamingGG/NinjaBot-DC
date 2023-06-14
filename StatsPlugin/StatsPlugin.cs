@@ -27,7 +27,7 @@ public class StatsPlugin : IPlugin
 
         SqLiteConnectionHelper.InitializeSqliteTables();
 
-        var slashCommands = client.UseSlashCommands();
+        var slashCommands = Worker.GetServiceSlashCommandsExtension();
         
         slashCommands.RegisterCommands<SlashCommandModule>();
 
@@ -43,6 +43,7 @@ public class StatsPlugin : IPlugin
 
     public void OnUnload()
     {
+        SqLiteConnectionHelper.CloseSqLiteConnection();
         Log.Information("[Stats Plugin] Plugin Unloaded!");
     }
 }

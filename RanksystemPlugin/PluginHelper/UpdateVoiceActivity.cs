@@ -2,7 +2,7 @@
 using DSharpPlus.Entities;
 using RankSystem;
 
-namespace Ranksystem.RanksystemHelper;
+namespace Ranksystem.PluginHelper;
 
 public static class UpdateVoiceActivity
 {

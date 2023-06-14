@@ -1,7 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.EventArgs;
 using RankSystem;
-using Ranksystem.RanksystemHelper;
+using Ranksystem.PluginHelper;
 
 namespace Ranksystem.Events;
 

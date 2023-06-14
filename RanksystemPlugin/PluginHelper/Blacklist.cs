@@ -1,9 +1,8 @@
 ﻿using Dapper;
-using DSharpPlus;
 using DSharpPlus.Entities;
 using NinjaBot_DC;
 
-namespace Ranksystem.RanksystemHelper;
+namespace Ranksystem.PluginHelper;
 
 public static class Blacklist
 {

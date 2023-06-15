@@ -1,4 +1,6 @@
-﻿using LoungeSystemPlugin.Events;
+﻿using DSharpPlus.CommandsNext;
+using LoungeSystemPlugin.CommandModules;
+using LoungeSystemPlugin.Events;
 using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
 using PluginBase;
@@ -23,9 +25,14 @@ public class LoungeSystemPlugin : IPlugin
         slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>();
 
         var client = Worker.GetServiceDiscordClient();
+
+        var commandsNext = client.GetCommandsNext();
+        commandsNext.RegisterCommands<CommandNextModule>();
         
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelEnter;
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelLeave;
+
+        client.ComponentInteractionCreated += ComponentInteractionCreated.RenameButtonPressed;
         
         
         Directory.CreateDirectory(PluginDirectory!);

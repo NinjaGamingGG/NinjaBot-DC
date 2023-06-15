@@ -15,8 +15,7 @@ public static class CleanupLounge
         var loungeChannel = await discordClient.GetChannelAsync(loungeDbRecord.ChannelId);
         var guild = await discordClient.GetGuildAsync(loungeDbRecord.GuildId);
         
-        //For some reason in this case the user count has to be queried by the guild not the channel because that would often result in an exception 
-        if (guild.Channels[loungeDbRecord.ChannelId].Users.Count != 0)
+        if (guild.Channels[loungeChannel.Id].Users.Count != 0)
             return;
 
         var channelExits  = await IsChannelInGuildAsync(discordClient, loungeDbRecord.ChannelId, loungeDbRecord.GuildId);

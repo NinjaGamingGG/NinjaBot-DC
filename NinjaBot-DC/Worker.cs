@@ -39,13 +39,21 @@ public sealed class Worker : BackgroundService
 
         DiscordClient = new DiscordClient(new DiscordConfiguration()
         {
-            Token = token,
+            Token = token!,
             TokenType = TokenType.Bot,
-            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | DiscordIntents.GuildMembers | DiscordIntents.GuildPresences,
+            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | DiscordIntents.GuildMembers | DiscordIntents.GuildPresences | DiscordIntents.GuildVoiceStates,
             LoggerFactory = logFactory
         });
 
         SlashCommandsExtension = DiscordClient.UseSlashCommands();
+        
+        DiscordClient.UseInteractivity(new InteractivityConfiguration()
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        });
+        {
+            
+        }
     }
 
     private static IConfigurationRoot LoadServiceConfig()
@@ -200,7 +208,7 @@ public sealed class Worker : BackgroundService
         Log.Information("Registering Commands");
         var commands = DiscordClient.UseCommandsNext(new CommandsNextConfiguration()
         {
-            StringPrefixes  = new []{stringPrefix},
+            StringPrefixes  = new []{stringPrefix}!,
         });
 
         commands.RegisterCommands<LoungeCommandModule>(); 

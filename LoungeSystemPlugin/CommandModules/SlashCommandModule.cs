@@ -7,7 +7,7 @@ using DSharpPlus.SlashCommands;
 using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records;
 
-namespace LoungeSystemPlugin;
+namespace LoungeSystemPlugin.CommandModules;
 
 
 [SlashCommandGroup("lounge", "Lounge System Commands")]

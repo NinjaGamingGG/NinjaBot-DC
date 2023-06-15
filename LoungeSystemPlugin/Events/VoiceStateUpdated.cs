@@ -91,9 +91,32 @@ public static class VoiceStateUpdated
 
             var builder = new DiscordMessageBuilder()
                 .WithContent(discordMember.Mention + " this is your lounge Interface")
-                .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "lounge_test",
-                    DiscordEmoji.FromName(client, ":black_nib:") + " Edit Name"));
-
+                .AddComponents(new DiscordComponent[]
+                {
+                    new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_rename_button",
+                          "Rename",false, new DiscordComponentEmoji( DiscordEmoji.FromName(client, ":black_nib:"))),
+                    new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_resize_button",
+                        "Resize", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":busts_in_silhouette:"))),
+                    new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_trust_button",
+                        "Trust", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":people_hugging:"))),
+                    new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_claim_button",
+                        "Claim", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":triangular_flag_on_post:"))),
+                    new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_kick_button",
+                        "Kick", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":athletic_shoe:")))
+                })
+                .AddComponents(new DiscordComponent[]
+                {
+                    new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_un-trust_button",
+                        // ReSharper disable once StringLiteralTypo
+                        "Untrust", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":bust_in_silhouette:"))),
+                    new DiscordButtonComponent(ButtonStyle.Danger, "lounge_lock_button",
+                        "Un/Lock", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":lock:"))),
+                    new DiscordButtonComponent(ButtonStyle.Danger, "lounge_ban_button",
+                        "Ban", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":judge:"))),
+                    new DiscordButtonComponent(ButtonStyle.Danger, "lounge_delete_button",
+                        "Delete", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":put_litter_in_its_place:"))),
+                });
+            
             await newChannel.SendMessageAsync(builder);
 
         }

@@ -32,7 +32,7 @@ public class LoungeSystemPlugin : IPlugin
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelEnter;
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelLeave;
 
-        client.ComponentInteractionCreated += ComponentInteractionCreated.RenameButtonPressed;
+        client.ComponentInteractionCreated += ComponentInteractionCreated.InterfaceButtonPressed;
         
         
         Directory.CreateDirectory(PluginDirectory!);

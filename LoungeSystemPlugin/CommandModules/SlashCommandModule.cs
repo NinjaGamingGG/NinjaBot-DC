@@ -145,9 +145,110 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             
             await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent(configStringBuilder.ToString()));
             
+        }
+    
+        [SlashCommand("add-required-role", "If Channel requires i.e. reaction Role for access. Otherwise access level will be @everyone role))")]
+        public async Task AddRequiredRole(InteractionContext context, [Option("Channel", "Channel which this Role is Required for")] DiscordChannel channel, [Option("Role", "Role which is Required for this Channel")] DiscordRole role)
+        {
+            await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
             
+            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            
+            if (ReferenceEquals(sqLiteConnection, null))
+            {
+                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+            }
+            
+            var alreadyExists = await sqLiteConnection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId", new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
 
+            if (alreadyExists != 0)
+            {
+                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Role is already listed as required for this channel!"));
+                return;
+            }
+
+            var insertSuccess = await sqLiteConnection.ExecuteAsync("INSERT INTO RequiredRoleIndex (GuildId, ChannelId, RoleId) VALUES (@GuildId, @ChannelId, @RoleId)", new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
+
+            if (insertSuccess == 0)
+            {
+                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to insert new required role record!"));
+                return;
+            }
+            
+            await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Successfully created new required role record!"));
         }
         
+        [SlashCommand("remove-required-role", "Remove a required role from a channel")]
+        public async Task RemoveRequiredRole(InteractionContext context, [Option("Channel", "Channel which this Role is Required for")] DiscordChannel channel, [Option("Role", "Role which is Required for this Channel")] DiscordRole role)
+        {
+            await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+            
+            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            
+            if (ReferenceEquals(sqLiteConnection, null))
+            {
+                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+            }
+            
+            var alreadyExists = await sqLiteConnection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId", new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
+
+            if (alreadyExists == 0)
+            {
+                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Role is not listed as required for this channel!"));
+                return;
+            }
+
+            var deleteSuccess = await sqLiteConnection.ExecuteAsync("DELETE FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId", new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
+
+            if (deleteSuccess == 0)
+            {
+                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to delete required role record!"));
+                return;
+            }
+            
+            await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Successfully deleted required role record!"));
+        }
+        
+        [SlashCommand("list-required-roles", "List all required roles for a channel")]
+        public async Task ListRequiredRoles(InteractionContext context, [Option("Channel", "Channel which this Role is Required for")] DiscordChannel channel)
+        {
+            await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+            
+            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            
+            if (ReferenceEquals(sqLiteConnection, null))
+            {
+                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+            }
+            
+            var requiredRoleRecords = await sqLiteConnection.QueryAsync<RequiredRoleRecord>("SELECT * FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId", new { GuildId = context.Guild.Id, ChannelId = channel.Id });
+            
+            var requiredRoleRecordsList = requiredRoleRecords.ToList();
+            
+            if (!requiredRoleRecordsList.Any())
+            {
+                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("No required roles found for this channel!"));
+                return;
+            }
+
+            var requiredRoleStringBuilder = new StringBuilder();
+            
+            requiredRoleStringBuilder.AppendLine("Found the following required roles:\n");
+
+            foreach (var requiredRoleRecord in requiredRoleRecordsList)
+            {
+                var requiredRole = context.Guild.GetRole(requiredRoleRecord.RoleId);
+                requiredRoleStringBuilder.AppendLine("Required Role: " + requiredRole.Mention);
+                
+                if(requiredRoleRecordsList.Last() != requiredRoleRecord)
+                    requiredRoleStringBuilder.AppendLine("-------------------------------------------------");
+
+            }
+            
+            await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent(requiredRoleStringBuilder.ToString()));
+            
+        }
     }
+    
+    
 }

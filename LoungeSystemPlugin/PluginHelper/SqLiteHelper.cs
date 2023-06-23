@@ -55,6 +55,15 @@ public static class SqLiteHelper
 
             sqLiteLoungeSystemLoungeTableCommand.ExecuteNonQuery();
         }
+        
+        using var sqliteLoungeSystemRequiredRolesTableCommand  = _sqLiteConnection.CreateCommand();
+        {
+            sqliteLoungeSystemRequiredRolesTableCommand.CommandText =
+                "CREATE TABLE IF NOT EXISTS RequiredRoleIndex (Id INTEGER PRIMARY KEY AUTOINCREMENT, GuildId INTEGER, ChannelId INTEGER, RoleId INTEGER)";
+            
+            sqliteLoungeSystemRequiredRolesTableCommand.ExecuteNonQuery();
+        }
+
 
     }
 }

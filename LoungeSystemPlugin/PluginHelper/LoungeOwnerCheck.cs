@@ -18,4 +18,15 @@ public class LoungeOwnerCheck
         
         return existsAsOwner != 0;
     }
+    
+    public static async Task<ulong> GetOwnerIdAsync(DiscordChannel channel)
+    {
+        var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+        
+        var ownerId = await sqLiteConnection.ExecuteScalarAsync<ulong>(
+            "SELECT OwnerId FROM LoungeIndex WHERE ChannelId = @ChannelId",
+            new {ChannelId = channel.Id});
+        
+        return ownerId;
+    }
 }

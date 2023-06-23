@@ -108,14 +108,9 @@ public sealed class Worker : BackgroundService
         
         Log.Information("Starting up the Bot");
         await DiscordClient.ConnectAsync();
-        
-        var startupTasks = new List<Task>() {
-                LoungeSystem.StartupCleanup(DiscordClient), 
-                TwitchAlerts.InitExtensionAsync(),
-        };
-                
-        
-        await Task.WhenAll(startupTasks);
+
+        var cleanupTask = Task.Run(async () => await CleanUpChannel(), stoppingToken);
+        //TODO: Remove CleanupTask as soon as Helltide bot is available again
         
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -211,7 +206,6 @@ public sealed class Worker : BackgroundService
             StringPrefixes  = new []{stringPrefix}!,
         });
 
-        commands.RegisterCommands<LoungeCommandModule>(); 
         commands.RegisterCommands<ReactionRolesCommandModule>();
         commands.RegisterCommands<TwitchAlertsCommandModule>();
         
@@ -239,13 +233,6 @@ public sealed class Worker : BackgroundService
         try
         {
             SqLiteConnection.Open();
-
-            await using var sqLiteLoungeTableCommand = SqLiteConnection.CreateCommand();
-            {
-                sqLiteLoungeTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, OwnerId INTEGER, GuildId INTEGER)";
-            
-                await sqLiteLoungeTableCommand.ExecuteNonQueryAsync();
-            }
 
             await using var sqLiteReactionMessageTableCommand = SqLiteConnection.CreateCommand();
             {

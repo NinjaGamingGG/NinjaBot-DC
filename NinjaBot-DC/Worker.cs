@@ -185,16 +185,6 @@ public sealed class Worker : BackgroundService
         return Task.CompletedTask;
     }
 
-    private static Task SetupInteractivity()
-    {
-        DiscordClient.UseInteractivity(new InteractivityConfiguration()
-        {
-            PollBehaviour = PollBehaviour.KeepEmojis,
-            Timeout = TimeSpan.FromSeconds(30)
-        });
-        return Task.CompletedTask;
-    }
-
     private static Task RegisterCommands()
     {
         var stringPrefix = Configuration.GetValue<string>("ninja-bot:prefix");
@@ -235,53 +225,39 @@ public sealed class Worker : BackgroundService
         {
             SqLiteConnection.Open();
 
-            await using var sqLiteReactionMessageTableCommand = SqLiteConnection.CreateCommand();
-            {
-                sqLiteReactionMessageTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS ReactionMessagesIndex (GuildId INTEGER, MessageId INTEGER, MessageTag VARCHAR(20))";
-            
-                await sqLiteReactionMessageTableCommand.ExecuteNonQueryAsync();
-            }
-
-            await using var sqLiteReactionRoleCommand = SqLiteConnection.CreateCommand();
-            {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS ReactionRoleIndex(GuildId INTEGER, MessageTag VARCHAR(50),ReactionEmojiTag VARCHAR(50),LinkedRoleId INTEGER)";
-
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
-            }
-            
             await using var sqliteTwitchAlertRoleTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchAlertRoleIndex(GuildId INTEGER, RoleId INTEGER, RoleTag VARCHAR(50))";
+                sqliteTwitchAlertRoleTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchAlertRoleIndex(GuildId INTEGER, RoleId INTEGER, RoleTag VARCHAR(50))";
 
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+                await sqliteTwitchAlertRoleTableCommand.ExecuteNonQueryAsync();
             }
             
             await using var sqliteTwitchCreatorTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchCreatorIndex(GuildId INTEGER, UserId INTEGER, RoleTag VARCHAR(50))";
+                sqliteTwitchCreatorTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchCreatorIndex(GuildId INTEGER, UserId INTEGER, RoleTag VARCHAR(50))";
 
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+                await sqliteTwitchCreatorTableCommand.ExecuteNonQueryAsync();
             }
     
             await using var sqliteTwitchCreatorSocialChannelTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchCreatorSocialMediaChannelIndex(GuildId INTEGER, UserId INTEGER, RoleTag VARCHAR(50), SocialMediaChannel VARCHAR(50),Platform VARCHAR(50) )";
+                sqliteTwitchCreatorSocialChannelTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchCreatorSocialMediaChannelIndex(GuildId INTEGER, UserId INTEGER, RoleTag VARCHAR(50), SocialMediaChannel VARCHAR(50),Platform VARCHAR(50) )";
 
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+                await sqliteTwitchCreatorSocialChannelTableCommand.ExecuteNonQueryAsync();
             }
             
             await using var sqliteTwitchDiscordChannelTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchDiscordChannelIndex(GuildId INTEGER, ChannelId INTEGER, RoleTag VARCHAR(50))";
+                sqliteTwitchDiscordChannelTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchDiscordChannelIndex(GuildId INTEGER, ChannelId INTEGER, RoleTag VARCHAR(50))";
 
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+                await sqliteTwitchDiscordChannelTableCommand.ExecuteNonQueryAsync();
             }
                 
             await using var sqliteTwitchStreamIndexTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchStreamCacheIndex(Id VARCHAR(50), ChannelName VARCHAR(50), ChannelId VARCHAR(50))";
+                sqliteTwitchStreamIndexTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchStreamCacheIndex(Id VARCHAR(50), ChannelName VARCHAR(50), ChannelId VARCHAR(50))";
 
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+                await sqliteTwitchStreamIndexTableCommand.ExecuteNonQueryAsync();
             }    
 
         }

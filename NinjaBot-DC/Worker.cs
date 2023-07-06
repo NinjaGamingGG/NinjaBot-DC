@@ -37,9 +37,11 @@ public sealed class Worker : BackgroundService
 
         var logFactory = new LoggerFactory().AddSerilog();
 
+        token ??= "";
+
         DiscordClient = new DiscordClient(new DiscordConfiguration()
         {
-            Token = token!,
+            Token = token,
             TokenType = TokenType.Bot,
             Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | DiscordIntents.GuildMembers | DiscordIntents.GuildPresences | DiscordIntents.GuildVoiceStates,
             LoggerFactory = logFactory
@@ -109,9 +111,6 @@ public sealed class Worker : BackgroundService
         Log.Information("Starting up the Bot");
         await DiscordClient.ConnectAsync();
 
-        var cleanupTask = Task.Run(async () => await CleanUpChannel(), stoppingToken);
-        //TODO: Remove CleanupTask as soon as Helltide bot is available again
-        
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000, stoppingToken);
@@ -199,11 +198,13 @@ public sealed class Worker : BackgroundService
     private static Task RegisterCommands()
     {
         var stringPrefix = Configuration.GetValue<string>("ninja-bot:prefix");
+
+        stringPrefix ??= "1";
         
         Log.Information("Registering Commands");
         var commands = DiscordClient.UseCommandsNext(new CommandsNextConfiguration()
         {
-            StringPrefixes  = new []{stringPrefix}!,
+            StringPrefixes  = new []{stringPrefix},
         });
 
         commands.RegisterCommands<ReactionRolesCommandModule>();

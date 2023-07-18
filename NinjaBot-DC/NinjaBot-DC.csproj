@@ -8,17 +8,19 @@
         <RootNamespace>NinjaBot_DC</RootNamespace>
         <LangVersion>default</LangVersion>
         <Company>NinjaGaming.gg</Company>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Dapper" Version="2.0.143" />
         <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
-        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01619" />
-        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01619" />
-        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-01619" />
-        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01619" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-preview.5.23280.8" />
-        <PackageReference Include="Serilog" Version="3.0.1" />
+        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01662" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01662" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-01662" />
+        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01662" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-preview.6.23329.7" />
+        <PackageReference Include="Microsoft.NET.Build.Containers" Version="8.0.100-preview.6.23330.7" />
+        <PackageReference Include="Serilog" Version="3.0.2-dev-02044" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="7.0.0" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="7.0.0" />

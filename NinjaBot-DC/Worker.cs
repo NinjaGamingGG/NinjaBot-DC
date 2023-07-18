@@ -4,7 +4,6 @@ using NinjaBot_DC.Extensions;
 using System.Data.SQLite;
 using System.Reflection;
 using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using NinjaBot_DC.CommandModules;

@@ -31,6 +31,7 @@ public sealed class Worker : BackgroundService
 
         var sqliteSource = Configuration.GetValue<string>("ninja-bot:sqlite-source");
         SqLiteConnection = new SQLiteConnection($"Data Source={sqliteSource};Version=3;New=True;Compress=True;");
+        
 
         var token = Configuration.GetValue<string>("ninja-bot:token");
 
@@ -133,10 +134,18 @@ public sealed class Worker : BackgroundService
 
     private static Task LoadPlugins()
     {
-        var pluginFolder = Path.Combine(Directory.GetCurrentDirectory() ,"Plugins");
+        
+        var pluginFolderConfig = Configuration.GetValue<string>("ninja-bot:plugin-folder");
+        if (ReferenceEquals(pluginFolderConfig, null))
+        {
+            Log.Fatal("Unable to load Plugin Path from Config");
+            return Task.CompletedTask;
+        }
+
+        var pluginFolder = Path.Combine(Directory.GetCurrentDirectory() ,pluginFolderConfig);
     
         Directory.CreateDirectory(pluginFolder);
-    
+
         var pluginPaths = Directory.GetFiles(pluginFolder, "*.dll");
     
 
@@ -145,6 +154,8 @@ public sealed class Worker : BackgroundService
             var pluginAssembly = LoadPlugin.LoadPluginFromPath(pluginPath);
             return CreatePlugin.CreateFromAssembly(pluginAssembly);
         }).ToArray();
+        
+        Log.Information("Loading {PluginCount} Plugins from {FolderPath}", pluginsArray.Length, pluginFolder);
         
         for (var i = 0; i < pluginsArray.Length; i++)
         {

@@ -3,7 +3,8 @@
   {
     "token": "Your Token Here",
     "prefix": "!",
-    "sqlite-source":  "database.sqlite"
+    "sqlite-source":  "database.sqlite",
+    "plugin-folder": "plugins"
   },
   "twitch-extension":
   {

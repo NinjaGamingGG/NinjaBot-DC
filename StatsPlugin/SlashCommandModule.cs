@@ -113,7 +113,7 @@ ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
                 return;
             }
         
-            var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelLinkedRolesIndex SET RoleId = @RoleId, RoleHandle = @RoleHandle WHERE GuildId = @GuildId", new { RoleId = role.Id, GuildId = ctx.Guild.Id , RoleHandle = roleHandleInDb});
+            var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelLinkedRolesIndex SET RoleHandle = @RoleHandle WHERE RoleId = @RoleId AND GuildId = @GuildId", new { RoleId = role.Id, GuildId = ctx.Guild.Id , RoleHandle = roleHandleInDb});
         
             if (hasUpdated == 1)
             {

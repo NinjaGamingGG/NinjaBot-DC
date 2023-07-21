@@ -186,8 +186,6 @@ public static class ComponentInteractionCreated
         var membersInChannel = eventArgs.Channel.Users;
 
         var optionsList = membersInChannel.Select(channelMember => new DiscordSelectComponentOption("@" + channelMember.DisplayName, channelMember.Id.ToString())).ToList();
-        
-        optionsList.Add(new DiscordSelectComponentOption("@leon",952248460277604372.ToString()));
 
         var sortedList = optionsList.OrderBy(x => x.Label);
         

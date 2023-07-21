@@ -9,5 +9,7 @@ public record LoungeDbRecord
     public ulong ChannelId { get; set; }
     public ulong GuildId { get; set; }
     public ulong OwnerId { get; set; }
+    
+    public bool IsPublic { get; set; }
 
 }

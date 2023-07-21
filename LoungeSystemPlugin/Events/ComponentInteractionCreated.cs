@@ -1,9 +1,11 @@
 ﻿using Dapper;
+using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Net.Models;
 using LoungeSystemPlugin.PluginHelper;
+using LoungeSystemPlugin.Records;
 using NinjaBot_DC;
 using Serilog;
 
@@ -36,12 +38,27 @@ public static class ComponentInteractionCreated
                 break;
             
             case "lounge_kick_button":
+                await LoungeKickButtonLogic(eventArgs);
                 break;
             
             case "lounge_lock_button":
+                await LoungeLockButtonLogic(eventArgs);
+                break;
+            
+            case "lounge_ban_button":
+                await LoungeBanButtonLogic(eventArgs);
                 break;
             
             case "lounge_delete_button":
+                await LoungeDeleteButtonLogic(eventArgs);
+                break;
+            
+            case "lounge_ban_dropdown":
+                await BanDropdownLogic(eventArgs);
+                break;
+            
+            case "lounge_kick_dropdown":
+                await KickDropdownLogin(eventArgs);
                 break;
             
             case "lounge_resize_dropdown":
@@ -62,6 +79,330 @@ public static class ComponentInteractionCreated
         }
     }
 
+    private static async Task LoungeDeleteButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    {
+        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        
+        if (ReferenceEquals(eventArgs.User, null))
+            return;
+
+        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
+        
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        
+        //Only non owners can delete
+        if (!existsAsOwner)
+            return;
+
+        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+
+        var loungeDbRecordEnumerable = await sqliteConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId= @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
+
+        var loungeDbRecordList = loungeDbRecordEnumerable.ToList();
+
+        if (!loungeDbRecordList.Any())
+        {
+            Log.Error("Unable to Load the LoungeDbRecord from Lounge Index on Guild {GuildId} at Channel {ChannelId}", eventArgs.Guild.Id, eventArgs.Channel.Id);
+            return;
+        }
+
+        var loungeChannel = eventArgs.Channel;
+
+        await loungeChannel.DeleteAsync();
+        
+        var sqlSuccess = await sqliteConnection.DeleteAsync(loungeDbRecordList.First());
+                
+        if (sqlSuccess == false)
+            Log.Error("Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",loungeChannel.Name, eventArgs.Channel.Id, eventArgs.Guild.Id);
+
+    }
+
+    private static async Task BanDropdownLogic(ComponentInteractionCreateEventArgs eventArgs)
+    {
+        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        
+        if (ReferenceEquals(eventArgs.User, null))
+            return;
+
+        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
+        
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        
+        //Only owner can ban
+        if (!existsAsOwner)
+            return;
+
+        await eventArgs.Message.DeleteAsync();
+        
+        var selectedUserIds = eventArgs.Interaction.Data.Values.ToList();
+
+        var selectedUsersAsDiscordMember = new List<DiscordMember>();
+
+        foreach (var userIdAsUlong in selectedUserIds.Select(ulong.Parse))
+        {
+            selectedUsersAsDiscordMember.Add(await eventArgs.Guild.GetMemberAsync(userIdAsUlong));
+        }
+
+        var existingOverwrites = eventArgs.Channel.PermissionOverwrites.ToList();
+
+        var overwriteBuilderList = new List<DiscordOverwriteBuilder>();
+        
+        foreach (var overwrite in existingOverwrites)
+        {
+            if (overwrite.Type == OverwriteType.Member && selectedUsersAsDiscordMember.Contains(await overwrite.GetMemberAsync()))
+                continue;
+            
+            if (overwrite.Type == OverwriteType.Member)
+                overwriteBuilderList.Add(await new DiscordOverwriteBuilder(await overwrite.GetMemberAsync()).FromAsync(overwrite));
+            
+            if (overwrite.Type == OverwriteType.Role)
+                overwriteBuilderList.Add(await new DiscordOverwriteBuilder(await overwrite.GetRoleAsync()).FromAsync(overwrite));
+        }
+
+        overwriteBuilderList.AddRange(selectedUsersAsDiscordMember.Select(member => new DiscordOverwriteBuilder(member).Allow(Permissions.AccessChannels)
+            .Deny(Permissions.SendMessages)
+            .Deny(Permissions.UseVoice)
+            .Deny(Permissions.Speak)
+            .Deny(Permissions.Stream)));
+        
+        await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
+    }
+
+    private static async Task LoungeBanButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    {
+        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        
+        if (ReferenceEquals(eventArgs.User, null))
+            return;
+
+        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
+        
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        
+        //Only non owners can ban
+        if (!existsAsOwner)
+            return;
+
+        var membersInChannel = eventArgs.Channel.Users;
+
+        var optionsList = membersInChannel.Select(channelMember => new DiscordSelectComponentOption("@" + channelMember.DisplayName, channelMember.Id.ToString())).ToList();
+        
+        optionsList.Add(new DiscordSelectComponentOption("@leon",952248460277604372.ToString()));
+
+        var sortedList = optionsList.OrderBy(x => x.Label);
+        
+        var dropdown = new DiscordSelectComponent("lounge_ban_dropdown", "Please select an user to ban (from channel)", sortedList);
+
+        var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Please select an user below").AddComponents(dropdown);
+        
+        var followupMessage = await eventArgs.Interaction.CreateFollowupMessageAsync(followUpMessageBuilder);
+        
+        await Task.Delay(TimeSpan.FromSeconds(20));
+
+        try
+        {
+            await followupMessage.DeleteAsync();
+        }
+        catch (DSharpPlus.Exceptions.NotFoundException)
+        {
+            //Do nothing
+        }
+    }
+
+    private static async Task LoungeLockButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    {
+        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        
+        if (ReferenceEquals(eventArgs.User, null))
+            return;
+
+        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
+        
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        
+        //Only non owners can kick
+        if (!existsAsOwner)
+            return;
+
+        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+
+        var isPublic =
+            await sqliteConnection.QueryAsync<bool>(
+                "SELECT isPublic FROM LoungeIndex where GuildId=@GuildId and ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId= eventArgs.Channel.Id});
+
+        var isPublicAsArray = isPublic as bool[] ?? isPublic.ToArray();
+        if (isPublicAsArray.Any() == false)
+            Log.Error("[Ranksystem] Unable to load isPublic variable for Channel {ChannelId} on Guild {GuildId}", eventArgs.Channel.Id, eventArgs.Guild.Id);
+
+        if (isPublicAsArray[0] == false)
+        {
+            await UnLockLoungeLogic(eventArgs);
+            return;
+        }
+
+        await LockLoungeLogic(eventArgs);
+    }
+
+    private static async Task LockLoungeLogic(ComponentInteractionCreateEventArgs eventArgs)
+    {
+        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+        var requiredRolesQueryResult =
+           await sqliteConnection.QueryAsync<ulong>(
+                "SELECT RoleId FROM RequiredRoleIndex WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+
+        var requiresRolesList = requiredRolesQueryResult.ToList();
+
+        var lounge = eventArgs.Channel;
+
+        var existingOverwrites = lounge.PermissionOverwrites;
+        var overwriteBuilderList = new List<DiscordOverwriteBuilder>();
+        
+        foreach (var overwrite in existingOverwrites)
+        {
+            if (overwrite.Type == OverwriteType.Role)
+                continue;
+            
+            var overwriteMember = await overwrite.GetMemberAsync();
+            overwriteBuilderList.Add(await new DiscordOverwriteBuilder(overwriteMember).FromAsync(overwrite));
+        }
+        
+        if (!requiresRolesList.Any())
+            requiresRolesList.Add(eventArgs.Guild.EveryoneRole.Id);
+
+        overwriteBuilderList.AddRange(requiresRolesList.Select(requiredRole => eventArgs.Guild.GetRole(requiredRole))
+            .Select(role => new DiscordOverwriteBuilder(role).Allow(Permissions.AccessChannels)
+                .Deny(Permissions.SendMessages)
+                .Deny(Permissions.UseVoice)
+                .Deny(Permissions.Speak)
+                .Deny(Permissions.Stream)));
+        
+        await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
+
+        await sqliteConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = FALSE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+    }
+    
+    
+    
+    private static async Task UnLockLoungeLogic(ComponentInteractionCreateEventArgs eventArgs)
+    {
+        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+        var requiredRolesQueryResult =
+            await sqliteConnection.QueryAsync<ulong>(
+                "SELECT RoleId FROM RequiredRoleIndex WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+
+        var requiresRolesList = requiredRolesQueryResult.ToList();
+
+        var lounge = eventArgs.Channel;
+
+        var existingOverwrites = lounge.PermissionOverwrites;
+        var overwriteBuilderList = new List<DiscordOverwriteBuilder>();
+        
+        foreach (var overwrite in existingOverwrites)
+        {
+            if (overwrite.Type == OverwriteType.Role)
+                continue;
+            
+            var overwriteMember = await overwrite.GetMemberAsync();
+            overwriteBuilderList.Add(await new DiscordOverwriteBuilder(overwriteMember).FromAsync(overwrite));
+        }
+        
+        if (!requiresRolesList.Any())
+            requiresRolesList.Add(eventArgs.Guild.EveryoneRole.Id);
+        else
+            overwriteBuilderList.Add(new DiscordOverwriteBuilder(eventArgs.Guild.EveryoneRole)
+                .Deny(Permissions.AccessChannels)
+                .Deny(Permissions.SendMessages)
+                .Deny(Permissions.UseVoice)
+                .Deny(Permissions.Speak)
+                .Deny(Permissions.Stream));
+
+        overwriteBuilderList.AddRange(requiresRolesList.Select(requiredRole => eventArgs.Guild.GetRole(requiredRole))
+            .Select(role => new DiscordOverwriteBuilder(role).Allow(Permissions.AccessChannels)
+                .Allow(Permissions.SendMessages)
+                .Allow(Permissions.UseVoice)
+                .Allow(Permissions.Speak)
+                .Allow(Permissions.Stream)));
+
+        await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
+
+        await sqliteConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = TRUE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+
+    }
+
+    private static async Task KickDropdownLogin(ComponentInteractionCreateEventArgs eventArgs)
+    {
+        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        
+        if (ReferenceEquals(eventArgs.User, null))
+            return;
+
+        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
+        
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        
+        //Owner cant be kicked
+        if (!existsAsOwner)
+            return;
+
+        await eventArgs.Message.DeleteAsync();
+        
+        var selectedUserIds = eventArgs.Interaction.Data.Values.ToList();
+
+        foreach (var userId in selectedUserIds)
+        {
+            var user = await eventArgs.Guild.GetMemberAsync(ulong.Parse(userId));
+
+            await user.ModifyAsync(delegate (MemberEditModel kick)
+            {
+                kick.VoiceChannel = eventArgs.Guild.AfkChannel;
+            });
+        }
+    }
+
+    private static async Task LoungeKickButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    {
+        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        
+        if (ReferenceEquals(eventArgs.User, null))
+            return;
+
+        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
+        
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        
+        //Only non owners can kick
+        if (!existsAsOwner)
+            return;
+
+        var membersInChannel = eventArgs.Channel.Users;
+
+        var optionsList = new List<DiscordSelectComponentOption>();
+
+        foreach (var channelMember in membersInChannel)
+        {
+            optionsList.Add(new DiscordSelectComponentOption("@"+channelMember.DisplayName, channelMember.Id.ToString()));
+        }
+        
+        var sortedList = optionsList.OrderBy(x => x.Label);
+        
+        var dropdown = new DiscordSelectComponent("lounge_kick_dropdown", "Please select an user", sortedList);
+
+        var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Please select an user below").AddComponents(dropdown);
+        
+        var followupMessage = await eventArgs.Interaction.CreateFollowupMessageAsync(followUpMessageBuilder);
+        
+        await Task.Delay(TimeSpan.FromSeconds(20));
+
+        try
+        {
+            await followupMessage.DeleteAsync();
+        }
+        catch (DSharpPlus.Exceptions.NotFoundException)
+        {
+            //Do nothing
+        }
+    }
+
     private static async Task LoungeClaimButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
     {
         await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
@@ -74,7 +415,7 @@ public static class ComponentInteractionCreated
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
         
         //Only non owners can claim
-        if (existsAsOwner == true)
+        if (existsAsOwner)
             return;
 
         var ownerId = await LoungeOwnerCheck.GetOwnerIdAsync(eventArgs.Channel);
@@ -89,7 +430,7 @@ public static class ComponentInteractionCreated
                 isOwnerPresent = true;
         }
 
-        if (isOwnerPresent == true)
+        if (isOwnerPresent)
             return;
         
         var builder = new DiscordFollowupMessageBuilder().WithContent(eventArgs.User.Mention + " please wait, claiming channel for you");
@@ -177,10 +518,10 @@ public static class ComponentInteractionCreated
 
 
             
-            if (ReferenceEquals(guildMember.VoiceState, null) || ReferenceEquals(guildMember.VoiceState!.Channel, null))
+            if (ReferenceEquals(guildMember.VoiceState, null) || ReferenceEquals(guildMember.VoiceState.Channel, null))
                 voiceStateString = DiscordEmoji.FromName(client, ":red_circle:") + " Not in Server VC";
 
-            else if (guildMember.VoiceState!.Channel!.Id != eventArgs.Channel.Id)
+            else if (guildMember.VoiceState.Channel.Id != eventArgs.Channel.Id)
                 voiceStateString = DiscordEmoji.FromName(client, ":green_circle:") + "Currently connected to Server VC";
 
             optionsList.Add(new DiscordSelectComponentOption("@" + guildMember.DisplayName, guildMember.Id.ToString(), voiceStateString));
@@ -221,9 +562,7 @@ public static class ComponentInteractionCreated
             return;
         
         var optionsList = new List<DiscordSelectComponentOption>();
-        
-        var client = Worker.GetServiceDiscordClient();
-        
+
         var channelOverwrites = eventArgs.Channel.PermissionOverwrites;
 
         foreach (var overwriteEntry in channelOverwrites)
@@ -357,21 +696,22 @@ public static class ComponentInteractionCreated
         var interactionId = eventArgs.Message.Id;
         var message = await eventArgs.Channel.GetMessageAsync(interactionId);
         await message.DeleteAsync();
-        
+
         var selectedUserIds = eventArgs.Interaction.Data.Values.ToList();
 
         foreach (var selectedUserId in selectedUserIds)
         {
             var selectedUser = await eventArgs.Guild.GetMemberAsync(ulong.Parse(selectedUserId));
 
-            var overwriteBuilderList = new List<DiscordOverwriteBuilder>();
-            
-            overwriteBuilderList.Add(new DiscordOverwriteBuilder(selectedUser)
-                .Allow(Permissions.AccessChannels)
-                .Allow(Permissions.SendMessages)
-                .Allow(Permissions.UseVoice)
-                .Allow(Permissions.Speak)
-                .Allow(Permissions.Stream));
+            var overwriteBuilderList = new List<DiscordOverwriteBuilder>
+            {
+                new DiscordOverwriteBuilder(selectedUser)
+                    .Allow(Permissions.AccessChannels)
+                    .Allow(Permissions.SendMessages)
+                    .Allow(Permissions.UseVoice)
+                    .Allow(Permissions.Speak)
+                    .Allow(Permissions.Stream)
+            };
 
             var existingOverwrites = eventArgs.Channel.PermissionOverwrites;
 

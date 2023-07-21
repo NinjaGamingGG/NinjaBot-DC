@@ -51,7 +51,7 @@ public static class SqLiteHelper
         using var sqLiteLoungeSystemLoungeTableCommand = _sqLiteConnection.CreateCommand();
         {
             sqLiteLoungeSystemLoungeTableCommand.CommandText =
-                "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, GuildId INTEGER, OwnerId INTEGER)";
+                "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, GuildId INTEGER, OwnerId INTEGER, IsPublic BOOLEAN)";
 
             sqLiteLoungeSystemLoungeTableCommand.ExecuteNonQuery();
         }

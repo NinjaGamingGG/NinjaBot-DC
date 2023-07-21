@@ -91,6 +91,7 @@ public static class VoiceStateUpdated
             GuildId = eventArgs.Guild.Id,
             ChannelId = newChannel.Id,
             OwnerId = eventArgs.User.Id,
+            IsPublic = true
         };
 
         var inserted = await sqliteConnection.InsertAsync(newModel);
@@ -124,7 +125,7 @@ public static class VoiceStateUpdated
                     new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_claim_button",
                         "Claim", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":triangular_flag_on_post:"))),
                     new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_kick_button",
-                        "Kick", true, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":athletic_shoe:"))),
+                        "Kick", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":athletic_shoe:"))),
                     new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_un-trust_button",
                         // ReSharper disable once StringLiteralTypo
                         "Untrust", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":bust_in_silhouette:")))
@@ -132,11 +133,11 @@ public static class VoiceStateUpdated
                 .AddComponents(new DiscordComponent[]
                 {
                     new DiscordButtonComponent(ButtonStyle.Danger, "lounge_lock_button",
-                        "Un/Lock", true, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":lock:"))),
+                        "Un/Lock", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":lock:"))),
                     new DiscordButtonComponent(ButtonStyle.Danger, "lounge_ban_button",
-                        "Ban", true, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":judge:"))),
+                        "Ban", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":judge:"))),
                     new DiscordButtonComponent(ButtonStyle.Danger, "lounge_delete_button",
-                        "Delete", true, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":put_litter_in_its_place:"))),
+                        "Delete", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":put_litter_in_its_place:"))),
                 });
             
             var interfaceMessage = await newChannel.SendMessageAsync(builder);

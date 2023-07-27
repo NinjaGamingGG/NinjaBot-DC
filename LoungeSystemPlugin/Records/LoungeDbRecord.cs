@@ -11,5 +11,7 @@ public record LoungeDbRecord
     public ulong OwnerId { get; set; }
     
     public bool IsPublic { get; set; }
+    
+    public ulong OriginChannel { get; set; }
 
 }

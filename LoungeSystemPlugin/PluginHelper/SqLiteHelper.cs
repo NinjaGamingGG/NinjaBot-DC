@@ -51,7 +51,7 @@ public static class SqLiteHelper
         using var sqLiteLoungeSystemLoungeTableCommand = _sqLiteConnection.CreateCommand();
         {
             sqLiteLoungeSystemLoungeTableCommand.CommandText =
-                "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, GuildId INTEGER, OwnerId INTEGER, IsPublic BOOLEAN)";
+                "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, GuildId INTEGER, OwnerId INTEGER, IsPublic BOOLEAN, OriginChannel INTEGER)";
 
             sqLiteLoungeSystemLoungeTableCommand.ExecuteNonQuery();
         }
@@ -62,6 +62,14 @@ public static class SqLiteHelper
                 "CREATE TABLE IF NOT EXISTS RequiredRoleIndex (Id INTEGER PRIMARY KEY AUTOINCREMENT, GuildId INTEGER, ChannelId INTEGER, RoleId INTEGER)";
             
             sqliteLoungeSystemRequiredRolesTableCommand.ExecuteNonQuery();
+        }
+        
+        using var sqliteLoungeMessageReplacementTableCommand  = _sqLiteConnection.CreateCommand();
+        {
+            sqliteLoungeMessageReplacementTableCommand.CommandText =
+                "CREATE TABLE IF NOT EXISTS LoungeMessageReplacementIndex (Id INTEGER PRIMARY KEY AUTOINCREMENT, GuildId INTEGER, ChannelId INTEGER, ReplacementHandle TEXT,ReplacementValue TEXT)";
+            
+            sqliteLoungeMessageReplacementTableCommand.ExecuteNonQuery();
         }
 
 

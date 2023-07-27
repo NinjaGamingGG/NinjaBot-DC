@@ -29,9 +29,6 @@ public class CommandNextModule : BaseCommandModule
                 break;
             case "resize":
                 break;
-            
-            default:
-                break;
         }
     }
 
@@ -49,13 +46,84 @@ public class CommandNextModule : BaseCommandModule
             await message.RespondAsync(errorBuilder);
         }
 
-        var newName = response.Result.Content;
+        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+        
+        var channelConfigurations = await sqliteConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId ", new { GuildId = context.Guild.Id});
+        
+        var channelConfigurationList = channelConfigurations.ToList();
+
+        var channelRecords = await sqliteConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId", new {GuildId = context.Guild.Id, ChannelId = context.Channel.Id});
+
+        var channelRecordsAsList = channelRecords.ToList();
+
+        var channelRecord = channelRecordsAsList.First();
+        
+        var channelNamePattern = string.Empty;
+
+        var customNamePattern = response.Result.Content;
+        var separatorPattern = string.Empty;
+        var decoratorPrefix = string.Empty;
+        var decoratorEmoji = string.Empty;
+        var decoratorDecal = string.Empty;
+
+        var nameReplacementRecord = await sqliteConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = context.Guild.Id, ChannelId = channelRecord.OriginChannel});
+        var loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ?? nameReplacementRecord.ToArray();
+        if (loungeMessageReplacementsAsArray.Any())
+        {
+            foreach (var replacement in loungeMessageReplacementsAsArray)
+            {
+                switch (replacement.ReplacementHandle)
+                {
+                    case"Separator":
+                        separatorPattern = replacement.ReplacementValue;
+                        break;
+
+                    case"DecoratorDecal":
+                        decoratorDecal = replacement.ReplacementValue;
+                        break;
+                    
+                    case"DecoratorEmoji":
+                        decoratorEmoji = replacement.ReplacementValue;
+                        break;
+                    
+                    case"DecoratorPrefix":
+                        decoratorPrefix = replacement.ReplacementValue;
+                        break;
+                }
+
+            }
+        }
+        
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratordecal}"))
+            separatorPattern = separatorPattern.Replace("{decoratordecal}", decoratorDecal);
+        
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratoremoji}"))
+            separatorPattern = separatorPattern.Replace("{decoratoremoji}", decoratorEmoji);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratorprefix}"))
+            separatorPattern = separatorPattern.Replace("{decoratorprefix}", decoratorPrefix);
+
+        foreach (var channelConfig in channelConfigurationList.Where(channelConfig => channelRecord.OriginChannel == channelConfig.TargetChannelId))
+        {
+            channelNamePattern = channelConfig.LoungeNamePattern;
+
+            
+            //if (channelNamePattern != null && channelNamePattern.Contains("{username}"))
+            //    channelNamePattern = channelNamePattern.Replace("{username}", eventArgs.User.Username);
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{separator}"))
+                channelNamePattern = channelNamePattern.Replace("{separator}", separatorPattern);
+        
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{customname}"))
+                channelNamePattern = channelNamePattern.Replace("{customname}", customNamePattern);
+            
+            break;
+        }
 
         var channel = context.Channel;
 
         void NewEditModel(ChannelEditModel editModel)
         {
-            editModel.Name = newName;
+            if (channelNamePattern != null) editModel.Name = channelNamePattern;
+            editModel.Topic = "Test";
         }
 
         await channel.ModifyAsync(NewEditModel);

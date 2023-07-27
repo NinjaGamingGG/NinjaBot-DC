@@ -22,7 +22,59 @@ public static class VoiceStateUpdated
         var channelsList = channels.ToList();
         
         var channelExists = false;
-        string? channelNamePattern = null;
+        var channelNamePattern = string.Empty;
+
+        var customNamePattern = string.Empty;
+        var separatorPattern = string.Empty;
+        var decoratorPrefix = string.Empty;
+        var decoratorEmoji = string.Empty;
+        var decoratorDecal = string.Empty;
+
+        var nameReplacementRecord = await sqliteConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
+
+        var loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ?? nameReplacementRecord.ToArray();
+        if (loungeMessageReplacementsAsArray.Any())
+        {
+            foreach (var replacement in loungeMessageReplacementsAsArray)
+            {
+                switch (replacement.ReplacementHandle)
+                {
+                    case"Separator":
+                        separatorPattern = replacement.ReplacementValue;
+                        break;
+                    
+                    case"CustomName":
+                        customNamePattern = replacement.ReplacementValue;
+                        break;
+                    
+                    case"DecoratorDecal":
+                        decoratorDecal = replacement.ReplacementValue;
+                        break;
+                    
+                    case"DecoratorEmoji":
+                        decoratorEmoji = replacement.ReplacementValue;
+                        break;
+                    
+                    case"DecoratorPrefix":
+                        decoratorPrefix = replacement.ReplacementValue;
+                        break;
+                }
+
+            }
+        }
+        
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratordecal}"))
+            separatorPattern = separatorPattern.Replace("{decoratordecal}", decoratorDecal);
+        
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratoremoji}"))
+            separatorPattern = separatorPattern.Replace("{decoratoremoji}", decoratorEmoji);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratorprefix}"))
+            separatorPattern = separatorPattern.Replace("{decoratorprefix}", decoratorPrefix);
+        
+        if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{username}"))
+            customNamePattern = customNamePattern.Replace("{username}", eventArgs.User.Username);
+
+        
         ulong interfaceChannel = 0;
 
         foreach (var channelConfig in channelsList.Where(channelConfig => eventArgs.Channel.Id == channelConfig.TargetChannelId))
@@ -30,9 +82,16 @@ public static class VoiceStateUpdated
             channelExists = true;
             channelNamePattern = channelConfig.LoungeNamePattern;
             interfaceChannel = channelConfig.InterfaceChannelId;
+
             
-            if (channelNamePattern != null && channelNamePattern.Contains("{username}"))
-                channelNamePattern = channelNamePattern.Replace("{username}", eventArgs.User.Username);
+
+            //if (channelNamePattern != null && channelNamePattern.Contains("{username}"))
+            //    channelNamePattern = channelNamePattern.Replace("{username}", eventArgs.User.Username);
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{separator}"))
+                channelNamePattern = channelNamePattern.Replace("{separator}", separatorPattern);
+        
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{customname}"))
+                channelNamePattern = channelNamePattern.Replace("{customname}", customNamePattern);
             
             break;
         }
@@ -91,7 +150,8 @@ public static class VoiceStateUpdated
             GuildId = eventArgs.Guild.Id,
             ChannelId = newChannel.Id,
             OwnerId = eventArgs.User.Id,
-            IsPublic = true
+            IsPublic = true,
+            OriginChannel = eventArgs.Channel.Id
         };
 
         var inserted = await sqliteConnection.InsertAsync(newModel);

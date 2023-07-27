@@ -15,62 +15,69 @@ public static class ComponentInteractionCreated
 {
     public static async Task InterfaceButtonPressed(DiscordClient sender, ComponentInteractionCreateEventArgs eventArgs)
     {
+        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        
+        if (ReferenceEquals(eventArgs.User, null))
+            return;
+
+        var member = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
+        
         switch (eventArgs.Interaction.Data.CustomId)
         {
             case "lounge_rename_button":
-                await RenameButton(eventArgs);
+                await RenameButton(eventArgs, member);
                 break;
             
             case "lounge_resize_button":
-                await ResizeButtonLogic(eventArgs);
+                await ResizeButtonLogic(eventArgs, member);
                 break;
             
             case "lounge_trust_button":
-                await TrustUserButtonLogic(eventArgs);
+                await TrustUserButtonLogic(eventArgs, member);
                 break;
             
             case "lounge_un-trust_button":
-                await UnTrustUserButtonLogic(eventArgs);
+                await UnTrustUserButtonLogic(eventArgs, member);
                 break;
             
             case "lounge_claim_button":
-                await LoungeClaimButtonLogic(eventArgs);
+                await LoungeClaimButtonLogic(eventArgs, member);
                 break;
             
             case "lounge_kick_button":
-                await LoungeKickButtonLogic(eventArgs);
+                await LoungeKickButtonLogic(eventArgs, member);
                 break;
             
             case "lounge_lock_button":
-                await LoungeLockButtonLogic(eventArgs);
+                await LoungeLockButtonLogic(eventArgs, member);
                 break;
             
             case "lounge_ban_button":
-                await LoungeBanButtonLogic(eventArgs);
+                await LoungeBanButtonLogic(eventArgs, member);
                 break;
             
             case "lounge_delete_button":
-                await LoungeDeleteButtonLogic(eventArgs);
+                await LoungeDeleteButtonLogic(eventArgs, member);
                 break;
             
             case "lounge_ban_dropdown":
-                await BanDropdownLogic(eventArgs);
+                await BanDropdownLogic(eventArgs, member);
                 break;
             
             case "lounge_kick_dropdown":
-                await KickDropdownLogin(eventArgs);
+                await KickDropdownLogin(eventArgs, member);
                 break;
             
             case "lounge_resize_dropdown":
-                await ResizeDropdownLogic(eventArgs);
+                await ResizeDropdownLogic(eventArgs, member);
                 break;
             
             case "lounge_trust_dropdown":
-                await TrustDropdownLogic(eventArgs);
+                await TrustDropdownLogic(eventArgs, member);
                 break;
             
             case "lounge_un-trust_dropdown":
-                await UnTrustDropdownLogic(eventArgs);
+                await UnTrustDropdownLogic(eventArgs, member);
                 break;
             
             default:
@@ -79,15 +86,8 @@ public static class ComponentInteractionCreated
         }
     }
 
-    private static async Task LoungeDeleteButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task LoungeDeleteButtonLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
         
         //Only non owners can delete
@@ -117,15 +117,8 @@ public static class ComponentInteractionCreated
 
     }
 
-    private static async Task BanDropdownLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task BanDropdownLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
         
         //Only owner can ban
@@ -168,15 +161,8 @@ public static class ComponentInteractionCreated
         await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
     }
 
-    private static async Task LoungeBanButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task LoungeBanButtonLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
         
         //Only non owners can ban
@@ -193,29 +179,11 @@ public static class ComponentInteractionCreated
 
         var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Please select an user below").AddComponents(dropdown);
         
-        var followupMessage = await eventArgs.Interaction.CreateFollowupMessageAsync(followUpMessageBuilder);
-        
-        await Task.Delay(TimeSpan.FromSeconds(20));
-
-        try
-        {
-            await followupMessage.DeleteAsync();
-        }
-        catch (DSharpPlus.Exceptions.NotFoundException)
-        {
-            //Do nothing
-        }
+        await ThrowAwayFollowupMessage.HandleAsync(followUpMessageBuilder, eventArgs.Interaction);
     }
 
-    private static async Task LoungeLockButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task LoungeLockButtonLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
         
         //Only non owners can kick
@@ -327,15 +295,8 @@ public static class ComponentInteractionCreated
 
     }
 
-    private static async Task KickDropdownLogin(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task KickDropdownLogin(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
         
         //Owner cant be kicked
@@ -357,15 +318,8 @@ public static class ComponentInteractionCreated
         }
     }
 
-    private static async Task LoungeKickButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task LoungeKickButtonLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
         
         //Only non owners can kick
@@ -387,29 +341,11 @@ public static class ComponentInteractionCreated
 
         var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Please select an user below").AddComponents(dropdown);
         
-        var followupMessage = await eventArgs.Interaction.CreateFollowupMessageAsync(followUpMessageBuilder);
-        
-        await Task.Delay(TimeSpan.FromSeconds(20));
-
-        try
-        {
-            await followupMessage.DeleteAsync();
-        }
-        catch (DSharpPlus.Exceptions.NotFoundException)
-        {
-            //Do nothing
-        }
+        await ThrowAwayFollowupMessage.HandleAsync(followUpMessageBuilder, eventArgs.Interaction);
     }
 
-    private static async Task LoungeClaimButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task LoungeClaimButtonLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var member = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
         
         //Only non owners can claim
@@ -449,28 +385,12 @@ public static class ComponentInteractionCreated
         
         await followupMessage.ModifyAsync("Lounge claimed successfully, you are now the owner");
 
-        await Task.Delay(TimeSpan.FromSeconds(15));
-        
-        try
-        {
-            await followupMessage.DeleteAsync();
-        }
-        catch (DSharpPlus.Exceptions.NotFoundException)
-        {
-            //Do nothing
-        }
+        await ThrowAwayFollowupMessage.HandleAsync(followupMessage);
 
     }
 
-    private static async Task RenameButton(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task RenameButton(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var member = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
         
         if (existsAsOwner == false)
@@ -478,22 +398,11 @@ public static class ComponentInteractionCreated
         
         var builder = new DiscordFollowupMessageBuilder().WithContent("Please use *!l rename* to rename your channel");
         
-        var followupMessage = await eventArgs.Interaction.CreateFollowupMessageAsync(builder);
-
-        await Task.Delay(TimeSpan.FromSeconds(15));
-
-        await followupMessage.DeleteAsync();
+        await ThrowAwayFollowupMessage.HandleAsync(builder, eventArgs.Interaction);
     }
     
-    private static async Task TrustUserButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task TrustUserButtonLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-        
-        var member = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
 
         if (existsAsOwner == false)
@@ -531,29 +440,11 @@ public static class ComponentInteractionCreated
 
         var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Please select an user below").AddComponents(dropdown);
         
-        var followupMessage = await eventArgs.Interaction.CreateFollowupMessageAsync(followUpMessageBuilder);
-
-        await Task.Delay(TimeSpan.FromSeconds(20));
-
-        try
-        {
-            await followupMessage.DeleteAsync();
-        }
-        catch (DSharpPlus.Exceptions.NotFoundException)
-        {
-            //Do nothing
-        }
+        await ThrowAwayFollowupMessage.HandleAsync(followUpMessageBuilder, eventArgs.Interaction);
     }
     
-    private static async Task UnTrustUserButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task UnTrustUserButtonLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-        
-        var owningMember = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
 
         if (existsAsOwner == false)
@@ -582,31 +473,12 @@ public static class ComponentInteractionCreated
         var dropdown = new DiscordSelectComponent("lounge_un-trust_dropdown", "Please select an user", sortedList);
 
         var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Please select an user below").AddComponents(dropdown);
-        
-        var followupMessage = await eventArgs.Interaction.CreateFollowupMessageAsync(followUpMessageBuilder);
-        
-        await Task.Delay(TimeSpan.FromSeconds(20));
 
-        try
-        {
-            await followupMessage.DeleteAsync();
-        }
-        catch (DSharpPlus.Exceptions.NotFoundException)
-        {
-            //Do nothing
-        }
-        
+        await ThrowAwayFollowupMessage.HandleAsync(followUpMessageBuilder, eventArgs.Interaction);
     }
 
-    private static async Task ResizeButtonLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task ResizeButtonLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var member = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-        
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
         
         if (existsAsOwner == false)
@@ -629,21 +501,14 @@ public static class ComponentInteractionCreated
         
         var dropdown = new DiscordSelectComponent("lounge_resize_dropdown", "Select a new Size Below", optionsList);
 
-        var followUpMessage = new DiscordFollowupMessageBuilder().WithContent("Select a new Size Below").AddComponents(dropdown);
+        var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Select a new Size Below").AddComponents(dropdown);
 
-        await eventArgs.Interaction.CreateFollowupMessageAsync( followUpMessage);
+        await ThrowAwayFollowupMessage.HandleAsync(followUpMessageBuilder, eventArgs.Interaction);
 
     }
 
-    private static async Task ResizeDropdownLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task ResizeDropdownLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var member = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
 
         if (existsAsOwner == false)
@@ -677,15 +542,8 @@ public static class ComponentInteractionCreated
 
     }
 
-    private static async Task TrustDropdownLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task TrustDropdownLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var member = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
 
         if (existsAsOwner == false)
@@ -724,15 +582,8 @@ public static class ComponentInteractionCreated
         
     }
     
-    private static async Task UnTrustDropdownLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task UnTrustDropdownLogic(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-
-        if (ReferenceEquals(eventArgs.User, null))
-            return;
-
-        var member = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
-
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
 
         if (existsAsOwner == false)

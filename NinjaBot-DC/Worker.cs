@@ -4,7 +4,6 @@ using NinjaBot_DC.Extensions;
 using System.Data.SQLite;
 using System.Reflection;
 using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using NinjaBot_DC.CommandModules;
@@ -32,20 +31,31 @@ public sealed class Worker : BackgroundService
 
         var sqliteSource = Configuration.GetValue<string>("ninja-bot:sqlite-source");
         SqLiteConnection = new SQLiteConnection($"Data Source={sqliteSource};Version=3;New=True;Compress=True;");
+        
 
         var token = Configuration.GetValue<string>("ninja-bot:token");
 
         var logFactory = new LoggerFactory().AddSerilog();
 
+        token ??= "";
+
         DiscordClient = new DiscordClient(new DiscordConfiguration()
         {
             Token = token,
             TokenType = TokenType.Bot,
-            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | DiscordIntents.GuildMembers | DiscordIntents.GuildPresences,
+            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | DiscordIntents.GuildMembers | DiscordIntents.GuildPresences | DiscordIntents.GuildVoiceStates,
             LoggerFactory = logFactory
         });
 
         SlashCommandsExtension = DiscordClient.UseSlashCommands();
+        
+        DiscordClient.UseInteractivity(new InteractivityConfiguration()
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        });
+        {
+            
+        }
     }
 
     private static IConfigurationRoot LoadServiceConfig()
@@ -100,15 +110,7 @@ public sealed class Worker : BackgroundService
         
         Log.Information("Starting up the Bot");
         await DiscordClient.ConnectAsync();
-        
-        var startupTasks = new List<Task>() {
-                LoungeSystem.StartupCleanup(DiscordClient), 
-                TwitchAlerts.InitExtensionAsync(),
-        };
-                
-        
-        await Task.WhenAll(startupTasks);
-        
+
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(1000, stoppingToken);
@@ -132,10 +134,18 @@ public sealed class Worker : BackgroundService
 
     private static Task LoadPlugins()
     {
-        var pluginFolder = Path.Combine(Directory.GetCurrentDirectory() ,"Plugins");
+        
+        var pluginFolderConfig = Configuration.GetValue<string>("ninja-bot:plugin-folder");
+        if (ReferenceEquals(pluginFolderConfig, null))
+        {
+            Log.Fatal("Unable to load Plugin Path from Config");
+            return Task.CompletedTask;
+        }
+
+        var pluginFolder = Path.Combine(Directory.GetCurrentDirectory() ,pluginFolderConfig);
     
         Directory.CreateDirectory(pluginFolder);
-    
+
         var pluginPaths = Directory.GetFiles(pluginFolder, "*.dll");
     
 
@@ -144,6 +154,8 @@ public sealed class Worker : BackgroundService
             var pluginAssembly = LoadPlugin.LoadPluginFromPath(pluginPath);
             return CreatePlugin.CreateFromAssembly(pluginAssembly);
         }).ToArray();
+        
+        Log.Information("Loading {PluginCount} Plugins from {FolderPath}", pluginsArray.Length, pluginFolder);
         
         for (var i = 0; i < pluginsArray.Length; i++)
         {
@@ -183,19 +195,11 @@ public sealed class Worker : BackgroundService
         return Task.CompletedTask;
     }
 
-    private static Task SetupInteractivity()
-    {
-        DiscordClient.UseInteractivity(new InteractivityConfiguration()
-        {
-            PollBehaviour = PollBehaviour.KeepEmojis,
-            Timeout = TimeSpan.FromSeconds(30)
-        });
-        return Task.CompletedTask;
-    }
-
     private static Task RegisterCommands()
     {
         var stringPrefix = Configuration.GetValue<string>("ninja-bot:prefix");
+
+        stringPrefix ??= "1";
         
         Log.Information("Registering Commands");
         var commands = DiscordClient.UseCommandsNext(new CommandsNextConfiguration()
@@ -203,7 +207,6 @@ public sealed class Worker : BackgroundService
             StringPrefixes  = new []{stringPrefix},
         });
 
-        commands.RegisterCommands<LoungeCommandModule>(); 
         commands.RegisterCommands<ReactionRolesCommandModule>();
         commands.RegisterCommands<TwitchAlertsCommandModule>();
         
@@ -214,8 +217,8 @@ public sealed class Worker : BackgroundService
     {
         Log.Information("Registering Events");
         //Lounge System Events
-        DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
-        DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
+        //DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
+        //DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
         
         //Reaction Role Events
         DiscordClient.MessageReactionAdded += ReactionRoles.MessageReactionAdded; 
@@ -232,60 +235,39 @@ public sealed class Worker : BackgroundService
         {
             SqLiteConnection.Open();
 
-            await using var sqLiteLoungeTableCommand = SqLiteConnection.CreateCommand();
-            {
-                sqLiteLoungeTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS LoungeIndex (ChannelId INTEGER, OwnerId INTEGER, GuildId INTEGER)";
-            
-                await sqLiteLoungeTableCommand.ExecuteNonQueryAsync();
-            }
-
-            await using var sqLiteReactionMessageTableCommand = SqLiteConnection.CreateCommand();
-            {
-                sqLiteReactionMessageTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS ReactionMessagesIndex (GuildId INTEGER, MessageId INTEGER, MessageTag VARCHAR(20))";
-            
-                await sqLiteReactionMessageTableCommand.ExecuteNonQueryAsync();
-            }
-
-            await using var sqLiteReactionRoleCommand = SqLiteConnection.CreateCommand();
-            {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS ReactionRoleIndex(GuildId INTEGER, MessageTag VARCHAR(50),ReactionEmojiTag VARCHAR(50),LinkedRoleId INTEGER)";
-
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
-            }
-            
             await using var sqliteTwitchAlertRoleTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchAlertRoleIndex(GuildId INTEGER, RoleId INTEGER, RoleTag VARCHAR(50))";
+                sqliteTwitchAlertRoleTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchAlertRoleIndex(GuildId INTEGER, RoleId INTEGER, RoleTag VARCHAR(50))";
 
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+                await sqliteTwitchAlertRoleTableCommand.ExecuteNonQueryAsync();
             }
             
             await using var sqliteTwitchCreatorTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchCreatorIndex(GuildId INTEGER, UserId INTEGER, RoleTag VARCHAR(50))";
+                sqliteTwitchCreatorTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchCreatorIndex(GuildId INTEGER, UserId INTEGER, RoleTag VARCHAR(50))";
 
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+                await sqliteTwitchCreatorTableCommand.ExecuteNonQueryAsync();
             }
     
             await using var sqliteTwitchCreatorSocialChannelTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchCreatorSocialMediaChannelIndex(GuildId INTEGER, UserId INTEGER, RoleTag VARCHAR(50), SocialMediaChannel VARCHAR(50),Platform VARCHAR(50) )";
+                sqliteTwitchCreatorSocialChannelTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchCreatorSocialMediaChannelIndex(GuildId INTEGER, UserId INTEGER, RoleTag VARCHAR(50), SocialMediaChannel VARCHAR(50),Platform VARCHAR(50) )";
 
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+                await sqliteTwitchCreatorSocialChannelTableCommand.ExecuteNonQueryAsync();
             }
             
             await using var sqliteTwitchDiscordChannelTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchDiscordChannelIndex(GuildId INTEGER, ChannelId INTEGER, RoleTag VARCHAR(50))";
+                sqliteTwitchDiscordChannelTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchDiscordChannelIndex(GuildId INTEGER, ChannelId INTEGER, RoleTag VARCHAR(50))";
 
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+                await sqliteTwitchDiscordChannelTableCommand.ExecuteNonQueryAsync();
             }
                 
             await using var sqliteTwitchStreamIndexTableCommand = SqLiteConnection.CreateCommand();
             {
-                sqLiteReactionRoleCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchStreamCacheIndex(Id VARCHAR(50), ChannelName VARCHAR(50), ChannelId VARCHAR(50))";
+                sqliteTwitchStreamIndexTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchStreamCacheIndex(Id VARCHAR(50), ChannelName VARCHAR(50), ChannelId VARCHAR(50))";
 
-                await sqLiteReactionRoleCommand.ExecuteNonQueryAsync();
+                await sqliteTwitchStreamIndexTableCommand.ExecuteNonQueryAsync();
             }    
 
         }

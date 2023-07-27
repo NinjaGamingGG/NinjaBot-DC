@@ -12,15 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Dapper" Version="2.0.143" />
-      <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
-      <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01662" />
-      <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01662" />
-      <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Events\" />
+      <PackageReference Include="Serilog" Version="3.0.2-dev-02044" />
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

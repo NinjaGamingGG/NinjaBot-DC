@@ -6,6 +6,8 @@ namespace StatsPlugin.Models;
 public record StatsChannelLinkedRoleIndex
 {
     [ExplicitKey]
+    public int EntryId { get; set; }
+    
     public ulong GuildId { get; set; }
     
     public ulong RoleId { get; set; }

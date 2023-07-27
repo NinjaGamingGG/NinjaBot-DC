@@ -1,5 +1,4 @@
-﻿using DSharpPlus.SlashCommands;
-using NinjaBot_DC;
+﻿using NinjaBot_DC;
 using PluginBase;
 using Serilog;
 using StatsPlugin.PluginHelper;
@@ -31,8 +30,6 @@ public class StatsPlugin : IPlugin
         
         slashCommands.RegisterCommands<SlashCommandModule>();
 
-
-        
         Task.Run(async () =>
         {
             await RefreshServerStats.Execute(client);

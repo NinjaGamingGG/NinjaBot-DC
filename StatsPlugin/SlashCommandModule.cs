@@ -20,7 +20,7 @@ public class SlashCommandModule : ApplicationCommandModule
     public async Task SetupChannelCommand(InteractionContext ctx)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-        
+
         var guild = ctx.Guild;
         var newCategory = await guild.CreateChannelCategoryAsync(@"· • ●  📊 Stats 📊 ● • ·");
 
@@ -113,7 +113,7 @@ ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
                 return;
             }
         
-            var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelLinkedRolesIndex SET RoleId = @RoleId, RoleHandle = @RoleHandle WHERE GuildId = @GuildId", new { RoleId = role.Id, GuildId = ctx.Guild.Id , RoleHandle = roleHandleInDb});
+            var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelLinkedRolesIndex SET RoleHandle = @RoleHandle WHERE RoleId = @RoleId AND GuildId = @GuildId", new { RoleId = role.Id, GuildId = ctx.Guild.Id , RoleHandle = roleHandleInDb});
         
             if (hasUpdated == 1)
             {

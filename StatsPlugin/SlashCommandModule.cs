@@ -5,6 +5,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Net.Models;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 using Serilog;
 using StatsPlugin.Models;
 using StatsPlugin.PluginHelper;
@@ -12,6 +13,7 @@ using StatsPlugin.PluginHelper;
 namespace StatsPlugin;
 
 [SlashCommandGroup("stats", "Stats Plugin Commands")]
+[SlashRequirePermissions(Permissions.Administrator)]
 // ReSharper disable once ClassNeverInstantiated.Global
 public class SlashCommandModule : ApplicationCommandModule
 {

@@ -4,6 +4,7 @@ using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 using RankSystem.Models;
 using Ranksystem.PluginHelper;
 
@@ -13,6 +14,7 @@ namespace Ranksystem;
 public class RanksystemSubGroupContainer : ApplicationCommandModule
 {
     [SlashCommandGroup("blacklist", "Blacklist Commands")]
+    [SlashRequirePermissions(Permissions.Administrator)]
     public class BlacklistSubGroup : ApplicationCommandModule
     {
         [SlashCommand("add-channel", "Add a channel to the blacklist")]
@@ -112,6 +114,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
     
     
     [SlashCommandGroup("reward-role", "Reward Commands")]
+    [SlashRequirePermissions(Permissions.Administrator)]
     public class RewardSubGroup : ApplicationCommandModule
     {
         [SlashCommand("add", "Add a reward role")]
@@ -253,6 +256,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
     }
     
     [SlashCommandGroup("config", "Config Commands")]
+    [SlashRequirePermissions(Permissions.Administrator)]
     public class ConfigSubGroup : ApplicationCommandModule
     {
         [SlashCommand("Setup", "Setup reward configuration")]

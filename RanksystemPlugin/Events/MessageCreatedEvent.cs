@@ -1,7 +1,9 @@
 ﻿using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using RankSystem;
 using Ranksystem.PluginHelper;
+using Serilog;
 
 namespace Ranksystem.Events;
 
@@ -11,6 +13,10 @@ public static class MessageCreatedEvent
 {
     public static async Task MessageCreated(DiscordClient client, MessageCreateEventArgs eventArgs)
     {
+        if (ReferenceEquals(eventArgs.Message.Author, null))
+            return;
+        
+        
         //Check if it was own message
         if (eventArgs.Message.Author.Id == client.CurrentUser.Id)
             return;
@@ -22,7 +28,18 @@ public static class MessageCreatedEvent
         
         //Get the member that wrote the message
         var guild = await client.GetGuildAsync(eventArgs.Guild.Id);
-        var user = await guild.GetMemberAsync(eventArgs.Author.Id);
+
+        DiscordMember user;
+        try
+        {
+            user = await guild.GetMemberAsync(eventArgs.Author.Id);
+        }
+        catch (DSharpPlus.Exceptions.NotFoundException exception)
+        {
+            Log.Error(exception, "[Ranksystem] Error could not find the User {MemberId}", eventArgs.Author.Id);
+            return;
+        }
+
 
         //Check if member is in any blacklisted groups
         if(Blacklist.CheckUserGroups(user.Roles.ToArray(), eventArgs.Guild))

@@ -3,6 +3,7 @@ using DSharpPlus.CommandsNext;
 using NinjaBot_DC.Extensions;
 using System.Data.SQLite;
 using System.Reflection;
+using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
@@ -206,8 +207,7 @@ public sealed class Worker : BackgroundService
         {
             StringPrefixes  = new []{stringPrefix},
         });
-
-        commands.RegisterCommands<ReactionRolesCommandModule>();
+        
         commands.RegisterCommands<TwitchAlertsCommandModule>();
         
         return Task.CompletedTask;
@@ -220,11 +220,6 @@ public sealed class Worker : BackgroundService
         //DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
         //DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
         
-        //Reaction Role Events
-        DiscordClient.MessageReactionAdded += ReactionRoles.MessageReactionAdded; 
-        //DiscordClient.MessageReactionRemoved += ReactionRoles.MessageReactionRemoved;
-
-            
         return Task.CompletedTask;
     }
 

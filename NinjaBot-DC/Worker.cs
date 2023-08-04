@@ -1,13 +1,10 @@
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using NinjaBot_DC.Extensions;
 using System.Data.SQLite;
 using System.Reflection;
-using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
-using NinjaBot_DC.CommandModules;
 using NinjaBot_DC.PluginLoader;
 using PluginBase;
 using Serilog;
@@ -207,9 +204,7 @@ public sealed class Worker : BackgroundService
         {
             StringPrefixes  = new []{stringPrefix},
         });
-        
-        commands.RegisterCommands<TwitchAlertsCommandModule>();
-        
+
         return Task.CompletedTask;
     }
 
@@ -228,42 +223,7 @@ public sealed class Worker : BackgroundService
         Log.Information("Initializing Database");
         try
         {
-            SqLiteConnection.Open();
-
-            await using var sqliteTwitchAlertRoleTableCommand = SqLiteConnection.CreateCommand();
-            {
-                sqliteTwitchAlertRoleTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchAlertRoleIndex(GuildId INTEGER, RoleId INTEGER, RoleTag VARCHAR(50))";
-
-                await sqliteTwitchAlertRoleTableCommand.ExecuteNonQueryAsync();
-            }
-            
-            await using var sqliteTwitchCreatorTableCommand = SqLiteConnection.CreateCommand();
-            {
-                sqliteTwitchCreatorTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchCreatorIndex(GuildId INTEGER, UserId INTEGER, RoleTag VARCHAR(50))";
-
-                await sqliteTwitchCreatorTableCommand.ExecuteNonQueryAsync();
-            }
-    
-            await using var sqliteTwitchCreatorSocialChannelTableCommand = SqLiteConnection.CreateCommand();
-            {
-                sqliteTwitchCreatorSocialChannelTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchCreatorSocialMediaChannelIndex(GuildId INTEGER, UserId INTEGER, RoleTag VARCHAR(50), SocialMediaChannel VARCHAR(50),Platform VARCHAR(50) )";
-
-                await sqliteTwitchCreatorSocialChannelTableCommand.ExecuteNonQueryAsync();
-            }
-            
-            await using var sqliteTwitchDiscordChannelTableCommand = SqLiteConnection.CreateCommand();
-            {
-                sqliteTwitchDiscordChannelTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchDiscordChannelIndex(GuildId INTEGER, ChannelId INTEGER, RoleTag VARCHAR(50))";
-
-                await sqliteTwitchDiscordChannelTableCommand.ExecuteNonQueryAsync();
-            }
-                
-            await using var sqliteTwitchStreamIndexTableCommand = SqLiteConnection.CreateCommand();
-            {
-                sqliteTwitchStreamIndexTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS TwitchStreamCacheIndex(Id VARCHAR(50), ChannelName VARCHAR(50), ChannelId VARCHAR(50))";
-
-                await sqliteTwitchStreamIndexTableCommand.ExecuteNonQueryAsync();
-            }    
+            await SqLiteConnection.OpenAsync();
 
         }
         catch (Exception e)

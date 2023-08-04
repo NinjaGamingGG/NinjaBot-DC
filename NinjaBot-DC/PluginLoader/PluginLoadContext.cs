@@ -20,7 +20,7 @@ class PluginLoadContext : AssemblyLoadContext
             return LoadFromAssemblyPath(assemblyPath);
         }
 
-        return null;
+        return null!;
     }
 
     protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)

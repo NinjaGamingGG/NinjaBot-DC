@@ -1,11 +1,11 @@
 ﻿FROM mcr.microsoft.com/dotnet/runtime:7.0 AS base
-VOLUME /app/ninjabot-persistent
+VOLUME /app/ninjabot
 WORKDIR /app
 
 ENV ninja-bot:token="You Token Here"
 ENV ninja-bot:prefix="!"
-ENV ninja-bot:sqlite-source="ninjabot-persistent/database.sqlite"
-ENV ninja-bot:plugin-folder="ninjabot-persistent/plugins"
+ENV ninja-bot:sqlite-source="ninjabot/database.sqlite"
+ENV ninja-bot:plugin-folder="ninjabot/plugins"
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src

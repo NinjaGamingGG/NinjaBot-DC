@@ -11,8 +11,7 @@
       <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01663" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="CommonPluginHelpers\" />
-    </ItemGroup>
+
+
 
 </Project>

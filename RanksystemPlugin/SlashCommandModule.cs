@@ -11,6 +11,7 @@ using Ranksystem.PluginHelper;
 namespace Ranksystem;
 
 [SlashCommandGroup("RankSystem", "Ranksystem Plugin Commands")]
+// ReSharper disable once ClassNeverInstantiated.Global
 public class RanksystemSubGroupContainer : ApplicationCommandModule
 {
     [SlashCommandGroup("blacklist", "Blacklist Commands")]

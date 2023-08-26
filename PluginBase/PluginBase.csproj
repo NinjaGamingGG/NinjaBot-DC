@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01663" />
+      <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01694" />
     </ItemGroup>
 
 

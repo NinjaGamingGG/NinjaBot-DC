@@ -8,14 +8,14 @@ namespace GreeterPlugin.PluginHelpers;
 [SuppressMessage("Interoperability", "CA1416:Plattformkompatibilität überprüfen")]
 public static class GenerateWelcomeImage
 {
-    public static async void Generator(string username, string avatarUrl, string welcomeText, int memberCount, string backgroundUrl, bool roundedAvatar, double offsetX, double offsetY, string welcomeCardPath )
+    public static async void Generator(string username, string avatarUrl, string welcomeText, int memberCount, string backgroundUrl, bool roundedAvatar, double offsetX, double offsetY, string welcomeCardPath ,bool whiteCorner = true )
     {
         var baseBitmap = new Bitmap(backgroundUrl);
         var baseGraphic = Graphics.FromImage(baseBitmap);
         
 
         
-        await AddImage(avatarUrl, roundedAvatar, baseGraphic, offsetY, offsetX, username);
+        await AddImage(avatarUrl, roundedAvatar, baseGraphic, offsetY, offsetX, username, whiteCorner);
         AddText(username,welcomeText,memberCount, baseGraphic);
         
         baseBitmap.Save(welcomeCardPath);
@@ -23,19 +23,32 @@ public static class GenerateWelcomeImage
 
     }
     
-    private static async Task AddImage(string imageUrl,bool roundedAvatar, Graphics baseGraphic,double offsetY, double offsetX, string username)
+    private static async Task AddImage(string imageUrl,bool roundedAvatar, Graphics baseGraphic,double offsetY, double offsetX, string username, bool whiteCorner)
     {
         var avatarLocalPath = Path.Combine(GreeterPlugin.StaticPluginDirectory,"temp",$"avatar-{username}.png") ;
         
         await GetUserAvatar(imageUrl, avatarLocalPath);
         
         var avatarBitmap = new Bitmap(avatarLocalPath);
+
+        var whiteOverlay = new Bitmap(650, 650);
+        
+        using (var graph = Graphics.FromImage(whiteOverlay))
+        {
+            var imageSize = new Rectangle(0,0,whiteOverlay.Width,whiteOverlay.Height);
+            graph.FillRectangle(Brushes.White, imageSize);
+        }
+        
+        
+        
         
         avatarBitmap = ResizeImage(avatarBitmap, new Size(640, 640));
         
 
         if (roundedAvatar)
         {
+            whiteOverlay = OvalImage(whiteOverlay);
+            
             avatarBitmap = OvalImage(avatarBitmap);
         }
 
@@ -44,6 +57,8 @@ public static class GenerateWelcomeImage
         
         var image = new PointF((float)avatarOffsetX, (float)avatarOffsetY);
         
+        if (whiteCorner)
+            baseGraphic.DrawImage(whiteOverlay, image);
         baseGraphic.DrawImage(avatarBitmap, image);
 
         if (!IsFileLocked.Check(avatarLocalPath, 10))
@@ -64,11 +79,9 @@ public static class GenerateWelcomeImage
         try
         {
             var bitmap = new Bitmap(size.Width, size.Height);
-            using (var graphics = Graphics.FromImage((Image)bitmap))
-            {
-                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                graphics.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
-            }
+            using var graphics = Graphics.FromImage((Image)bitmap);
+            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            graphics.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
             return bitmap;
         }
         catch 

@@ -24,11 +24,7 @@ public static class RefreshServerStats
             foreach (var serverStatsModel in serverStatsModels)
             {
                 var guild = await discordClient.GetGuildAsync(serverStatsModel.GuildId);
-
-                var allGuildMembers = await guild.GetAllMembersAsync();
-
-                var memberCount = allGuildMembers.Count;
-
+                
                 var botCount = 0;
                 var teamCount = 0;
 
@@ -45,8 +41,9 @@ public static class RefreshServerStats
                 var teamRoleIdsAsList = teamRoles.Select(role => role.RoleId).ToArray();
                 var botRoleIdsAsList = botRoles.Select(role => role.RoleId).ToArray();
 
+                var allGuildMembers = guild.GetAllMembersAsync();
 
-                foreach (var member in allGuildMembers)
+                await foreach (var member in allGuildMembers)
                 {
                     var roles = member.Roles;
 
@@ -60,6 +57,10 @@ public static class RefreshServerStats
 
                     }
                 }
+                
+                var memberCount = 0;
+                if (guild.ApproximateMemberCount.HasValue)
+                    memberCount = guild.ApproximateMemberCount.Value;
 
                 var taskList = new List<Task>()
                 {

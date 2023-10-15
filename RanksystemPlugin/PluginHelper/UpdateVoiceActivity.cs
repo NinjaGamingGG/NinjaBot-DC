@@ -28,9 +28,9 @@ public static class UpdateVoiceActivity
 
     private static async Task UpdateForGuild(KeyValuePair<ulong, DiscordGuild> guild, DiscordClient client)
     {
-        var members = await guild.Value.GetAllMembersAsync();
+        var members = guild.Value.GetAllMembersAsync();
 
-        foreach (var member in members)
+        await foreach (var member in members)
         {
             if (ReferenceEquals(member.VoiceState,null))
                 continue;

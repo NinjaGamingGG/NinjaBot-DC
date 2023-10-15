@@ -21,9 +21,16 @@ public static class StartupIndex
 
     private static async Task IndexAllGuildMembers(DiscordClient client, DiscordGuild guild)
     {
-        var guildMembers = await guild.GetAllMembersAsync();
+        var guildMembers = guild.GetAllMembersAsync();
+
+        var guildMembersAsList = new List<DiscordMember>();
+
+        await foreach (var member in guildMembers)
+        {
+            guildMembersAsList.Add(member);
+        }
         
-        var guildMembersSorted = guildMembers.OrderBy(x => x.JoinedAt);
+        var guildMembersSorted = guildMembersAsList.OrderBy(x => x.JoinedAt);
         
         var currentGuildMemberIndex = 1;
         

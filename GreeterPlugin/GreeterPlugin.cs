@@ -20,7 +20,7 @@ public class GreeterPlugin : IPlugin
         var client = Worker.GetServiceDiscordClient();
         
         client.GuildMemberAdded += GuildMemberAdded.GuildMemberAddedEvent;
-
+        
         if (PluginDirectory != null) ConfigHelper.SetBasePath(PluginDirectory);
         if (PluginDirectory != null) StaticPluginDirectory = PluginDirectory;
         

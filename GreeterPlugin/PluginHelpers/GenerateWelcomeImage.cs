@@ -81,23 +81,22 @@ public static class GenerateWelcomeImage
     
     private static void AddText(string username,string welcomeText, int memberCount, Graphics baseGraphic)
     {
-        var fontMainText = new Font("Tahoma", 45);
+        var fontMainText = new Font("Tahoma", 60);
         var fontSubText = new Font("Tahoma", 40);
         var brushMainText = Brushes.White;
         var brushSubText = Brushes.White;
         var pointMainText = new PointF(850,400);
         var pointSubText = new PointF(1000,650);
+        
+
+        
+        var boundingBoxPoint = new PointF(800, 150);
+        var boundingBox = new RectangleF(boundingBoxPoint, new SizeF(750, 450));
 
         if (welcomeText.Contains("{username}"))
             welcomeText = welcomeText.Replace("{username}", username);
-
-        if (welcomeText.Length > 35)
-        {
-            welcomeText = welcomeText.Remove(35);
-        }
         
-        baseGraphic.DrawString(welcomeText, fontMainText, brushMainText, pointMainText);
-    
+        baseGraphic.DrawString(welcomeText, fontMainText, brushMainText,boundingBox, new StringFormat(){Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Far, Trimming = StringTrimming.EllipsisWord});
         baseGraphic.DrawString($"Member: #{memberCount}", fontSubText, brushSubText, pointSubText);
     }
     

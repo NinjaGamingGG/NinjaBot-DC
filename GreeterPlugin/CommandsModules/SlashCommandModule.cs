@@ -47,7 +47,7 @@ public class SlashCommandModule : ApplicationCommandModule
         
         
     }
-    
+    /*
     [SlashCommandGroup("debug", "asd")]
     public class DebugSubGroup : ApplicationCommandModule
     {
@@ -122,7 +122,7 @@ public class SlashCommandModule : ApplicationCommandModule
             
             await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Operation Complete"));
         }
-    }
+    }*/
 
     
 }

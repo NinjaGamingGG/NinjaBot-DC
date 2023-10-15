@@ -1,8 +1,9 @@
-﻿using System.Net.Mime;
+﻿using GreeterPlugin.CommandsModules;
 using GreeterPlugin.Events;
 using GreeterPlugin.PluginHelpers;
 using NinjaBot_DC;
 using PluginBase;
+using Serilog;
 
 namespace GreeterPlugin;
 
@@ -27,11 +28,13 @@ public class GreeterPlugin : IPlugin
 
         MySqlConnectionHelper.OpenMySqlConnection();
         
+
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
-        slashCommands.RegisterCommands<GreeterPluginSubGroupContainer>();
-        
+        slashCommands.RegisterCommands<SlashCommandModule>();
 
         Task.Run(async () => await StartupIndex.StartupTask(client));
+        
+        Log.Debug("[Greeter Plugin] Init Finished");
     }
 
     public void OnUnload()

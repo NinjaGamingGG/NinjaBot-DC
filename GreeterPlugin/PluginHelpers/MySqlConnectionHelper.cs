@@ -30,7 +30,7 @@ public static class MySqlConnectionHelper
         var connectionString = $"Server={serverString}; ";
 
         if (portString != string.Empty)
-            connectionString += $"Port={portString} ";
+            connectionString += $"Port={portString}; ";
 
         connectionString += $"User ID={userString}; Password={userPassword}; ";
         

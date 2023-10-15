@@ -165,9 +165,12 @@ public sealed class Worker : BackgroundService
             
             if (pluginAssembly == null)
                 continue;
-            
+
             var pluginDirectory = Path.Combine(Path.GetDirectoryName(pluginAssembly.Location)!, pluginAssembly.GetName().Name!);
-            Directory.CreateDirectory(pluginDirectory);
+            
+            if (!Directory.Exists(pluginDirectory))
+                Directory.CreateDirectory(pluginDirectory);
+            
             plugin.PluginDirectory = pluginDirectory;
             
             plugin.OnLoad();

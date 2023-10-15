@@ -1,35 +1,36 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using Serilog;
+using System.Drawing.Imaging;
 
 namespace GreeterPlugin.PluginHelpers;
 
 [SuppressMessage("Interoperability", "CA1416:Plattformkompatibilität überprüfen")]
 public static class GenerateWelcomeImage
 {
-    public static async void Generator(string username, string avatarUrl, string welcomeText, int memberCount, string backgroundUrl, bool roundedAvatar, double offsetX, double offsetY, string welcomeCardPath ,bool whiteCorner = true )
+    public static async Task Generator(string username, string avatarUrl, string welcomeText, int memberCount, string backgroundUrl, bool roundedAvatar, double offsetX, double offsetY, string welcomeCardPath ,bool whiteCorner = true )
     {
-        var baseBitmap = new Bitmap(backgroundUrl);
+        var baseBitmap = new Bitmap(Path.Combine(GreeterPlugin.StaticPluginDirectory,backgroundUrl));
         var baseGraphic = Graphics.FromImage(baseBitmap);
         
-
-        
-        await AddImage(avatarUrl, roundedAvatar, baseGraphic, offsetY, offsetX, username, whiteCorner);
+        await AddImage(avatarUrl, roundedAvatar, baseGraphic, offsetY, offsetX, whiteCorner);
         AddText(username,welcomeText,memberCount, baseGraphic);
         
-        baseBitmap.Save(welcomeCardPath);
-        
+        var memoryStream = new MemoryStream();
+        baseBitmap.Save(memoryStream,ImageFormat.Png);
+
+        var file = new FileStream(welcomeCardPath, FileMode.Create, FileAccess.Write);
+        memoryStream.WriteTo(file);
+
+        file.Close();
 
     }
     
-    private static async Task AddImage(string imageUrl,bool roundedAvatar, Graphics baseGraphic,double offsetY, double offsetX, string username, bool whiteCorner)
+    private static async Task AddImage(string imageUrl,bool roundedAvatar, Graphics baseGraphic,double offsetY, double offsetX, bool whiteCorner)
     {
-        var avatarLocalPath = Path.Combine(GreeterPlugin.StaticPluginDirectory,"temp",$"avatar-{username}.png") ;
-        
-        await GetUserAvatar(imageUrl, avatarLocalPath);
-        
-        var avatarBitmap = new Bitmap(avatarLocalPath);
+
+
+        var avatarBitmap = await GetUserAvatar(imageUrl);
 
         var whiteOverlay = new Bitmap(650, 650);
         
@@ -52,69 +53,49 @@ public static class GenerateWelcomeImage
             avatarBitmap = OvalImage(avatarBitmap);
         }
 
-        var avatarOffsetY = baseGraphic.DpiY / 2 + avatarBitmap.Height / 2 - offsetY;
-        var avatarOffsetX = offsetX;
-        
-        var image = new PointF((float)avatarOffsetX, (float)avatarOffsetY);
+        var avatarOffsetY = baseGraphic.DpiY / 2.0f + avatarBitmap.Height / 2.0f - offsetY;
+
+        var imagePoint = new PointF((float)offsetX+15, (float)avatarOffsetY+15);
+        var overlayPoint = new PointF((float)offsetX+10.5f, (float)avatarOffsetY+10.5f);
         
         if (whiteCorner)
-            baseGraphic.DrawImage(whiteOverlay, image);
-        baseGraphic.DrawImage(avatarBitmap, image);
-
-        if (!IsFileLocked.Check(avatarLocalPath, 10))
-        {
-            File.Delete(avatarLocalPath);
-        }
-        else
-        {
-            Log.Error("[Greeter Plugin] Failed to delete local avatar, file appears to be locked! Filepath: {FilePath}", avatarLocalPath);
-            
-        } 
-    
-
+            baseGraphic.DrawImage(whiteOverlay, overlayPoint);
+        baseGraphic.DrawImage(avatarBitmap, imagePoint);
     }
-    
-    private static Bitmap ResizeImage(Bitmap imgToResize, Size size)
+
+    private static Image ResizeImage(Image imgToResize, Size size)
     {
-        try
-        {
-            var bitmap = new Bitmap(size.Width, size.Height);
-            using var graphics = Graphics.FromImage((Image)bitmap);
-            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-            graphics.DrawImage(imgToResize, 0, 0, size.Width, size.Height);
-            return bitmap;
-        }
-        catch 
-        { 
-            Log.Error("Failed to resize image");
-            return imgToResize; 
-        }
+        return new Bitmap(imgToResize, size);
     }
     
-    private static async Task GetUserAvatar(string avatarUrl, string localPath)
+    private static async Task<Image> GetUserAvatar(string avatarUrl)
     {
         var httpClient = new HttpClient();
 
         var res = await httpClient.GetAsync(avatarUrl);
 
         var bytes = await res.Content.ReadAsByteArrayAsync();
-
-        using var image = Image.FromStream(new MemoryStream(bytes));
-        image.Save(localPath);
+        
+        return Image.FromStream(new MemoryStream(bytes));
     }
     
     private static void AddText(string username,string welcomeText, int memberCount, Graphics baseGraphic)
     {
-        var fontMainText = new Font("Tahoma", 40);
-        var fontSubText = new Font("Tahoma", 30);
+        var fontMainText = new Font("Tahoma", 45);
+        var fontSubText = new Font("Tahoma", 40);
         var brushMainText = Brushes.White;
         var brushSubText = Brushes.White;
         var pointMainText = new PointF(850,400);
-        var pointSubText = new PointF(1000,500);
+        var pointSubText = new PointF(1000,650);
 
         if (welcomeText.Contains("{username}"))
             welcomeText = welcomeText.Replace("{username}", username);
-    
+
+        if (welcomeText.Length > 35)
+        {
+            welcomeText = welcomeText.Remove(35);
+        }
+        
         baseGraphic.DrawString(welcomeText, fontMainText, brushMainText, pointMainText);
     
         baseGraphic.DrawString($"Member: #{memberCount}", fontSubText, brushSubText, pointSubText);

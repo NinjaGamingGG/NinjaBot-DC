@@ -1,0 +1,8 @@
+{
+  "greeter-plugin": {
+    "mysql-server": "127.0.0.1:3306",
+    "mysql-user": "root",
+    "mysql-password": "Your password here",
+    "mysql-database": "greeter-plugin"
+  }
+}

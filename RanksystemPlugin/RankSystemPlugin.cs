@@ -26,7 +26,6 @@ public class RankSystemPlugin : IPlugin
         
         SqLiteHelper.OpenSqLiteConnection(PluginDirectory!);
         SqLiteHelper.InitializeSqliteTables();
-        
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
         slashCommands.RegisterCommands<RanksystemSubGroupContainer>();

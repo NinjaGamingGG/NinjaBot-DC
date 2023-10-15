@@ -6,13 +6,14 @@ public static class LoggingBuilderExtensions
 {
     public static ILoggingBuilder ConfigureSerilog(this ILoggingBuilder loggingBuilder, IConfiguration configuration)
     {
+        const string outputTemplate = "[{Timestamp:dd-MM-yyyy HH:mm:ss} {Level}] {Message}{NewLine}{Exception}";
         
 #if DEBUG
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(configuration)
             .MinimumLevel.Debug()
-            .WriteTo.Console()
-            .WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "service.log"))
+            .WriteTo.Console(outputTemplate: outputTemplate )
+            .WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "service.log"),outputTemplate: outputTemplate)
             .CreateLogger();
 
         return loggingBuilder;
@@ -20,8 +21,8 @@ public static class LoggingBuilderExtensions
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(configuration)
             .MinimumLevel.Information()
-            .WriteTo.Console()
-            .WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "service.log"))
+            .WriteTo.Console(outputTemplate: outputTemplate)
+            .WriteTo.File(Path.Combine(Directory.GetCurrentDirectory(), "service.log"),outputTemplate: outputTemplate)
             .CreateLogger();
         
                 return loggingBuilder;

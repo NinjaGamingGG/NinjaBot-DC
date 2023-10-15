@@ -28,19 +28,18 @@ public static class UpdateVoiceActivity
 
     private static async Task UpdateForGuild(KeyValuePair<ulong, DiscordGuild> guild, DiscordClient client)
     {
-        var members = await guild.Value.GetAllMembersAsync();
-        var membersAsArray = members.ToArray();
+        var members = guild.Value.GetAllMembersAsync();
 
-        for (var i = 0; i < membersAsArray.Length; i++)
+        await foreach (var member in members)
         {
-            if (membersAsArray[i].VoiceState == null)
+            if (ReferenceEquals(member.VoiceState,null))
                 continue;
                 
             //Check if member is in any blacklisted groups
-            if(Blacklist.CheckUserGroups(membersAsArray[i].Roles.ToArray(), guild.Value))
+            if(Blacklist.CheckUserGroups(member.Roles.ToArray(), guild.Value))
                 continue;
 
-            var userChannel = membersAsArray[i].VoiceState.Channel;
+            var userChannel = member.VoiceState.Channel;
             if (Blacklist.CheckUserChannel(userChannel))
                 continue;
                 
@@ -48,11 +47,11 @@ public static class UpdateVoiceActivity
             if (Blacklist.CheckUserChannel(userChannel.Parent))
                 continue;
 
-            var user = membersAsArray[i];
-            await UpdateUserPoints.Add(client,guild.Key ,user, 
+
+            await UpdateUserPoints.Add(client,guild.Key ,member, 
                 RankSystemPlugin.ERankSystemReason.ChannelVoiceActivity);
 
-            await UpdateRewardRole.ForUserAsync(client, guild.Key, user.Id);
+            await UpdateRewardRole.ForUserAsync(client, guild.Key, member.Id);
         }
     }
     

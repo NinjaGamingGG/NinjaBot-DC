@@ -1,117 +1,126 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
+using ImageMagick;
+
 
 namespace GreeterPlugin.PluginHelpers;
 
-[SuppressMessage("Interoperability", "CA1416:Plattformkompatibilität überprüfen")]
 public static class GenerateWelcomeImage
 {
-    public static async Task Generator(string username, string avatarUrl, string welcomeText, int memberCount, string backgroundUrl, bool roundedAvatar, double offsetX, double offsetY, string welcomeCardPath ,bool whiteCorner = true )
+    public static async Task Generator(string username, string avatarUrl, string welcomeText, int memberCount,
+        string backgroundUrl, bool roundedAvatar, double offsetX, double offsetY, string welcomeCardPath,
+        int cornerRadius ,bool whiteCorner = true)
     {
-        var baseBitmap = new Bitmap(Path.Combine(GreeterPlugin.StaticPluginDirectory,backgroundUrl));
-        var baseGraphic = Graphics.FromImage(baseBitmap);
+        var baseImage = new MagickImage(Path.Combine(GreeterPlugin.StaticPluginDirectory,backgroundUrl));
         
-        await AddImage(avatarUrl, roundedAvatar, baseGraphic, offsetY, offsetX, whiteCorner);
-        AddText(username,welcomeText,memberCount, baseGraphic);
+        var avatarImage = new MagickImage(await GetUserAvatar(avatarUrl));
         
-        var memoryStream = new MemoryStream();
-        baseBitmap.Save(memoryStream,ImageFormat.Png);
+        avatarImage.Resize(640,640);
 
-        var file = new FileStream(welcomeCardPath, FileMode.Create, FileAccess.Write);
-        memoryStream.WriteTo(file);
-
-        file.Close();
-
-    }
-    
-    private static async Task AddImage(string imageUrl,bool roundedAvatar, Graphics baseGraphic,double offsetY, double offsetX, bool whiteCorner)
-    {
-
-
-        var avatarBitmap = await GetUserAvatar(imageUrl);
-
-        var whiteOverlay = new Bitmap(650, 650);
+        var avatarBorder = new MagickImage(MagickColors.White, avatarImage.Width+10, avatarImage.Height+10);
         
-        using (var graph = Graphics.FromImage(whiteOverlay))
-        {
-            var imageSize = new Rectangle(0,0,whiteOverlay.Width,whiteOverlay.Height);
-            graph.FillRectangle(Brushes.White, imageSize);
-        }
-        
-        
-        
-        
-        avatarBitmap = ResizeImage(avatarBitmap, new Size(640, 640));
-        
-
         if (roundedAvatar)
         {
-            whiteOverlay = OvalImage(whiteOverlay);
-            
-            avatarBitmap = OvalImage(avatarBitmap);
+            avatarImage = UserAvatarRoundedCorners(avatarImage, cornerRadius);
+            avatarBorder = UserAvatarRoundedCorners(avatarBorder, cornerRadius);
         }
 
-        var avatarOffsetY = baseGraphic.DpiY / 2.0f + avatarBitmap.Height / 2.0f - offsetY;
-
-        var imagePoint = new PointF((float)offsetX+15, (float)avatarOffsetY+15);
-        var overlayPoint = new PointF((float)offsetX+10.5f, (float)avatarOffsetY+10.5f);
+        
+        var drawableAvatar =
+            new DrawableComposite(offsetX, offsetY, CompositeOperator.Over , avatarImage);
+        var drawableBorder = new DrawableComposite(offsetX-5,offsetY-5, CompositeOperator.Over, avatarBorder);
+        
+        //var drawableText = new DrawableText(900, 400, welcomeText.Replace("{username}",username));
+        var drawableSubText = new DrawableText(1000, 650, $"Member: #{memberCount}");
+        
+        var drawableSubTextFontPointSize = new DrawableFontPointSize(30);
+        var drawableFillColor = new DrawableFillColor(MagickColors.White);
         
         if (whiteCorner)
-            baseGraphic.DrawImage(whiteOverlay, overlayPoint);
-        baseGraphic.DrawImage(avatarBitmap, imagePoint);
+            baseImage.Draw(drawableBorder);
+        
+        baseImage.Draw(drawableAvatar);
+        
+        
+        var readSettings = new MagickReadSettings
+        {
+            FillColor = MagickColors.White,
+            BackgroundColor = MagickColors.Transparent,
+            TextGravity = Gravity.South,
+            // This determines the size of the area where the text will be drawn in
+            Width = 600,
+            Height = 350,
+            FontPointsize = 50
+        };
+
+        if (welcomeText.Contains("{username}"))
+            welcomeText = welcomeText.Replace("{username}", username);
+        
+        using (var label = new MagickImage($"caption:{welcomeText}", readSettings))
+        {
+            //baseImage.Composite(label, 900, 200, CompositeOperator.Over);
+            var drawableBoundingText =
+                new DrawableComposite(900, 200, CompositeOperator.Over , label);
+            baseImage.Draw(drawableBoundingText);
+        }
+        
+        
+        
+        baseImage.Draw(drawableSubText,drawableFillColor,drawableSubTextFontPointSize);
+        
+        await baseImage.WriteAsync(welcomeCardPath);
+        baseImage.Dispose();
+
+
     }
 
-    private static Image ResizeImage(Image imgToResize, Size size)
-    {
-        return new Bitmap(imgToResize, size);
-    }
-    
-    private static async Task<Image> GetUserAvatar(string avatarUrl)
+    private static async Task<MagickImage> GetUserAvatar(string avatarUrl)
     {
         var httpClient = new HttpClient();
 
         var res = await httpClient.GetAsync(avatarUrl);
 
         var bytes = await res.Content.ReadAsByteArrayAsync();
-        
-        return Image.FromStream(new MemoryStream(bytes));
+
+        return new MagickImage(bytes);
     }
-    
-    private static void AddText(string username,string welcomeText, int memberCount, Graphics baseGraphic)
+
+    private static  MagickImage UserAvatarRoundedCorners(MagickImage userAvatar, int cornerRadius)
     {
-        var fontMainText = new Font("Tahoma", 60);
-        var fontSubText = new Font("Tahoma", 40);
-        var brushMainText = Brushes.White;
-        var brushSubText = Brushes.White;
-        var pointMainText = new PointF(850,400);
-        var pointSubText = new PointF(1000,650);
-        
+        var image = new MagickImage(userAvatar);
 
+        using var mask = new MagickImage(MagickColors.White, image.Width, image.Height);
         
-        var boundingBoxPoint = new PointF(800, 150);
-        var boundingBox = new RectangleF(boundingBoxPoint, new SizeF(750, 450));
+        new Drawables()
+            .FillColor(MagickColors.Black)
+            .StrokeColor(MagickColors.Black)
+            .Polygon(new PointD(0, 0), new PointD(0, cornerRadius), new PointD(cornerRadius, 0))
+            .Polygon(new PointD(mask.Width, 0), new PointD(mask.Width, cornerRadius), new PointD(mask.Width - cornerRadius, 0))
+            .Polygon(new PointD(0, mask.Height), new PointD(0, mask.Height - cornerRadius), new PointD(cornerRadius, mask.Height))
+            .Polygon(new PointD(mask.Width, mask.Height), new PointD(mask.Width, mask.Height - cornerRadius), new PointD(mask.Width - cornerRadius, mask.Height))
+            .FillColor(MagickColors.White)
+            .StrokeColor(MagickColors.White)
+            .Circle(cornerRadius, cornerRadius, cornerRadius, 0)
+            .Circle(mask.Width - cornerRadius, cornerRadius, mask.Width - cornerRadius, 0)
+            .Circle(cornerRadius, mask.Height - cornerRadius, 0, mask.Height - cornerRadius)
+            .Circle(mask.Width - cornerRadius, mask.Height - cornerRadius, mask.Width - cornerRadius, mask.Height)
+            .Draw(mask);
 
-        if (welcomeText.Contains("{username}"))
-            welcomeText = welcomeText.Replace("{username}", username);
-        
-        baseGraphic.DrawString(welcomeText, fontMainText, brushMainText,boundingBox, new StringFormat(){Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Far, Trimming = StringTrimming.EllipsisWord});
-        baseGraphic.DrawString($"Member: #{memberCount}", fontSubText, brushSubText, pointSubText);
+        // This copies the pixels that were already transparent on the mask.
+        using (var imageAlpha = image.Clone())
+        {
+            imageAlpha.Alpha(AlphaOption.Extract);
+            imageAlpha.Opaque(MagickColors.White, MagickColors.None);
+            mask.Composite(imageAlpha, CompositeOperator.Over);
+        }
+
+        mask.HasAlpha = false;
+        image.HasAlpha = false;
+        image.Composite(mask, CompositeOperator.CopyAlpha);
+        image.Write("rounded-corners.png");
+        return image;
+
     }
     
-    private static Bitmap OvalImage(Image img) {
-        var bmp = new Bitmap(img.Width, img.Height);
-        
-        using var gp = new GraphicsPath();
-        gp.AddEllipse(0, 0, img.Width, img.Height);
-        
-        using var gr = Graphics.FromImage(bmp);
-        gr.SetClip(gp);
-        gr.DrawImage(img, Point.Empty);
-
-        return bmp;
-    }
+    
     
 
 

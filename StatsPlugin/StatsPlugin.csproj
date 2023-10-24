@@ -14,6 +14,8 @@
     <ItemGroup>
       <PackageReference Include="Dapper" Version="2.0.151" />
       <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
+      <PackageReference Include="Magick.NET-Q16-x64" Version="13.3.0" />
+      <PackageReference Include="Magick.NET.SystemDrawing" Version="7.1.0" />
       <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
     </ItemGroup>
 

@@ -1,6 +1,8 @@
-﻿using GreeterPlugin.CommandsModules;
+﻿using System.Runtime.InteropServices;
+using GreeterPlugin.CommandsModules;
 using GreeterPlugin.Events;
 using GreeterPlugin.PluginHelpers;
+using ImageMagick;
 using NinjaBot_DC;
 using PluginBase;
 using Serilog;
@@ -21,6 +23,8 @@ public class GreeterPlugin : IPlugin
         
         client.GuildMemberAdded += GuildMemberAdded.GuildMemberAddedEvent;
         
+  
+        
         if (PluginDirectory != null) ConfigHelper.SetBasePath(PluginDirectory);
         if (PluginDirectory != null) StaticPluginDirectory = PluginDirectory;
         
@@ -33,7 +37,7 @@ public class GreeterPlugin : IPlugin
         slashCommands.RegisterCommands<SlashCommandModule>();
 
         Task.Run(async () => await StartupIndex.StartupTask(client));
-        
+
         Log.Debug("[Greeter Plugin] Init Finished");
     }
 

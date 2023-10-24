@@ -20,6 +20,10 @@ RUN dotnet build "NinjaBot-DC.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "NinjaBot-DC.csproj" -c Release -o /app/publish
 
+FROM debian:11-slim
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install fontconfig -y
+
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .

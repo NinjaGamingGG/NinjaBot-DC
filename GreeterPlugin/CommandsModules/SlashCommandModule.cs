@@ -47,7 +47,7 @@ public class SlashCommandModule : ApplicationCommandModule
         
         
     }
-    /*
+    
     [SlashCommandGroup("debug", "asd")]
     public class DebugSubGroup : ApplicationCommandModule
     {
@@ -55,8 +55,13 @@ public class SlashCommandModule : ApplicationCommandModule
         public async Task GenerateCommand(InteractionContext context, [Option("User", "asd")] DiscordUser user)
         {
             await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Generating Image..."));
+            Log.Information("Generate Command Init");
             
             var connection = MySqlConnectionHelper.GetMySqlConnection();
+            
+            await context.EditResponseAsync( new DiscordWebhookBuilder().WithContent("Getting GSR..."));
+            Log.Information("Getting GuildSettingsRecord");
+
             
             var guildSettingsRecord = await connection.QueryFirstOrDefaultAsync<GuildSettingsRecord>("SELECT * FROM GuildSettingsIndex WHERE GuildId = @GuildId", new {GuildId = context.Guild.Id});
             
@@ -65,6 +70,10 @@ public class SlashCommandModule : ApplicationCommandModule
                 return;
             }
             
+            await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Getting JDR..."));
+            Log.Information("Getting UserJoinedDataRecord");
+
+            
             var userJoinedDataRecord = await connection.QueryFirstOrDefaultAsync<UserJoinedDataRecord>("SELECT * FROM UserJoinedDataIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = context.Guild.Id, UserId = context.Member.Id});
         
             if (userJoinedDataRecord == null)
@@ -72,9 +81,16 @@ public class SlashCommandModule : ApplicationCommandModule
                 return;
             }
             
+            Log.Information("Preparing Generation");
+            await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Preparing Generation..."));
+
+            
             var welcomeChannel = context.Guild.GetChannel(guildSettingsRecord.WelcomeChannelId);
 
             var welcomeCard = Path.Combine(GreeterPlugin.StaticPluginDirectory,"temp", $"welcomeCard{user.Id}.png");
+
+            await context.EditResponseAsync( new DiscordWebhookBuilder().WithContent("Starting Generator..."));
+            Log.Information("Starting Generator");
 
             await GenerateWelcomeImage.Generator(user.Username,
                 user.AvatarUrl, 
@@ -84,9 +100,9 @@ public class SlashCommandModule : ApplicationCommandModule
                 true, 
                 guildSettingsRecord.ProfilePictureOffsetX, 
                 guildSettingsRecord.ProfilePictureOffsetY, 
-                welcomeCard);
+                welcomeCard,150);
 
-
+            Log.Information("Image Generated, releasing now");
             await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Image Generated, releasing now"));
             
             var messageBuilder = new DiscordMessageBuilder();
@@ -103,6 +119,7 @@ public class SlashCommandModule : ApplicationCommandModule
             messageBuilder.WithContent(guildSettingsRecord.WelcomeMessage);
                 
             await context.Client.SendMessageAsync(welcomeChannel, messageBuilder);
+            Log.Information("Image Send");
             
             filestream.Close();
             await filestream.DisposeAsync();
@@ -122,7 +139,7 @@ public class SlashCommandModule : ApplicationCommandModule
             
             await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Operation Complete"));
         }
-    }*/
+    }
 
     
 }

@@ -53,8 +53,8 @@ public static class GuildMemberAdded
                 guildSettingsRecord.WelcomeImageUrl, 
                 true, 
                 guildSettingsRecord.ProfilePictureOffsetX, 
-                guildSettingsRecord.ProfilePictureOffsetY, 
-                welcomeCard);
+                guildSettingsRecord.ProfilePictureOffsetY,
+                welcomeCard, 300);
             
             var messageBuilder = new DiscordMessageBuilder();
 

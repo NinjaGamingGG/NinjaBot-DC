@@ -115,7 +115,6 @@ public static class GenerateWelcomeImage
         mask.HasAlpha = false;
         image.HasAlpha = false;
         image.Composite(mask, CompositeOperator.CopyAlpha);
-        image.Write("rounded-corners.png");
         return image;
 
     }

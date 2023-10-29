@@ -55,13 +55,8 @@ public class SlashCommandModule : ApplicationCommandModule
         public async Task GenerateCommand(InteractionContext context, [Option("User", "asd")] DiscordUser user)
         {
             await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Generating Image..."));
-            Log.Information("Generate Command Init");
             
             var connection = MySqlConnectionHelper.GetMySqlConnection();
-            
-            await context.EditResponseAsync( new DiscordWebhookBuilder().WithContent("Getting GSR..."));
-            Log.Information("Getting GuildSettingsRecord");
-
             
             var guildSettingsRecord = await connection.QueryFirstOrDefaultAsync<GuildSettingsRecord>("SELECT * FROM GuildSettingsIndex WHERE GuildId = @GuildId", new {GuildId = context.Guild.Id});
             
@@ -70,10 +65,6 @@ public class SlashCommandModule : ApplicationCommandModule
                 return;
             }
             
-            await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Getting JDR..."));
-            Log.Information("Getting UserJoinedDataRecord");
-
-            
             var userJoinedDataRecord = await connection.QueryFirstOrDefaultAsync<UserJoinedDataRecord>("SELECT * FROM UserJoinedDataIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = context.Guild.Id, UserId = context.Member.Id});
         
             if (userJoinedDataRecord == null)
@@ -81,35 +72,29 @@ public class SlashCommandModule : ApplicationCommandModule
                 return;
             }
             
-            Log.Information("Preparing Generation");
-            await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Preparing Generation..."));
-
-            
             var welcomeChannel = context.Guild.GetChannel(guildSettingsRecord.WelcomeChannelId);
 
-            var welcomeCard = Path.Combine(GreeterPlugin.StaticPluginDirectory,"temp", $"welcomeCard{user.Id}.png");
-
-            await context.EditResponseAsync( new DiscordWebhookBuilder().WithContent("Starting Generator..."));
-            Log.Information("Starting Generator");
+        //Removed welcome card generation due to issues with the image library on Linux
+            /*var welcomeCard = Path.Combine(GreeterPlugin.StaticPluginDirectory,"temp", $"welcomeCard{user.Id}.png");
 
             await GenerateWelcomeImage.Generator(user.Username,
-                user.AvatarUrl, 
+                user.AvatarUrl,
                 guildSettingsRecord.WelcomeImageText,
                 userJoinedDataRecord.UserIndex,
-                guildSettingsRecord.WelcomeImageUrl, 
-                true, 
-                guildSettingsRecord.ProfilePictureOffsetX, 
-                guildSettingsRecord.ProfilePictureOffsetY, 
+                guildSettingsRecord.WelcomeImageUrl,
+                true,
+                guildSettingsRecord.ProfilePictureOffsetX,
+                guildSettingsRecord.ProfilePictureOffsetY,
                 welcomeCard,150);
 
             Log.Information("Image Generated, releasing now");
-            await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Image Generated, releasing now"));
+            await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Image Generated, releasing now"));*/
             
             var messageBuilder = new DiscordMessageBuilder();
 
-            var filestream = File.Open(welcomeCard,FileMode.Open);
+            /*var filestream = File.Open(welcomeCard,FileMode.Open);
             
-            messageBuilder.AddFile(filestream);
+            messageBuilder.AddFile(filestream);*/
             
             if (guildSettingsRecord.WelcomeMessage.Contains("{usermention}"))
             {
@@ -117,11 +102,10 @@ public class SlashCommandModule : ApplicationCommandModule
             }
             
             messageBuilder.WithContent(guildSettingsRecord.WelcomeMessage);
-                
-            await context.Client.SendMessageAsync(welcomeChannel, messageBuilder);
-            Log.Information("Image Send");
             
-            filestream.Close();
+            await context.Client.SendMessageAsync(welcomeChannel, messageBuilder);
+            
+            /*filestream.Close();
             await filestream.DisposeAsync();
 
             if (!IsFileLocked.Check(welcomeCard, 10))
@@ -133,7 +117,7 @@ public class SlashCommandModule : ApplicationCommandModule
             {
                 Log.Error("[Greeter Plugin] Failed to delete welcome card, file appears to be locked! Filepath: {FilePath}", welcomeCard);
                 
-            } 
+            } */
             
             await connection.ExecuteAsync("UPDATE UserJoinedDataIndex SET WasGreeted = @WasGreeted WHERE GuildId = @GuildId AND UserId = @UserId", new {WasGreeted = true, GuildId = context.Guild.Id, UserId = context.Member.Id});
             

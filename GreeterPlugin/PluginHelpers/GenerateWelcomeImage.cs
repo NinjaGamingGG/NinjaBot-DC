@@ -33,6 +33,7 @@ public static class GenerateWelcomeImage
         
         var drawableSubTextFontPointSize = new DrawableFontPointSize(30);
         var drawableFillColor = new DrawableFillColor(MagickColors.White);
+        var drawableSubTextFont = new DrawableFont("Cantarell");
         
         if (whiteCorner)
             baseImage.Draw(drawableBorder);
@@ -54,17 +55,17 @@ public static class GenerateWelcomeImage
         if (welcomeText.Contains("{username}"))
             welcomeText = welcomeText.Replace("{username}", username);
         
-        using (var label = new MagickImage($"caption:{welcomeText}", readSettings))
+        /*using (var label = new MagickImage($"caption:{welcomeText}", readSettings))
         {
             //baseImage.Composite(label, 900, 200, CompositeOperator.Over);
             var drawableBoundingText =
                 new DrawableComposite(900, 200, CompositeOperator.Over , label);
             baseImage.Draw(drawableBoundingText);
-        }
+        }*/
         
         
         
-        baseImage.Draw(drawableSubText,drawableFillColor,drawableSubTextFontPointSize);
+        baseImage.Draw(drawableSubText,drawableFillColor,drawableSubTextFontPointSize,drawableSubTextFont);
         
         await baseImage.WriteAsync(welcomeCardPath);
         baseImage.Dispose();

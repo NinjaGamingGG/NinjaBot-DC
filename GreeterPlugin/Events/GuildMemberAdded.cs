@@ -5,7 +5,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using GreeterPlugin.DatabaseRecords;
 using GreeterPlugin.PluginHelpers;
-using Serilog;
 
 namespace GreeterPlugin.Events;
 
@@ -44,7 +43,8 @@ public static class GuildMemberAdded
             
             var welcomeChannel = args.Guild.GetChannel(guildSettingsRecord.WelcomeChannelId);
 
-            var welcomeCard = Path.Combine(GreeterPlugin.StaticPluginDirectory,"temp", $"welcomeCard{args.Member.Id}.png");
+        //Removed welcome card generation due to issues with the image library on Linux
+            /*var welcomeCard = Path.Combine(GreeterPlugin.StaticPluginDirectory,"temp", $"welcomeCard{args.Member.Id}.png");
 
             await GenerateWelcomeImage.Generator(args.Member.Username,
                 args.Member.AvatarUrl, 
@@ -54,13 +54,13 @@ public static class GuildMemberAdded
                 true, 
                 guildSettingsRecord.ProfilePictureOffsetX, 
                 guildSettingsRecord.ProfilePictureOffsetY,
-                welcomeCard, 300);
+                welcomeCard, 300);*/
             
             var messageBuilder = new DiscordMessageBuilder();
 
-            var filestream = File.Open(welcomeCard,FileMode.Open);
+            /*var filestream = File.Open(welcomeCard,FileMode.Open);
             
-            messageBuilder.AddFile(filestream);
+            messageBuilder.AddFile(filestream);*/
             
             if (guildSettingsRecord.WelcomeMessage.Contains("{usermention}"))
             {
@@ -71,7 +71,7 @@ public static class GuildMemberAdded
                 
             await client.SendMessageAsync(welcomeChannel, messageBuilder);
             
-            filestream.Close();
+            /*filestream.Close();
             await filestream.DisposeAsync();
 
             if (!IsFileLocked.Check(welcomeCard, 10))
@@ -83,7 +83,7 @@ public static class GuildMemberAdded
             {
                 Log.Error("[Greeter Plugin] Failed to delete welcome card, file appears to be locked! Filepath: {FilePath}", welcomeCard);
                 
-            } 
+            } */
             
             await connection.ExecuteAsync("UPDATE UserJoinedDataIndex SET WasGreeted = @WasGreeted WHERE GuildId = @GuildId AND UserId = @UserId", new {WasGreeted = true, GuildId = args.Guild.Id, UserId = args.Member.Id});
             

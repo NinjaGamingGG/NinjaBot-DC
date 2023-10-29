@@ -1,8 +1,6 @@
-﻿using System.Runtime.InteropServices;
-using GreeterPlugin.CommandsModules;
+﻿using GreeterPlugin.CommandsModules;
 using GreeterPlugin.Events;
 using GreeterPlugin.PluginHelpers;
-using ImageMagick;
 using NinjaBot_DC;
 using PluginBase;
 using Serilog;

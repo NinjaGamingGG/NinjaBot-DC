@@ -74,52 +74,7 @@ public class SlashCommandModule : ApplicationCommandModule
             
             var welcomeChannel = context.Guild.GetChannel(guildSettingsRecord.WelcomeChannelId);
 
-        //Removed welcome card generation due to issues with the image library on Linux
-            /*var welcomeCard = Path.Combine(GreeterPlugin.StaticPluginDirectory,"temp", $"welcomeCard{user.Id}.png");
-
-            await GenerateWelcomeImage.Generator(user.Username,
-                user.AvatarUrl,
-                guildSettingsRecord.WelcomeImageText,
-                userJoinedDataRecord.UserIndex,
-                guildSettingsRecord.WelcomeImageUrl,
-                true,
-                guildSettingsRecord.ProfilePictureOffsetX,
-                guildSettingsRecord.ProfilePictureOffsetY,
-                welcomeCard,150);
-
-            Log.Information("Image Generated, releasing now");
-            await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Image Generated, releasing now"));*/
-            
-            var messageBuilder = new DiscordMessageBuilder();
-
-            /*var filestream = File.Open(welcomeCard,FileMode.Open);
-            
-            messageBuilder.AddFile(filestream);*/
-            
-            if (guildSettingsRecord.WelcomeMessage.Contains("{usermention}"))
-            {
-                guildSettingsRecord.WelcomeMessage = guildSettingsRecord.WelcomeMessage.Replace("{usermention}", user.Mention);
-            }
-            
-            messageBuilder.WithContent(guildSettingsRecord.WelcomeMessage);
-            
-            await context.Client.SendMessageAsync(welcomeChannel, messageBuilder);
-            
-            /*filestream.Close();
-            await filestream.DisposeAsync();
-
-            if (!IsFileLocked.Check(welcomeCard, 10))
-            {
-                File.Delete(welcomeCard);
-
-            }
-            else
-            {
-                Log.Error("[Greeter Plugin] Failed to delete welcome card, file appears to be locked! Filepath: {FilePath}", welcomeCard);
-                
-            } */
-            
-            await connection.ExecuteAsync("UPDATE UserJoinedDataIndex SET WasGreeted = @WasGreeted WHERE GuildId = @GuildId AND UserId = @UserId", new {WasGreeted = true, GuildId = context.Guild.Id, UserId = context.Member.Id});
+            await GenerateWelcomeMessageWithImage.Generate(context.Client, context.Member, guildSettingsRecord, userJoinedDataRecord, welcomeChannel, connection, context.Guild);
             
             await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Operation Complete"));
         }

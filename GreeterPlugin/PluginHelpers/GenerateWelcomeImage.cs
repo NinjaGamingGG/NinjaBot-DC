@@ -28,7 +28,7 @@ public static class GenerateWelcomeImage
             new DrawableComposite(offsetX, offsetY, CompositeOperator.Over , avatarImage);
         var drawableBorder = new DrawableComposite(offsetX-5,offsetY-5, CompositeOperator.Over, avatarBorder);
         
-        //var drawableText = new DrawableText(900, 400, welcomeText.Replace("{username}",username));
+        var drawableText = new DrawableText(900, 400, welcomeText.Replace("{username}",username));
         var drawableSubText = new DrawableText(1000, 650, $"Member: #{memberCount}");
         
         var drawableSubTextFontPointSize = new DrawableFontPointSize(30);
@@ -55,13 +55,13 @@ public static class GenerateWelcomeImage
         if (welcomeText.Contains("{username}"))
             welcomeText = welcomeText.Replace("{username}", username);
         
-        /*using (var label = new MagickImage($"caption:{welcomeText}", readSettings))
+        using (var label = new MagickImage($"caption:{welcomeText}", readSettings))
         {
             //baseImage.Composite(label, 900, 200, CompositeOperator.Over);
             var drawableBoundingText =
                 new DrawableComposite(900, 200, CompositeOperator.Over , label);
             baseImage.Draw(drawableBoundingText);
-        }*/
+        }
         
         
         

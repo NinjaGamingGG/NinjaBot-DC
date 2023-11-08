@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using NinjaBot_DC;
 
 namespace GreeterPlugin.PluginHelpers;
 
@@ -16,7 +17,7 @@ public static class ConfigHelper
         if (testLoad == null)
         {
             return new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(Program.BasePath)
                 .AddJsonFile(Path.Combine(_basePath,"config.json"), optional: false, reloadOnChange: true)
                 .Build();
         }

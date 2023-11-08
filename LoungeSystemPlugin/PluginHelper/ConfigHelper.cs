@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using NinjaBot_DC;
 
 namespace LoungeSystemPlugin.PluginHelper;
 
@@ -13,7 +14,7 @@ public static class ConfigHelper
         //If none are found try to read from config files
         if (testLoad == null)
         {
-            var directory = Directory.GetCurrentDirectory();
+            var directory = Program.BasePath;
             
             return new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())

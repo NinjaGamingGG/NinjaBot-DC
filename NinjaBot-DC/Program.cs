@@ -4,38 +4,39 @@ namespace NinjaBot_DC;
 
 public static class Program
 {
-    public static async Task Main(string[] args)
+    private const string OutputTemplate = "[{Timestamp:dd-MM-yyyy HH:mm:ss} {Level}] {Message}{NewLine}{Exception}";
+    
+    public static string BasePath = Directory.GetCurrentDirectory();
+    
+    public static void Main(string[] args)
     {
+        if (!Environment.UserInteractive)
+        {
+            BasePath = "C:\\NinjaBot-DC";
+        }
+        
         Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .CreateBootstrapLogger();
-
-        try
-        {
-            var host = CreateHostBuilder(args)
-                .Build();
-            
-            await host.RunAsync();
-        }
-        catch (Exception ex)
-        {
-            Log.Fatal(ex, "Worker service failed initiation. See exception for more details");
-        }
-        finally
-        {
-            await Log.CloseAndFlushAsync();
-        }
+            .MinimumLevel.Debug()
+            .WriteTo.Console(outputTemplate: OutputTemplate )
+            .WriteTo.File(Path.Combine(BasePath, "service.log"),outputTemplate: OutputTemplate)
+            .CreateLogger();
+        
+        CreateHostBuilder(args)
+            .Build().Run();
+        
+        
+        Log.CloseAndFlush();
+        
     }
 
     private static IHostBuilder CreateHostBuilder(string[] args)
     {
-        return Host.CreateDefaultBuilder(args).ConfigureServices((_, services) => 
+        return Host.CreateDefaultBuilder(args)
+            .UseWindowsService()
+            .ConfigureServices((_, services) => 
         {
             services.AddHostedService<Worker>();
 
-        }).ConfigureLogging((hostContext, builder) =>
-        {
-            builder.ConfigureSerilog(hostContext.Configuration);
         }).UseSerilog();
     }
 }

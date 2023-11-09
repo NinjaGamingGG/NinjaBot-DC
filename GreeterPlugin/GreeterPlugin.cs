@@ -21,6 +21,8 @@ public class GreeterPlugin : IPlugin
         
         client.GuildMemberAdded += GuildMemberAdded.GuildMemberAddedEvent;
         
+  
+        
         if (PluginDirectory != null) ConfigHelper.SetBasePath(PluginDirectory);
         if (PluginDirectory != null) StaticPluginDirectory = PluginDirectory;
         
@@ -33,7 +35,7 @@ public class GreeterPlugin : IPlugin
         slashCommands.RegisterCommands<SlashCommandModule>();
 
         Task.Run(async () => await StartupIndex.StartupTask(client));
-        
+
         Log.Debug("[Greeter Plugin] Init Finished");
     }
 

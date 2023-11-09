@@ -1,6 +1,5 @@
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using System.Data.SQLite;
 using System.Reflection;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
@@ -15,47 +14,14 @@ public sealed class Worker : BackgroundService
 {
     private static readonly IConfigurationRoot Configuration;
 
-    private static readonly SQLiteConnection SqLiteConnection;
+    //private static readonly SQLiteConnection SqLiteConnection;
     
     private static readonly DiscordClient DiscordClient;
 
     private static readonly SlashCommandsExtension SlashCommandsExtension;
 
-    private static IPlugin[]? _loadedPluginsArray; 
-
-    static Worker()
-    {
-        Configuration = LoadServiceConfig();
-
-        var sqliteSource = Configuration.GetValue<string>("ninja-bot:sqlite-source");
-        SqLiteConnection = new SQLiteConnection($"Data Source={sqliteSource};Version=3;New=True;Compress=True;");
-        
-
-        var token = Configuration.GetValue<string>("ninja-bot:token");
-
-        var logFactory = new LoggerFactory().AddSerilog();
-
-        token ??= "";
-
-        DiscordClient = new DiscordClient(new DiscordConfiguration()
-        {
-            Token = token,
-            TokenType = TokenType.Bot,
-            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents | DiscordIntents.GuildMembers | DiscordIntents.GuildPresences | DiscordIntents.GuildVoiceStates,
-            LoggerFactory = logFactory
-        });
-
-        SlashCommandsExtension = DiscordClient.UseSlashCommands();
-        
-        DiscordClient.UseInteractivity(new InteractivityConfiguration()
-        {
-            Timeout = TimeSpan.FromSeconds(30)
-        });
-        {
-            
-        }
-    }
-
+    private static IPlugin[]? _loadedPluginsArray;
+    
     private static IConfigurationRoot LoadServiceConfig()
     {
         //Check if there are any env variables set by loading the most mandatory variable
@@ -65,7 +31,7 @@ public sealed class Worker : BackgroundService
         if (testLoad == null)
         {
             return new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(Program.BasePath)
                 .AddJsonFile("config.json", optional: false, reloadOnChange: true)
                 .Build();
         }
@@ -75,6 +41,35 @@ public sealed class Worker : BackgroundService
         
         //If env vars are set load them
         return builder.Build();
+    }
+
+
+    static Worker()
+    {
+ 
+            
+        Configuration = LoadServiceConfig();
+        var token = Configuration.GetValue<string>("ninja-bot:token");
+        token ??= "";
+        
+        var logFactory = new LoggerFactory().AddSerilog();
+        
+        DiscordClient = new DiscordClient(new DiscordConfiguration()
+        {
+            Token = token,
+            TokenType = TokenType.Bot,
+            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents |
+                      DiscordIntents.GuildMembers | DiscordIntents.GuildPresences | DiscordIntents.GuildVoiceStates,
+            LoggerFactory = logFactory
+        });
+        
+        SlashCommandsExtension = DiscordClient.UseSlashCommands();
+        DiscordClient.UseInteractivity(new InteractivityConfiguration()
+        {
+        
+            Timeout = TimeSpan.FromSeconds(60)
+            
+        });
     }
 
     public static IConfigurationRoot GetServiceConfig()
@@ -87,12 +82,6 @@ public sealed class Worker : BackgroundService
     {
         return DiscordClient;
     }
-
-    [Obsolete]
-    public static SQLiteConnection GetServiceSqLiteConnection()
-    {
-        return SqLiteConnection;
-    }
     
     public static SlashCommandsExtension GetServiceSlashCommandsExtension()
     {
@@ -101,7 +90,8 @@ public sealed class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var taskList = new List<Task>() {RegisterCommands(), RegisterEvents(), InitializeDatabase()};
+        
+        var taskList = new List<Task>() {RegisterCommands(), RegisterEvents()};
         await Task.WhenAll(taskList);
         
         await LoadPlugins();
@@ -121,7 +111,6 @@ public sealed class Worker : BackgroundService
 
         var unloadTasks = new List<Task>()
         {
-            UnloadDatabase(),
             UnloadPlugins()
         };
         
@@ -140,7 +129,7 @@ public sealed class Worker : BackgroundService
             return Task.CompletedTask;
         }
 
-        var pluginFolder = Path.Combine(Directory.GetCurrentDirectory() ,pluginFolderConfig);
+        var pluginFolder = Path.Combine(Program.BasePath ,pluginFolderConfig);
     
         Directory.CreateDirectory(pluginFolder);
 
@@ -218,26 +207,6 @@ public sealed class Worker : BackgroundService
         //DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
         //DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
         
-        return Task.CompletedTask;
-    }
-
-    private static async Task InitializeDatabase()
-    {
-        Log.Information("Initializing Database");
-        try
-        {
-            await SqLiteConnection.OpenAsync();
-
-        }
-        catch (Exception e)
-        {
-            Log.Error(e, "Unable to open the sqlite database connection");
-        }
-    }
-    
-    private static Task UnloadDatabase()
-    {
-        SqLiteConnection.Close();
         return Task.CompletedTask;
     }
 }

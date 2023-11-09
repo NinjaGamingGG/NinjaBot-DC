@@ -15,11 +15,11 @@ public static class StartupIndex
         foreach (var guildConfig in guildConfigRecords)
         {
             var guild = await client.GetGuildAsync(guildConfig.GuildId);
-            await IndexAllGuildMembers(client, guild);
+            await IndexAllGuildMembers(guild);
         }
     }
 
-    private static async Task IndexAllGuildMembers(DiscordClient client, DiscordGuild guild)
+    private static async Task IndexAllGuildMembers(DiscordGuild guild)
     {
         var guildMembers = guild.GetAllMembersAsync();
 

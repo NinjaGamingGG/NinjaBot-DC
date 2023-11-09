@@ -12,10 +12,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Dapper" Version="2.0.151" />
+      <PackageReference Include="Dapper" Version="2.1.15" />
       <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
-      <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01839" />
-      <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01839" />
+      <PackageReference Include="Magick.NET-Q16-x64" Version="13.4.0" />
+      <PackageReference Include="Magick.NET.SystemDrawing" Version="7.2.0" />
       <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
     </ItemGroup>
 

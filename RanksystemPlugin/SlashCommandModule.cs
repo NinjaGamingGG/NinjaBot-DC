@@ -5,6 +5,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
+using RankSystem;
 using RankSystem.Models;
 using Ranksystem.PluginHelper;
 
@@ -24,7 +25,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
             var channelId = channel.Id;
 
@@ -37,7 +38,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 ChannelId = channelId
             };
         
-            var insertSuccess = await sqLiteConnection.InsertAsync(blackListedChannel);
+            var insertSuccess = await sqlConnection.InsertAsync(blackListedChannel);
 
             if (insertSuccess == 0)
             {
@@ -53,7 +54,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
             
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
             var blackListedRole = new BlacklistedRolesModel()
             {
@@ -61,7 +62,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 RoleId = role.Id
             };
         
-            var insertSuccess = await sqLiteConnection.InsertAsync(blackListedRole);
+            var insertSuccess = await sqlConnection.InsertAsync(blackListedRole);
         
             if (insertSuccess == 0)
             {
@@ -77,11 +78,11 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
             
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
             var channelId = channel.Id;
         
-            var deleteSuccess = await sqLiteConnection.ExecuteAsync(
+            var deleteSuccess = await sqlConnection.ExecuteAsync(
                 $"DELETE FROM RanksystemBlacklistedChannelsIndex WHERE GuildId = {context.Guild.Id} AND ChannelId = {channelId}");
         
             if (deleteSuccess == 0)
@@ -98,9 +99,9 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
             
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-            var deleteSuccess = await sqLiteConnection.ExecuteAsync(
+            var deleteSuccess = await sqlConnection.ExecuteAsync(
                 $"DELETE FROM RanksystemBlacklistedRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
         
             if (deleteSuccess == 0)
@@ -129,9 +130,9 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 return;
             }
 
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
 
-            var alreadyExists = await sqLiteConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
             if (alreadyExists != 0)
             {
@@ -146,7 +147,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 RequiredPoints = (int)requiredPoints
             };
         
-            var insertSuccess = await sqLiteConnection.InsertAsync(rewardRole);
+            var insertSuccess = await sqlConnection.InsertAsync(rewardRole);
         
             if (insertSuccess == 0)
             {
@@ -168,9 +169,9 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 return;
             }
 
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
 
-            var alreadyExists = await sqLiteConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
             if (alreadyExists == 0)
             {
@@ -178,7 +179,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 return;
             }
             
-            var deleteSuccess = await sqLiteConnection.ExecuteAsync(
+            var deleteSuccess = await sqlConnection.ExecuteAsync(
                 $"DELETE FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
         
             if (deleteSuccess == 0)
@@ -195,9 +196,9 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-            var rewardRoles = await sqLiteConnection.GetAllAsync<RanksystemRewardRoleModel>();
+            var rewardRoles = await sqlConnection.GetAllAsync<RanksystemRewardRoleModel>();
 
             var rewardRoleModels = rewardRoles.ToList();
 
@@ -231,9 +232,9 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 return;
             }
 
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
 
-            var alreadyExists = await sqLiteConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
             if (alreadyExists == 0)
             {
@@ -241,7 +242,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 return;
             }
             
-            var updateSuccess = await sqLiteConnection.ExecuteAsync(
+            var updateSuccess = await sqlConnection.ExecuteAsync(
                 $"UPDATE RanksystemRewardRolesIndex SET RequiredPoints = {requiredPoints} WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
         
             if (updateSuccess == 0)
@@ -273,9 +274,9 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
             
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-            var alreadyExists = await sqLiteConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
+            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
 
             if (alreadyExists != 0)
             {
@@ -292,7 +293,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 LogChannelId = logChannel.Id
             };
         
-            var insertSuccess = await sqLiteConnection.InsertAsync(rewardConfig);
+            var insertSuccess = await sqlConnection.InsertAsync(rewardConfig);
         
             if (insertSuccess == 0)
             {
@@ -316,9 +317,9 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-            var updateSuccess = await sqLiteConnection.ExecuteAsync(
+            var updateSuccess = await sqlConnection.ExecuteAsync(
                 $"UPDATE RanksystemConfigurationIndex SET PointsPerMessage = {pointsPerMessage}, PointsPerReaction = {pointsPerReaction}, PointsPerVoiceActivity = {pointsPerVoiceMinute}, LogChannelId = {logChannel.Id} WHERE GuildId = {context.Guild.Id}");
 
             if (updateSuccess == 0)
@@ -335,9 +336,9 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-            var rewardConfig = await sqLiteConnection.GetAllAsync<RanksystemConfigurationModel>();
+            var rewardConfig = await sqlConnection.GetAllAsync<RanksystemConfigurationModel>();
 
             var rewardConfigModels = rewardConfig.ToList();
 
@@ -371,9 +372,9 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
             
-            var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-            var deleteSuccess = await sqLiteConnection.ExecuteAsync(
+            var deleteSuccess = await sqlConnection.ExecuteAsync(
                 $"DELETE FROM RanksystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
         
             if (deleteSuccess == 0)

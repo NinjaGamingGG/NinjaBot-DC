@@ -98,6 +98,7 @@ public sealed class Worker : BackgroundService
         
         Log.Information("Starting up the Bot");
         await DiscordClient.ConnectAsync();
+        
 
         while (!stoppingToken.IsCancellationRequested)
         {

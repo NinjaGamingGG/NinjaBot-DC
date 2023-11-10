@@ -94,9 +94,9 @@ public static class ComponentInteractionCreated
         if (!existsAsOwner)
             return;
 
-        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();;
 
-        var loungeDbRecordEnumerable = await sqliteConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId= @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
+        var loungeDbRecordEnumerable = await mySqlConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId= @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
 
         var loungeDbRecordList = loungeDbRecordEnumerable.ToList();
 
@@ -110,7 +110,7 @@ public static class ComponentInteractionCreated
 
         await loungeChannel.DeleteAsync();
         
-        var sqlSuccess = await sqliteConnection.DeleteAsync(loungeDbRecordList.First());
+        var sqlSuccess = await mySqlConnection.DeleteAsync(loungeDbRecordList.First());
                 
         if (sqlSuccess == false)
             Log.Error("Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",loungeChannel.Name, eventArgs.Channel.Id, eventArgs.Guild.Id);
@@ -190,10 +190,10 @@ public static class ComponentInteractionCreated
         if (!existsAsOwner)
             return;
 
-        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();;
 
         var isPublic =
-            await sqliteConnection.QueryAsync<bool>(
+            await mySqlConnection.QueryAsync<bool>(
                 "SELECT isPublic FROM LoungeIndex where GuildId=@GuildId and ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId= eventArgs.Channel.Id});
 
         var isPublicAsArray = isPublic as bool[] ?? isPublic.ToArray();
@@ -211,9 +211,9 @@ public static class ComponentInteractionCreated
 
     private static async Task LockLoungeLogic(ComponentInteractionCreateEventArgs eventArgs)
     {
-        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         var requiredRolesQueryResult =
-           await sqliteConnection.QueryAsync<ulong>(
+           await mySqlConnection.QueryAsync<ulong>(
                 "SELECT RoleId FROM RequiredRoleIndex WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
 
         var requiresRolesList = requiredRolesQueryResult.ToList();
@@ -244,16 +244,16 @@ public static class ComponentInteractionCreated
         
         await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
 
-        await sqliteConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = FALSE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+        await mySqlConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = FALSE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
     }
     
     
     
     private static async Task UnLockLoungeLogic(ComponentInteractionCreateEventArgs eventArgs)
     {
-        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         var requiredRolesQueryResult =
-            await sqliteConnection.QueryAsync<ulong>(
+            await mySqlConnection.QueryAsync<ulong>(
                 "SELECT RoleId FROM RequiredRoleIndex WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
 
         var requiresRolesList = requiredRolesQueryResult.ToList();
@@ -291,7 +291,7 @@ public static class ComponentInteractionCreated
 
         await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
 
-        await sqliteConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = TRUE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+        await mySqlConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = TRUE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
 
     }
 
@@ -371,9 +371,9 @@ public static class ComponentInteractionCreated
         
         var followupMessage = await eventArgs.Interaction.CreateFollowupMessageAsync(builder);
 
-        var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-        var updateCount = await sqLiteConnection.ExecuteAsync(
+        var updateCount = await mySqlConnection.ExecuteAsync(
             "UPDATE LoungeIndex SET OwnerId = @OwnerId WHERE ChannelId = @ChannelId",
             new {OwnerId = eventArgs.User.Id, ChannelId = eventArgs.Channel.Id});
         

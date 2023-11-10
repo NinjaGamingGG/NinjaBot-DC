@@ -3,7 +3,7 @@ using NinjaBot_DC;
 
 namespace StatsPlugin.PluginHelper;
 
-public class ConfigHelper
+public static class ConfigHelper
 {
     public static IConfigurationRoot Load()
     {

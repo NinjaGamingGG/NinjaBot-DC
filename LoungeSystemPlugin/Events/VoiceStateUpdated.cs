@@ -15,9 +15,9 @@ public static class VoiceStateUpdated
         if (ReferenceEquals(eventArgs.Channel, null))
             return;
         
-        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
 
-        var channels = await sqliteConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId", new { GuildId = eventArgs.Guild.Id});
+        var channels = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId", new { GuildId = eventArgs.Guild.Id});
         
         var channelsList = channels.ToList();
         
@@ -30,7 +30,7 @@ public static class VoiceStateUpdated
         var decoratorEmoji = string.Empty;
         var decoratorDecal = string.Empty;
 
-        var nameReplacementRecord = await sqliteConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
+        var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
 
         var loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ?? nameReplacementRecord.ToArray();
         if (loungeMessageReplacementsAsArray.Any())
@@ -117,7 +117,7 @@ public static class VoiceStateUpdated
             .Allow(Permissions.Stream)
             .Allow(Permissions.PrioritySpeaker));
         
-        var requiredRoles = await sqliteConnection.QueryAsync<RequiredRoleRecord>("SELECT * FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId", new { GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
+        var requiredRoles = await mySqlConnection.QueryAsync<RequiredRoleRecord>("SELECT * FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId", new { GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
         var requiredRolesList = requiredRoles.ToList();
 
 
@@ -154,7 +154,7 @@ public static class VoiceStateUpdated
             OriginChannel = eventArgs.Channel.Id
         };
 
-        var inserted = await sqliteConnection.InsertAsync(newModel);
+        var inserted = await mySqlConnection.InsertAsync(newModel);
         
         if (inserted == 0)
         {
@@ -213,9 +213,9 @@ public static class VoiceStateUpdated
         if ( ReferenceEquals(eventArgs.Before, null))
             return;
 
-        var sqlite = SqLiteHelper.GetSqLiteConnection();
+        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
 
-        var loungeList = await sqlite.GetAllAsync<LoungeDbRecord>();
+        var loungeList = await mySqlConnection.GetAllAsync<LoungeDbRecord>();
 
         foreach (var loungeDbModel in loungeList)
         {

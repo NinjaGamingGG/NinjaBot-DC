@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using DSharpPlus.Entities;
+using RankSystem;
 
 namespace Ranksystem.PluginHelper;
 
@@ -7,9 +8,9 @@ public static class Blacklist
 {
     public static bool CheckUserGroups(DiscordRole[] userRolesAsArray, DiscordGuild guild)
     {
-        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+        var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
 
-        var blacklistedRoles = sqliteConnection.Query($"SELECT RoleId FROM RanksystemBlacklistedRolesIndex WHERE GuildId = {guild.Id} ").ToArray();
+        var blacklistedRoles = sqlConnection.Query($"SELECT RoleId FROM RanksystemBlacklistedRolesIndex WHERE GuildId = {guild.Id} ").ToArray();
         
         var blacklistedRolesIds = blacklistedRoles.Select(t => (ulong) t.RoleId).ToArray();
         
@@ -27,9 +28,9 @@ public static class Blacklist
     {
         
         
-        var sqliteConnection = SqLiteHelper.GetSqLiteConnection();
+        var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
 
-        var blacklistedChannels = sqliteConnection.Query($"SELECT ChannelId FROM RanksystemBlacklistedChannelsIndex WHERE GuildId = {userChannel.GuildId} ").ToArray();
+        var blacklistedChannels = sqlConnection.Query($"SELECT ChannelId FROM RanksystemBlacklistedChannelsIndex WHERE GuildId = {userChannel.GuildId} ").ToArray();
         
         var blacklistedChannelsIds = blacklistedChannels.Select(t => (ulong) t.ChannelId).ToArray();
         

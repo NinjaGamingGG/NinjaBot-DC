@@ -1,24 +1,21 @@
-﻿using Microsoft.Extensions.Configuration;
-using NinjaBot_DC;
-
-namespace Ranksystem.PluginHelper;
+﻿namespace NinjaBot_DC.CommonPluginHelpers;
 
 public static class ConfigHelper
 {
-    public static IConfigurationRoot Load()
+    public static IConfigurationRoot Load(string pluginBasePath, string pluginEnvironmentVariablePrefix)
     {
         
         //Check if there are any env variables set by loading the most mandatory variable
-        var testLoad = Environment.GetEnvironmentVariable("stats-plugin:sqlite-source");
+        var testLoad = Environment.GetEnvironmentVariables();
         
         //If none are found try to read from config files
-        if (testLoad == null)
+        if (!testLoad.Contains(pluginEnvironmentVariablePrefix))
         {
-            var directory = Program.BasePath;
+
             
             return new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(Path.Combine(directory,"config.json"), optional: false, reloadOnChange: true)
+                .SetBasePath(pluginBasePath)
+                .AddJsonFile(Path.Combine(pluginBasePath,"config.json"), optional: false, reloadOnChange: true)
                 .Build();
         }
 
@@ -28,5 +25,5 @@ public static class ConfigHelper
         //If env vars are set load them
         return builder.Build();
     }
-    
+
 }

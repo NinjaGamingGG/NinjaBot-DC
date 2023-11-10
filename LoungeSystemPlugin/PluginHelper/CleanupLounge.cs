@@ -10,7 +10,7 @@ public static class CleanupLounge
 {
     public static async Task Execute(LoungeDbRecord loungeDbRecord)
     {
-        var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();;
         var discordClient = Worker.GetServiceDiscordClient();       
         var loungeChannel = await discordClient.GetChannelAsync(loungeDbRecord.ChannelId);
         var guild = await discordClient.GetGuildAsync(loungeDbRecord.GuildId);
@@ -22,7 +22,7 @@ public static class CleanupLounge
 
         if (channelExits == false)
         {
-            var deleteSuccess = await sqLiteConnection.DeleteAsync(loungeDbRecord);
+            var deleteSuccess = await mySqlConnection.DeleteAsync(loungeDbRecord);
                 
             if (deleteSuccess == false)
                 Log.Error("Unable to delete the Sql Record for Lounge with the Id {LoungeId} in Guild {GuildId}",loungeDbRecord.ChannelId, loungeDbRecord.GuildId);
@@ -41,7 +41,7 @@ public static class CleanupLounge
         }
 
 
-        var sqlSuccess = await sqLiteConnection.DeleteAsync(loungeDbRecord);
+        var sqlSuccess = await mySqlConnection.DeleteAsync(loungeDbRecord);
                 
         if (sqlSuccess == false)
             Log.Error("Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",loungeChannel.Name, loungeDbRecord.ChannelId, loungeDbRecord.GuildId);

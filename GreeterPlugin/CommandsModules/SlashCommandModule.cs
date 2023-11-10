@@ -4,7 +4,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using GreeterPlugin.DatabaseRecords;
 using GreeterPlugin.PluginHelpers;
-using Serilog;
 
 namespace GreeterPlugin.CommandsModules;
 
@@ -32,7 +31,7 @@ public class SlashCommandModule : ApplicationCommandModule
                 ProfilePictureOffsetY = offsetY
             };
             
-            var connection = MySqlConnectionHelper.GetMySqlConnection();
+            var connection = GreeterPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
             
             var inserted = await connection.ExecuteAsync("INSERT INTO GuildSettingsIndex (GuildId, WelcomeChannelId, WelcomeMessage, WelcomeImageUrl, WelcomeImageText, ProfilePictureOffsetX, ProfilePictureOffsetY) VALUES (@GuildId, @WelcomeChannelId, @WelcomeMessage, @WelcomeImageUrl, @WelcomeImageText, @ProfilePictureOffsetX, @ProfilePictureOffsetY)", guildSettingsRecord);
 
@@ -56,7 +55,7 @@ public class SlashCommandModule : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Generating Image..."));
             
-            var connection = MySqlConnectionHelper.GetMySqlConnection();
+            var connection = GreeterPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
             
             var guildSettingsRecord = await connection.QueryFirstOrDefaultAsync<GuildSettingsRecord>("SELECT * FROM GuildSettingsIndex WHERE GuildId = @GuildId", new {GuildId = context.Guild.Id});
             

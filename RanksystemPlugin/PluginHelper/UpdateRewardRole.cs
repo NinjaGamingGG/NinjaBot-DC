@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using DSharpPlus;
+using RankSystem;
 using RankSystem.Models;
 using Serilog;
 
@@ -9,13 +10,13 @@ public static class UpdateRewardRole
 {
     public static async Task ForUserAsync(DiscordClient client, ulong  guildId, ulong userId)
     {
-        var sqlite = SqLiteHelper.GetSqLiteConnection();
+        var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-        var userPointsForGuild = await sqlite.QueryFirstOrDefaultAsync<int>("SELECT Points FROM RankSystemUserPointsIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = guildId, UserId = userId});
+        var userPointsForGuild = await sqlConnection.QueryFirstOrDefaultAsync<int>("SELECT Points FROM RankSystemUserPointsIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = guildId, UserId = userId});
 
-        var rankSystemConfiguration = await sqlite.QueryFirstOrDefaultAsync<RanksystemConfigurationModel>("SELECT * FROM RanksystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+        var rankSystemConfiguration = await sqlConnection.QueryFirstOrDefaultAsync<RanksystemConfigurationModel>("SELECT * FROM RanksystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
         
-        var rewardRoles = await sqlite.QueryAsync<RanksystemRewardRoleModel>("SELECT * FROM RanksystemRewardRolesIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+        var rewardRoles = await sqlConnection.QueryAsync<RanksystemRewardRoleModel>("SELECT * FROM RanksystemRewardRolesIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
         
         var rewardRolesAsList = rewardRoles.ToList();
         

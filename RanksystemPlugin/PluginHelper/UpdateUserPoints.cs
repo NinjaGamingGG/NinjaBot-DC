@@ -11,9 +11,9 @@ public static class UpdateUserPoints
 {
     public static async Task Add(DiscordClient client,ulong guildId,DiscordUser user, RankSystemPlugin.ERankSystemReason reason)
     {
-        var sqlite = SqLiteHelper.GetSqLiteConnection();
+        var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-        var config = await sqlite.QueryFirstOrDefaultAsync<RanksystemConfigurationModel>("SELECT * FROM RanksystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+        var config = await sqlConnection.QueryFirstOrDefaultAsync<RanksystemConfigurationModel>("SELECT * FROM RanksystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
         
         if (config == null)
         {
@@ -31,11 +31,11 @@ public static class UpdateUserPoints
         
 
         
-        var addUserPoints = await sqlite.ExecuteAsync("UPDATE RankSystemUserPointsIndex SET Points = Points + @PointsToAdd WHERE GuildId = @GuildId AND UserId = @UserId", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
+        var addUserPoints = await sqlConnection.ExecuteAsync("UPDATE RankSystemUserPointsIndex SET Points = Points + @PointsToAdd WHERE GuildId = @GuildId AND UserId = @UserId", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
 
         if (addUserPoints == 0)
         {
-            await sqlite.ExecuteAsync("INSERT INTO RankSystemUserPointsIndex (GuildId, UserId, Points) VALUES (@GuildId, @UserId, @PointsToAdd)", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
+            await sqlConnection.ExecuteAsync("INSERT INTO RankSystemUserPointsIndex (GuildId, UserId, Points) VALUES (@GuildId, @UserId, @PointsToAdd)", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
         }
         
         var guild = await client.GetGuildAsync(guildId);

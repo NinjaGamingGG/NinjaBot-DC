@@ -7,12 +7,12 @@ public class LoungeOwnerCheck
 {
     public static async Task<bool> IsLoungeOwnerAsync(DiscordMember member, DiscordChannel channel, DiscordGuild guild)
     {
-        var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
         if (ReferenceEquals(member, null))
             return false;
         
-        var existsAsOwner = await sqLiteConnection.ExecuteScalarAsync<int>(
+        var existsAsOwner = await mySqlConnection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM LoungeIndex WHERE ChannelId = @ChannelId AND OwnerId = @OwnerId AND GuildId = @GuildId",
             new {ChannelId = channel.Id ,OwnerId = member.Id, GuildId = guild.Id});
         
@@ -21,9 +21,9 @@ public class LoungeOwnerCheck
     
     public static async Task<ulong> GetOwnerIdAsync(DiscordChannel channel)
     {
-        var sqLiteConnection = SqLiteHelper.GetSqLiteConnection();
+        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();;
         
-        var ownerId = await sqLiteConnection.ExecuteScalarAsync<ulong>(
+        var ownerId = await mySqlConnection.ExecuteScalarAsync<ulong>(
             "SELECT OwnerId FROM LoungeIndex WHERE ChannelId = @ChannelId",
             new {ChannelId = channel.Id});
         

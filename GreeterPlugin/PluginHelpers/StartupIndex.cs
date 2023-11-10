@@ -10,7 +10,7 @@ public static class StartupIndex
 {
     public static async Task StartupTask(DiscordClient client)
     {
-        var guildConfigRecords = await MySqlConnectionHelper.GetMySqlConnection().QueryAsync<GuildSettingsRecord>("SELECT * FROM GuildSettingsIndex");
+        var guildConfigRecords = await GreeterPlugin.GetMySqlConnectionHelper().GetMySqlConnection().QueryAsync<GuildSettingsRecord>("SELECT * FROM GuildSettingsIndex");
 
         foreach (var guildConfig in guildConfigRecords)
         {
@@ -34,7 +34,7 @@ public static class StartupIndex
         
         var currentGuildMemberIndex = 1;
         
-        var connection = MySqlConnectionHelper.GetMySqlConnection();
+        var connection = GreeterPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
         foreach (var guildMember in guildMembersSorted)
         {

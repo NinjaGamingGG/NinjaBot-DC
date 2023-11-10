@@ -12,7 +12,7 @@ public static class GuildMemberAdded
     
     public static async Task GuildMemberAddedEvent(DiscordClient client, GuildMemberAddEventArgs args)
     {
-        var connection = MySqlConnectionHelper.GetMySqlConnection();
+        var connection = GreeterPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
             
             var guildSettingsRecord = await connection.QueryFirstOrDefaultAsync<GuildSettingsRecord>("SELECT * FROM GuildSettingsIndex WHERE GuildId = @GuildId", new {GuildId = args.Guild.Id});
             

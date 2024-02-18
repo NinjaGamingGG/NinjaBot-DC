@@ -17,7 +17,12 @@ public class GreeterPlugin : IPlugin
 
     public static string StaticPluginDirectory = string.Empty;
 
-    private static readonly MySqlConnectionHelper MySqlConnectionHelper = new();
+    private static MySqlConnectionHelper? _mySqlConnectionHelper;
+    
+    public static MySqlConnectionHelper? GetMySqlConnectionHelper()
+    {
+        return _mySqlConnectionHelper;
+    }
     
     public void OnLoad()
     {
@@ -42,18 +47,19 @@ public class GreeterPlugin : IPlugin
             "CREATE TABLE IF NOT EXISTS UserJoinedDataIndex (EntryId int NOT NULL AUTO_INCREMENT, GuildId BIGINT, UserId BIGINT, UserIndex INT, WasGreeted BOOL, PRIMARY KEY (EntryId))"
         };
 
+        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
+
         try
         {
-            MySqlConnectionHelper.OpenMySqlConnection(EnvironmentVariablePrefix,config,Name);
+            var connection = _mySqlConnectionHelper.GetMySqlConnection();
+            _mySqlConnectionHelper.InitializeTables(tableStrings, connection);
+            connection.Close();
         }
         catch (Exception)
         {
             Log.Fatal("Canceling the Startup of {PluginName} Plugin!", Name);
             return;
         }
-
-        MySqlConnectionHelper.InitializeTables(tableStrings,Name);
-        
         
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
@@ -66,11 +72,6 @@ public class GreeterPlugin : IPlugin
 
     public void OnUnload()
     {
-        MySqlConnectionHelper.CloseMySqlConnection();
-    }
 
-    public static MySqlConnectionHelper GetMySqlConnectionHelper()
-    {
-        return MySqlConnectionHelper;
     }
 }

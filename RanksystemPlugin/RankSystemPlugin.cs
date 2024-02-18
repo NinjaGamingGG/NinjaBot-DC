@@ -21,11 +21,11 @@ public class RankSystemPlugin : IPlugin
     public string Description => "Simple Discord Ranksystem.";
     public string? PluginDirectory { get; set; }
 
-    private static readonly MySqlConnectionHelper MySqlConnectionHelper = new();
+    private static MySqlConnectionHelper _mySqlConnectionHelper;
     
     public static MySqlConnectionHelper GetMySqlConnectionHelper()
     {
-        return MySqlConnectionHelper;
+        return _mySqlConnectionHelper;
     }
     
 
@@ -51,17 +51,20 @@ public class RankSystemPlugin : IPlugin
             
             
         };
+
+        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
         
         try
         {
-            MySqlConnectionHelper.OpenMySqlConnection(EnvironmentVariablePrefix,config,Name);
+            var connection = _mySqlConnectionHelper.GetMySqlConnection();
+            _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
+            connection.Close();
         }
         catch (Exception)
         {
-            Log.Fatal("Canceling the Startup of {PluginName} Plugin!", Name);
+            Log.Fatal("Canceling the Startup of {PluginName} Plugin! Please check you MySql configuration", Name);
             return;
         }
-        MySqlConnectionHelper.InitializeTables(tableStrings,Name);
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
         slashCommands.RegisterCommands<RanksystemSubGroupContainer>();
@@ -79,7 +82,6 @@ public class RankSystemPlugin : IPlugin
 
     public void OnUnload()
     {
-        MySqlConnectionHelper.CloseMySqlConnection();
         Log.Information("[{Name}] Plugin Unloaded", Name);
     }
 }

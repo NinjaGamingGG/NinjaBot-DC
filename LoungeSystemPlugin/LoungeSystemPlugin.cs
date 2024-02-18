@@ -16,12 +16,13 @@ public class LoungeSystemPlugin : IPlugin
     public string Description => "Simple Discord LoungeSystem Plugin.";
     public string? PluginDirectory { get; set; }
 
-    private static readonly MySqlConnectionHelper MySqlConnectionHelper = new();
+    private static MySqlConnectionHelper _mySqlConnectionHelper;
     
     public static MySqlConnectionHelper GetMySqlConnectionHelper()
     {
-        return MySqlConnectionHelper;
+        return _mySqlConnectionHelper;
     }
+    
     
     public void OnLoad()
     {
@@ -42,16 +43,19 @@ public class LoungeSystemPlugin : IPlugin
             "CREATE TABLE IF NOT EXISTS LoungeMessageReplacementIndex (Id INTEGER PRIMARY KEY AUTO_INCREMENT, GuildId BIGINT, ChannelId BIGINT, ReplacementHandle TEXT,ReplacementValue TEXT)"
         };
         
+        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
+        
         try
         {
-            MySqlConnectionHelper.OpenMySqlConnection(EnvironmentVariablePrefix,config,Name);
+            var connection = _mySqlConnectionHelper.GetMySqlConnection();
+            _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
+            connection.Close();
         }
         catch (Exception)
         {
             Log.Fatal("Canceling the Startup of {PluginName} Plugin!", Name);
             return;
         }
-        MySqlConnectionHelper.InitializeTables(tableStrings,Name);
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
         slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>();
@@ -83,8 +87,6 @@ public class LoungeSystemPlugin : IPlugin
         
         client.VoiceStateUpdated -= VoiceStateUpdated.ChannelEnter;
         client.VoiceStateUpdated -= VoiceStateUpdated.ChannelLeave;
-        
-        MySqlConnectionHelper.CloseMySqlConnection();
         
         Log.Information("[{Name}] Plugin Unloaded", Name);
     }

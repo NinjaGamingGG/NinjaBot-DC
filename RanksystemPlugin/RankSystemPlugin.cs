@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
 using NinjaBot_DC;
-using NinjaBot_DC.CommonPluginHelpers;
+using CommonPluginHelpers;
 using PluginBase;
 using Ranksystem;
 using Ranksystem.Events;
@@ -21,11 +21,11 @@ public class RankSystemPlugin : IPlugin
     public string Description => "Simple Discord Ranksystem.";
     public string? PluginDirectory { get; set; }
 
-    private static readonly MySqlConnectionHelper MySqlConnectionHelper = new();
+    private static MySqlConnectionHelper _mySqlConnectionHelper;
     
     public static MySqlConnectionHelper GetMySqlConnectionHelper()
     {
-        return MySqlConnectionHelper;
+        return _mySqlConnectionHelper;
     }
     
 
@@ -51,9 +51,20 @@ public class RankSystemPlugin : IPlugin
             
             
         };
+
+        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
         
-        MySqlConnectionHelper.OpenMySqlConnection(EnvironmentVariablePrefix,config,Name);
-        MySqlConnectionHelper.InitializeTables(tableStrings,Name);
+        try
+        {
+            var connection = _mySqlConnectionHelper.GetMySqlConnection();
+            _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
+            connection.Close();
+        }
+        catch (Exception)
+        {
+            Log.Fatal("Canceling the Startup of {PluginName} Plugin! Please check you MySql configuration", Name);
+            return;
+        }
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
         slashCommands.RegisterCommands<RanksystemSubGroupContainer>();
@@ -71,7 +82,6 @@ public class RankSystemPlugin : IPlugin
 
     public void OnUnload()
     {
-        MySqlConnectionHelper.CloseMySqlConnection();
         Log.Information("[{Name}] Plugin Unloaded", Name);
     }
 }

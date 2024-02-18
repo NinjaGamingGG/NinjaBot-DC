@@ -2,7 +2,7 @@
 using GreeterPlugin.Events;
 using GreeterPlugin.PluginHelpers;
 using NinjaBot_DC;
-using NinjaBot_DC.CommonPluginHelpers;
+using CommonPluginHelpers;
 using PluginBase;
 using Serilog;
 
@@ -17,7 +17,12 @@ public class GreeterPlugin : IPlugin
 
     public static string StaticPluginDirectory = string.Empty;
 
-    private static readonly MySqlConnectionHelper MySqlConnectionHelper = new();
+    private static MySqlConnectionHelper? _mySqlConnectionHelper;
+    
+    public static MySqlConnectionHelper? GetMySqlConnectionHelper()
+    {
+        return _mySqlConnectionHelper;
+    }
     
     public void OnLoad()
     {
@@ -41,10 +46,20 @@ public class GreeterPlugin : IPlugin
             "CREATE TABLE IF NOT EXISTS GuildSettingsIndex (GuildId BIGINT PRIMARY KEY, WelcomeChannelId BIGINT, WelcomeMessage TEXT, WelcomeImageUrl TEXT, WelcomeImageText TEXT, ProfilePictureOffsetX double, ProfilePictureOffsetY double)",
             "CREATE TABLE IF NOT EXISTS UserJoinedDataIndex (EntryId int NOT NULL AUTO_INCREMENT, GuildId BIGINT, UserId BIGINT, UserIndex INT, WasGreeted BOOL, PRIMARY KEY (EntryId))"
         };
-        
-        MySqlConnectionHelper.OpenMySqlConnection(EnvironmentVariablePrefix,config,Name);
-        MySqlConnectionHelper.InitializeTables(tableStrings,Name);
-        
+
+        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
+
+        try
+        {
+            var connection = _mySqlConnectionHelper.GetMySqlConnection();
+            _mySqlConnectionHelper.InitializeTables(tableStrings, connection);
+            connection.Close();
+        }
+        catch (Exception)
+        {
+            Log.Fatal("Canceling the Startup of {PluginName} Plugin!", Name);
+            return;
+        }
         
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
@@ -57,11 +72,6 @@ public class GreeterPlugin : IPlugin
 
     public void OnUnload()
     {
-        MySqlConnectionHelper.CloseMySqlConnection();
-    }
 
-    public static MySqlConnectionHelper GetMySqlConnectionHelper()
-    {
-        return MySqlConnectionHelper;
     }
 }

@@ -3,10 +3,9 @@ using LoungeSystemPlugin.CommandModules;
 using LoungeSystemPlugin.Events;
 using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
-using NinjaBot_DC.CommonPluginHelpers;
+using CommonPluginHelpers;
 using PluginBase;
 using Serilog;
-using ConfigHelper = NinjaBot_DC.CommonPluginHelpers.ConfigHelper;
 
 namespace LoungeSystemPlugin;
 
@@ -17,12 +16,13 @@ public class LoungeSystemPlugin : IPlugin
     public string Description => "Simple Discord LoungeSystem Plugin.";
     public string? PluginDirectory { get; set; }
 
-    private static readonly MySqlConnectionHelper MySqlConnectionHelper = new();
+    private static MySqlConnectionHelper _mySqlConnectionHelper;
     
     public static MySqlConnectionHelper GetMySqlConnectionHelper()
     {
-        return MySqlConnectionHelper;
+        return _mySqlConnectionHelper;
     }
+    
     
     public void OnLoad()
     {
@@ -43,8 +43,19 @@ public class LoungeSystemPlugin : IPlugin
             "CREATE TABLE IF NOT EXISTS LoungeMessageReplacementIndex (Id INTEGER PRIMARY KEY AUTO_INCREMENT, GuildId BIGINT, ChannelId BIGINT, ReplacementHandle TEXT,ReplacementValue TEXT)"
         };
         
-        MySqlConnectionHelper.OpenMySqlConnection(EnvironmentVariablePrefix,config,Name);
-        MySqlConnectionHelper.InitializeTables(tableStrings,Name);
+        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
+        
+        try
+        {
+            var connection = _mySqlConnectionHelper.GetMySqlConnection();
+            _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
+            connection.Close();
+        }
+        catch (Exception)
+        {
+            Log.Fatal("Canceling the Startup of {PluginName} Plugin!", Name);
+            return;
+        }
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
         slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>();
@@ -76,8 +87,6 @@ public class LoungeSystemPlugin : IPlugin
         
         client.VoiceStateUpdated -= VoiceStateUpdated.ChannelEnter;
         client.VoiceStateUpdated -= VoiceStateUpdated.ChannelLeave;
-        
-        MySqlConnectionHelper.CloseMySqlConnection();
         
         Log.Information("[{Name}] Plugin Unloaded", Name);
     }

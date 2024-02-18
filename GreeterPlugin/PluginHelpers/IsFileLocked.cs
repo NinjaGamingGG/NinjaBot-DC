@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace GreeterPlugin.PluginHelpers;
 
-public class IsFileLocked
+public static class IsFileLocked
 {
     public static bool Check(string filePath, int secondsToWait)
     {

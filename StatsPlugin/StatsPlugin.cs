@@ -2,7 +2,6 @@
 using PluginBase;
 using Serilog;
 using StatsPlugin.PluginHelper;
-using ConfigHelper = NinjaBot_DC.CommonPluginHelpers.ConfigHelper;
 
 namespace StatsPlugin;
 

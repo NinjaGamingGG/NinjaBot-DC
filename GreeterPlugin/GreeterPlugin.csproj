@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,8 +25,8 @@
 
 
     <ItemGroup>
-      <PackageReference Include="Magick.NET-Q16-x64" Version="13.4.0" />
-      <PackageReference Include="Magick.NET.SystemDrawing" Version="7.2.0" />
+      <PackageReference Include="Magick.NET-Q16-x64" Version="13.6.0" />
+      <PackageReference Include="Magick.NET.SystemDrawing" Version="7.2.2" />
     </ItemGroup>
 
 

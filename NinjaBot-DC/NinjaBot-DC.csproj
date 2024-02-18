@@ -1,34 +1,34 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-NinjaBot_DC-7FA8566D-75E1-4039-93D2-870D8477E668</UserSecretsId>
         <RootNamespace>NinjaBot_DC</RootNamespace>
-        <LangVersion>default</LangVersion>
+        <LangVersion>latest</LangVersion>
         <Company>NinjaGaming.gg</Company>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Dapper" Version="2.1.15" />
+        <PackageReference Include="Dapper" Version="2.1.28" />
         <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
-        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01869" />
-        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01869" />
-        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-01869" />
-        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01869" />
-        <PackageReference Include="Magick.NET-Q16-x64" Version="13.4.0" />
-        <PackageReference Include="Magick.NET.SystemDrawing" Version="7.2.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-rc.2.23479.6" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0-rc.2.23479.6" />
-        <PackageReference Include="MySqlConnector" Version="2.3.0-beta.4" />
-        <PackageReference Include="Serilog" Version="3.1.1" />
-        <PackageReference Include="Serilog.Extensions.Hosting" Version="7.0.0" />
-        <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0-dev-10359" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="7.0.2-dev-00546" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
-        <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00968" />
+        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02096" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-02096" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-02096" />
+        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-02096" />
+        <PackageReference Include="Magick.NET-Q16-x64" Version="13.6.0" />
+        <PackageReference Include="Magick.NET.SystemDrawing" Version="7.2.2" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0-preview.1.24080.9" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.0-preview.1.24080.9" />
+        <PackageReference Include="MySqlConnector" Version="2.3.5" />
+        <PackageReference Include="Serilog" Version="3.1.2-dev-02097" />
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.1-dev-10373" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.1-dev-00561" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
+        <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00972" />
         <None Update="config.json" CopyToOutputDirectory="PreserveNewest" />
         <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
     </ItemGroup>

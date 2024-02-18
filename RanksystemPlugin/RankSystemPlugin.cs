@@ -52,7 +52,15 @@ public class RankSystemPlugin : IPlugin
             
         };
         
-        MySqlConnectionHelper.OpenMySqlConnection(EnvironmentVariablePrefix,config,Name);
+        try
+        {
+            MySqlConnectionHelper.OpenMySqlConnection(EnvironmentVariablePrefix,config,Name);
+        }
+        catch (Exception)
+        {
+            Log.Fatal("Canceling the Startup of {PluginName} Plugin!", Name);
+            return;
+        }
         MySqlConnectionHelper.InitializeTables(tableStrings,Name);
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();

@@ -37,9 +37,18 @@ public class MySqlConnectionHelper
         
         _connection = new MySqlConnection(connectionString);
 
-   
-        _connection.Open();
-        Log.Information("[{PluginName}] Mysql connection opened", pluginName);
+
+        try
+        {
+            _connection.Open();
+            Log.Information("[{PluginName}] Mysql connection opened", pluginName);
+        }
+        catch (Exception e)
+        {
+            Log.Fatal(e, "An exception occured while trying to connect to your specified mysql database:");
+            throw;
+        }
+
     }
     
     public MySqlConnection GetMySqlConnection()

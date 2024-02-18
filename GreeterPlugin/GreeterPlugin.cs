@@ -41,8 +41,17 @@ public class GreeterPlugin : IPlugin
             "CREATE TABLE IF NOT EXISTS GuildSettingsIndex (GuildId BIGINT PRIMARY KEY, WelcomeChannelId BIGINT, WelcomeMessage TEXT, WelcomeImageUrl TEXT, WelcomeImageText TEXT, ProfilePictureOffsetX double, ProfilePictureOffsetY double)",
             "CREATE TABLE IF NOT EXISTS UserJoinedDataIndex (EntryId int NOT NULL AUTO_INCREMENT, GuildId BIGINT, UserId BIGINT, UserIndex INT, WasGreeted BOOL, PRIMARY KEY (EntryId))"
         };
-        
-        MySqlConnectionHelper.OpenMySqlConnection(EnvironmentVariablePrefix,config,Name);
+
+        try
+        {
+            MySqlConnectionHelper.OpenMySqlConnection(EnvironmentVariablePrefix,config,Name);
+        }
+        catch (Exception)
+        {
+            Log.Fatal("Canceling the Startup of {PluginName} Plugin!", Name);
+            return;
+        }
+
         MySqlConnectionHelper.InitializeTables(tableStrings,Name);
         
         

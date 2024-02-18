@@ -4,29 +4,51 @@ namespace CommonPluginHelpers;
 
 public static class ConfigHelper
 {
-    public static IConfigurationRoot Load(string pluginBasePath, string pluginEnvironmentVariablePrefix)
+    /// <summary>
+    /// Loads the configuration based on the presence of environment variables.
+    /// If any environment variable with the specified prefix exists, it builds the configuration from the environment variables.
+    /// Otherwise, it builds the configuration from a JSON file.
+    /// </summary>
+    /// <param name="pluginBasePath">The base path of the plugin.</param>
+    /// <param name="pluginEnvVarPrefix">The prefix of the environment variables.</param>
+    /// <returns>The loaded configuration.</returns>
+    public static IConfigurationRoot Load(string pluginBasePath, string pluginEnvVarPrefix)
     {
-        
-        //Check if there are any env variables set by loading the most mandatory variable
-        var testLoad = Environment.GetEnvironmentVariables();
-        
-        var builder = new ConfigurationBuilder();
-        
-        //If none are found try to read from config files
-        if (!testLoad.Contains(pluginEnvironmentVariablePrefix))
-        {
+        // Load all environment variables
+        var environmentVariables = Environment.GetEnvironmentVariables();
+    
+        // Check if any variables with the Prefix are present
+        var isAnyEnvVarPresent = environmentVariables.Contains(pluginEnvVarPrefix);
 
-            
-            return builder
-                .SetBasePath(pluginBasePath)
-                .AddJsonFile(Path.Combine(pluginBasePath,"config.json"), optional: false, reloadOnChange: true)
-                .Build();
-        }
-        
-        builder.AddEnvironmentVariables();
-        
-        //If env vars are set load them
-        return builder.Build();
+        // If any env-var are present, it returns the configuration from the env-vars, otherwise config from the JSON file.
+        return isAnyEnvVarPresent 
+            ? BuildConfigFromEnvVar(pluginEnvVarPrefix)
+            : BuildConfigFromJsonFile(pluginBasePath);
     }
 
+    /// <summary>
+    /// Builds the configuration from a JSON file.
+    /// </summary>
+    /// <param name="basePath">The base path of the plugin.</param>
+    /// <returns>The loaded configuration.</returns>
+    private static IConfigurationRoot BuildConfigFromJsonFile(string basePath)
+    {
+        var builder = new ConfigurationBuilder();
+        return builder
+            .SetBasePath(basePath)
+            .AddJsonFile(Path.Combine(basePath, "config.json"), optional: false, reloadOnChange: true)
+            .Build();
+    }
+
+    /// <summary>
+    /// Builds the configuration from the environment variables with the specified prefix.
+    /// </summary>
+    /// <param name="prefix">The prefix of the environment variables.</param>
+    /// <returns>The loaded configuration.</returns>
+    private static IConfigurationRoot BuildConfigFromEnvVar(string prefix)
+    {
+        var builder = new ConfigurationBuilder();
+        builder.AddEnvironmentVariables(prefix);
+        return builder.Build();
+    }
 }

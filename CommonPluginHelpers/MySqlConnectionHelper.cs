@@ -4,12 +4,16 @@ using Serilog;
 
 namespace CommonPluginHelpers;
 
-public class MySqlConnectionHelper
+/// <summary>
+/// Helper class for managing MySQL database connections and table initialization.
+/// </summary>
+public class MySqlConnectionHelper(string envVarPrefix, IConfiguration configuration, string pluginName)
 {
-    
-    private MySqlConnection? _connection;
-
-    public void OpenMySqlConnection(string envVarPrefix, IConfigurationRoot configuration, string pluginName)
+    /// <summary>
+    /// Get a MySqlConnection object for connecting to a MySQL database.
+    /// </summary>
+    /// <returns>A MySqlConnection object.</returns>
+    public MySqlConnection GetMySqlConnection()
     {
         
         var serverString = configuration.GetValue<string>(envVarPrefix +":mysql-server") ?? "127.0.0.1";
@@ -22,7 +26,6 @@ public class MySqlConnectionHelper
         if (userPassword == string.Empty)
         {
             Log.Fatal("[{PluginName}]Error while preparing mysql connection, no password specified", pluginName);
-            return;
         }
 
         var connectionString = $"Server={serverString}; ";
@@ -35,38 +38,35 @@ public class MySqlConnectionHelper
         if (databaseString != string.Empty)
             connectionString += $"Database={databaseString};";
         
-        _connection = new MySqlConnection(connectionString);
+        var connection = new MySqlConnection(connectionString);
 
 
         try
         {
-            _connection.Open();
+            connection.Open();
             Log.Information("[{PluginName}] Mysql connection opened", pluginName);
         }
         catch (Exception e)
         {
-            _connection = null;
+            connection.Dispose();
             Log.Fatal(e, "An exception occured while trying to connect to your specified mysql database:");
             throw;
         }
+        
+        return connection;
 
     }
-    
-    public MySqlConnection GetMySqlConnection()
-    {
-        return _connection!;
-    }
-    
-    public void CloseMySqlConnection()
-    {
-        _connection?.Close();
-    }
 
-    public void InitializeTables(IEnumerable<string> tableCommands, string pluginName)
+    /// <summary>
+    /// Initializes MySQL database tables.
+    /// </summary>
+    /// <param name="tableCommands">The SQL commands used to create the tables.</param>
+    /// <param name="connection">The MySqlConnection object used to connect to the database.</param>
+    public void InitializeTables(IEnumerable<string> tableCommands, MySqlConnection connection)
     {
         Log.Information("[{PluginName}] Initializing MySql Tables", pluginName);
         
-        if (ReferenceEquals(_connection, null))
+        if (ReferenceEquals(connection, null))
         {
             Log.Error("[{PluginName}] Mysql connection is null, cannot initialize tables", pluginName);
             return;
@@ -74,7 +74,7 @@ public class MySqlConnectionHelper
 
         foreach (var commandString in tableCommands)
         {
-            using var command = _connection.CreateCommand();
+            using var command = connection.CreateCommand();
 
             command.CommandText = commandString;
 

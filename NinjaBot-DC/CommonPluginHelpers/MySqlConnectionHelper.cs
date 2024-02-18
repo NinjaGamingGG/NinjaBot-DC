@@ -1,5 +1,4 @@
-﻿using Dapper;
-using MySqlConnector;
+﻿using MySqlConnector;
 using Serilog;
 
 namespace NinjaBot_DC.CommonPluginHelpers;
@@ -9,15 +8,15 @@ public class MySqlConnectionHelper
     
     private MySqlConnection? _connection;
 
-    public void OpenMySqlConnection(string pluginEnvironmentVariablePrefix, IConfigurationRoot configuration, string pluginName)
+    public void OpenMySqlConnection(string envVarPrefix, IConfigurationRoot configuration, string pluginName)
     {
         
-        var serverString = configuration.GetValue<string>(pluginEnvironmentVariablePrefix +":mysql-server") ?? "127.0.0.1";
-        var portString = configuration.GetValue<string>(pluginEnvironmentVariablePrefix+":mysql-port") ?? string.Empty;
+        var serverString = configuration.GetValue<string>(envVarPrefix +":mysql-server") ?? "127.0.0.1";
+        var portString = configuration.GetValue<string>(envVarPrefix+":mysql-port") ?? string.Empty;
         
-        var userString = configuration.GetValue<string>(pluginEnvironmentVariablePrefix+":mysql-user") ?? "root";
-        var userPassword = configuration.GetValue<string>(pluginEnvironmentVariablePrefix+":mysql-password") ?? string.Empty;
-        var databaseString = configuration.GetValue<string>(pluginEnvironmentVariablePrefix+":mysql-database") ?? string.Empty;
+        var userString = configuration.GetValue<string>(envVarPrefix+":mysql-user") ?? "root";
+        var userPassword = configuration.GetValue<string>(envVarPrefix+":mysql-password") ?? string.Empty;
+        var databaseString = configuration.GetValue<string>(envVarPrefix+":mysql-database") ?? string.Empty;
         
         if (userPassword == string.Empty)
         {
@@ -45,6 +44,7 @@ public class MySqlConnectionHelper
         }
         catch (Exception e)
         {
+            _connection = null;
             Log.Fatal(e, "An exception occured while trying to connect to your specified mysql database:");
             throw;
         }

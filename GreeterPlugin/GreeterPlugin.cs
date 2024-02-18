@@ -2,7 +2,7 @@
 using GreeterPlugin.Events;
 using GreeterPlugin.PluginHelpers;
 using NinjaBot_DC;
-using NinjaBot_DC.CommonPluginHelpers;
+using CommonPluginHelpers;
 using PluginBase;
 using Serilog;
 

@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\CommonPluginHelpers\CommonPluginHelpers.csproj" />
       <ProjectReference Include="..\NinjaBot-DC\NinjaBot-DC.csproj" />
       <ProjectReference Include="..\PluginBase\PluginBase.csproj" />
     </ItemGroup>

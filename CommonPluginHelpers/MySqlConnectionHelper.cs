@@ -1,7 +1,8 @@
-﻿using MySqlConnector;
+﻿using Microsoft.Extensions.Configuration;
+using MySqlConnector;
 using Serilog;
 
-namespace NinjaBot_DC.CommonPluginHelpers;
+namespace CommonPluginHelpers;
 
 public class MySqlConnectionHelper
 {

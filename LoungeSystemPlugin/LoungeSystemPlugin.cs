@@ -3,10 +3,9 @@ using LoungeSystemPlugin.CommandModules;
 using LoungeSystemPlugin.Events;
 using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
-using NinjaBot_DC.CommonPluginHelpers;
+using CommonPluginHelpers;
 using PluginBase;
 using Serilog;
-using ConfigHelper = NinjaBot_DC.CommonPluginHelpers.ConfigHelper;
 
 namespace LoungeSystemPlugin;
 

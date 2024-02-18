@@ -1,4 +1,6 @@
-﻿namespace NinjaBot_DC.CommonPluginHelpers;
+﻿using Microsoft.Extensions.Configuration;
+
+namespace CommonPluginHelpers;
 
 public static class ConfigHelper
 {

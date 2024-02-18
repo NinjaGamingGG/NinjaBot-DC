@@ -4,11 +4,11 @@ namespace LoungeSystemPlugin.PluginHelper;
 
 public static class ThrowAwayFollowupMessage
 {
-    public static async Task HandleAsync(DiscordFollowupMessageBuilder builder, DiscordInteraction interaction)
+    public static async Task HandleAsync(DiscordFollowupMessageBuilder builder, DiscordInteraction interaction, int waitDelay = 20)
     {
         var followupMessage = await interaction.CreateFollowupMessageAsync(builder);
         
-        await Task.Delay(TimeSpan.FromSeconds(20));
+        await Task.Delay(TimeSpan.FromSeconds(waitDelay));
 
         try
         {

@@ -2,7 +2,7 @@
 using DSharpPlus.Entities;
 using RankSystem;
 
-namespace Ranksystem.PluginHelper;
+namespace RankSystem.PluginHelper;
 
 public static class Blacklist
 {

@@ -2,10 +2,10 @@
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using RankSystem;
-using Ranksystem.PluginHelper;
+using RankSystem.PluginHelper;
 using Serilog;
 
-namespace Ranksystem.Events;
+namespace RankSystem.Events;
 
 
 

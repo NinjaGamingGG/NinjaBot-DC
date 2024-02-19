@@ -4,7 +4,7 @@ using RankSystem;
 using RankSystem.Models;
 using Serilog;
 
-namespace Ranksystem.PluginHelper;
+namespace RankSystem.PluginHelper;
 
 public static class UpdateRewardRole
 {
@@ -14,9 +14,9 @@ public static class UpdateRewardRole
         
         var userPointsForGuild = await sqlConnection.QueryFirstOrDefaultAsync<int>("SELECT Points FROM RankSystemUserPointsIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = guildId, UserId = userId});
 
-        var rankSystemConfiguration = await sqlConnection.QueryFirstOrDefaultAsync<RanksystemConfigurationModel>("SELECT * FROM RanksystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+        var rankSystemConfiguration = await sqlConnection.QueryFirstOrDefaultAsync<RankSystemConfigurationModel>("SELECT * FROM RankSystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
         
-        var rewardRoles = await sqlConnection.QueryAsync<RanksystemRewardRoleModel>("SELECT * FROM RanksystemRewardRolesIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+        var rewardRoles = await sqlConnection.QueryAsync<RankSystemRewardRoleModel>("SELECT * FROM RankSystemRewardRolesIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
         
         var rewardRolesAsList = rewardRoles.ToList();
         

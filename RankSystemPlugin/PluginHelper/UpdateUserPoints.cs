@@ -5,7 +5,7 @@ using RankSystem;
 using RankSystem.Models;
 using Serilog;
 
-namespace Ranksystem.PluginHelper;
+namespace RankSystem.PluginHelper;
 
 public static class UpdateUserPoints
 {
@@ -16,7 +16,7 @@ public static class UpdateUserPoints
         
         var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper()!.GetMySqlConnection();
         
-        var config = await sqlConnection.QueryFirstOrDefaultAsync<RanksystemConfigurationModel>("SELECT * FROM RanksystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+        var config = await sqlConnection.QueryFirstOrDefaultAsync<RankSystemConfigurationModel>("SELECT * FROM RankSystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
         
         if (config == null)
         {

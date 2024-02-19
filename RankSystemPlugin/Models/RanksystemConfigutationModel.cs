@@ -2,8 +2,8 @@
 
 namespace RankSystem.Models;
 
-[Table(("RanksystemConfigurationIndex"))]
-public record RanksystemConfigurationModel
+[Table(("RankSystemConfigurationIndex"))]
+public record RankSystemConfigurationModel
 {
     [ExplicitKey]
     public ulong GuildId { get; set; }

@@ -2,8 +2,8 @@
 
 namespace RankSystem.Models;
 
-[Table("RanksystemRewardRolesIndex")]
-public record RanksystemRewardRoleModel
+[Table("RankSystemRewardRolesIndex")]
+public record RankSystemRewardRoleModel
 {
     [ExplicitKey]
     public ulong GuildId { get; set; }

@@ -1,19 +1,21 @@
 ﻿using System.Text;
+using CommonPluginHelpers;
 using Dapper;
 using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
+using MySqlConnector;
 using RankSystem;
 using RankSystem.Models;
-using Ranksystem.PluginHelper;
+using Serilog;
 
-namespace Ranksystem;
+namespace RankSystem.CommandModules;
 
-[SlashCommandGroup("RankSystem", "Ranksystem Plugin Commands")]
+[SlashCommandGroup("RankSystem-Admin", "RankSystem Plugin Admin Commands",false)]
 // ReSharper disable once ClassNeverInstantiated.Global
-public class RanksystemSubGroupContainer : ApplicationCommandModule
+public class AdminCommandSubGroupContainer : ApplicationCommandModule
 {
     [SlashCommandGroup("blacklist", "Blacklist Commands")]
     [SlashRequirePermissions(Permissions.Administrator)]
@@ -269,7 +271,9 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             [Option("Points-per-reaction", "How much reward points each created reaction should generate")]
             long pointsPerReaction,
             [Option("points-per-voice-minute", "How much reward points each minute in a voice channel should generate")]
-            long pointsPerVoiceMinute)
+            long pointsPerVoiceMinute,
+            [Option("notify-channel", "Channel where Users get messaged about new Ranks gained")] 
+            DiscordChannel notifyChannel)
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
@@ -290,12 +294,15 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 PointsPerMessage = (int)pointsPerMessage,
                 PointsPerReaction = (int)pointsPerReaction,
                 PointsPerVoiceActivity = (int)pointsPerVoiceMinute,
-                LogChannelId = logChannel.Id
+                LogChannelId = logChannel.Id,
+                NotifyChannelId = notifyChannel.Id
             };
         
             var insertSuccess = await sqlConnection.InsertAsync(rewardConfig);
+            
+            await sqlConnection.CloseAsync();
         
-            if (insertSuccess == 0)
+            if (insertSuccess != 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to add Reward Config!"));
                 return;
@@ -313,15 +320,19 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             [Option("Points-per-reaction", "How much reward points each created reaction should generate")]
             long pointsPerReaction,
             [Option("points-per-voice-minute", "How much reward points each minute in a voice channel should generate")]
-            long pointsPerVoiceMinute)
+            long pointsPerVoiceMinute,
+            [Option("notify-channel", "Channel where Users get messaged about new Ranks gained")] 
+            DiscordChannel notifyChannel)
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
             var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
             var updateSuccess = await sqlConnection.ExecuteAsync(
-                $"UPDATE RanksystemConfigurationIndex SET PointsPerMessage = {pointsPerMessage}, PointsPerReaction = {pointsPerReaction}, PointsPerVoiceActivity = {pointsPerVoiceMinute}, LogChannelId = {logChannel.Id} WHERE GuildId = {context.Guild.Id}");
+                $"UPDATE RanksystemConfigurationIndex SET PointsPerMessage = {pointsPerMessage}, PointsPerReaction = {pointsPerReaction}, PointsPerVoiceActivity = {pointsPerVoiceMinute}, LogChannelId = {logChannel.Id}, NotifyChannelId = {notifyChannel.Id} WHERE GuildId = {context.Guild.Id}");
 
+            await sqlConnection.CloseAsync();
+            
             if (updateSuccess == 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to update Reward Config!"));
@@ -355,10 +366,12 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             foreach (var config in rewardConfigModels)
             {
                 var logChannel = context.Guild.GetChannel(config.LogChannelId);
+                var notifyChannel = context.Guild.GetChannel(config.NotifyChannelId);
                 rewardConfigString.AppendLine($"Points Per Message: {config.PointsPerMessage}");
                 rewardConfigString.AppendLine($"Points Per Reaction: {config.PointsPerReaction}");
                 rewardConfigString.AppendLine($"Points Per Voice Activity: {config.PointsPerVoiceActivity}");
                 rewardConfigString.AppendLine($"Log Channel: {logChannel.Mention}");
+                rewardConfigString.AppendLine($"Notify Channel: {notifyChannel.Mention}");
                 if(rewardConfigModels.Last() != config)
                     rewardConfigString.AppendLine("-------------------------------------------------");
             }

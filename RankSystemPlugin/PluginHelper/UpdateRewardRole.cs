@@ -55,10 +55,19 @@ public static class UpdateRewardRole
             return;
                 
         await user.GrantRoleAsync(role);
+
+        if (rankSystemConfiguration != null)
+        {
+            var notifyChannel = guild.GetChannel(rankSystemConfiguration.NotifyChannelId);
+            var logChannel = guild.GetChannel(rankSystemConfiguration.LogChannelId);
+            await logChannel.SendMessageAsync($"[Rank-system] {user.Username} earned the role {role.Name} for {highestRewardRole.RequiredPoints} xp");
+            await notifyChannel.SendMessageAsync(
+                $"Yay {user.Mention}, you leveled up in the Rank-System! Your new Rank is: {role.Mention}");
+        }
+
+        
                 
-        var logChannel = guild.GetChannel(rankSystemConfiguration.LogChannelId);
-                
-        await logChannel.SendMessageAsync($"[Rank-system] {user.Username} earned the role {role.Name} for {highestRewardRole.RequiredPoints} xp");
+        
         
     }
     

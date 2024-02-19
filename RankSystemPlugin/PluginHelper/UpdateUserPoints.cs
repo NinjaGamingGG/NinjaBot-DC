@@ -11,13 +11,16 @@ public static class UpdateUserPoints
 {
     public static async Task Add(DiscordClient client,ulong guildId,DiscordUser user, RankSystemPlugin.ERankSystemReason reason)
     {
-        var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+        if (ReferenceEquals(RankSystemPlugin.GetMySqlConnectionHelper(), null))
+            return;
+        
+        var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper()!.GetMySqlConnection();
         
         var config = await sqlConnection.QueryFirstOrDefaultAsync<RanksystemConfigurationModel>("SELECT * FROM RanksystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
         
         if (config == null)
         {
-            Log.Error("Ranksystem configuration not found for Guild {GuildId}!", guildId);
+            Log.Error("RankSystem configuration not found for Guild {GuildId}!", guildId);
             return;
         }
         

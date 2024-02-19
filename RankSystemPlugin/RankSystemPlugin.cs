@@ -3,7 +3,8 @@
 using NinjaBot_DC;
 using CommonPluginHelpers;
 using PluginBase;
-using Ranksystem;
+using RankSystem;
+using RankSystem.CommandModules;
 using Ranksystem.Events;
 using Ranksystem.PluginHelper;
 using Serilog;
@@ -21,9 +22,9 @@ public class RankSystemPlugin : IPlugin
     public string Description => "Simple Discord Ranksystem.";
     public string? PluginDirectory { get; set; }
 
-    private static MySqlConnectionHelper _mySqlConnectionHelper;
+    private static MySqlConnectionHelper? _mySqlConnectionHelper;
     
-    public static MySqlConnectionHelper GetMySqlConnectionHelper()
+    public static MySqlConnectionHelper? GetMySqlConnectionHelper()
     {
         return _mySqlConnectionHelper;
     }
@@ -43,11 +44,11 @@ public class RankSystemPlugin : IPlugin
         
         var tableStrings = new[]
         {
-            "CREATE TABLE IF NOT EXISTS RanksystemBlacklistedChannelsIndex (GuildId BIGINT, ChannelId INTEGER)",
-            "CREATE TABLE IF NOT EXISTS RanksystemBlacklistedRolesIndex (GuildId BIGINT, RoleId INTEGER)",
-            "CREATE TABLE IF NOT EXISTS RanksystemRewardRolesIndex (GuildId BIGINT, RoleId INTEGER, RequiredPoints INTEGER)",
-            "CREATE TABLE IF NOT EXISTS RanksystemConfigurationIndex (GuildId BIGINT, PointsPerMessage INTEGER, PointsPerReaction INTEGER, PointsPerVoiceActivity INTEGER, LogChannelId INTEGER)",
-            "CREATE TABLE IF NOT EXISTS RankSystemUserPointsIndex (Id INTEGER ,GuildId INTEGER, UserId INTEGER, Points INTEGER)"
+            "CREATE TABLE IF NOT EXISTS RanksystemBlacklistedChannelsIndex (GuildId MEDIUMTEXT, ChannelId MEDIUMTEXT)",
+            "CREATE TABLE IF NOT EXISTS RanksystemBlacklistedRolesIndex (GuildId MEDIUMTEXT, RoleId MEDIUMTEXT)",
+            "CREATE TABLE IF NOT EXISTS RanksystemRewardRolesIndex (GuildId MEDIUMTEXT, RoleId MEDIUMTEXT, RequiredPoints INTEGER)",
+            "CREATE TABLE IF NOT EXISTS RanksystemConfigurationIndex (GuildId MEDIUMTEXT, PointsPerMessage INTEGER, PointsPerReaction INTEGER, PointsPerVoiceActivity INTEGER, LogChannelId MEDIUMTEXT, NotifyChannelId MEDIUMTEXT)",
+            "CREATE TABLE IF NOT EXISTS RankSystemUserPointsIndex (Id INTEGER ,GuildId MEDIUMTEXT, UserId MEDIUMTEXT, Points MEDIUMTEXT)"
             
             
         };
@@ -67,7 +68,7 @@ public class RankSystemPlugin : IPlugin
         }
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
-        slashCommands.RegisterCommands<RanksystemSubGroupContainer>();
+        slashCommands.RegisterCommands<AdminCommandSubGroupContainer>();
         
         client.MessageCreated += MessageCreatedEvent.MessageCreated;
         client.MessageReactionAdded += MessageReactionAddedEvent.MessageReactionAdded;

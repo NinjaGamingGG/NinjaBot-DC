@@ -11,4 +11,5 @@ public record RanksystemConfigurationModel
     public int PointsPerReaction { get; set; }
     public float PointsPerVoiceActivity { get; set; }
     public ulong LogChannelId { get; set; }
+    public ulong NotifyChannelId { get; set; }
 }

@@ -14,10 +14,10 @@
     <ItemGroup>
         <PackageReference Include="Dapper" Version="2.1.28" />
         <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
-        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02096" />
-        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-02096" />
-        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-02096" />
-        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-02096" />
+        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02115" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-02115" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-02115" />
+        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-02115" />
         <PackageReference Include="Magick.NET-Q16-x64" Version="13.6.0" />
         <PackageReference Include="Magick.NET.SystemDrawing" Version="7.2.2" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0-preview.1.24080.9" />
@@ -25,8 +25,8 @@
         <PackageReference Include="MySqlConnector" Version="2.3.5" />
         <PackageReference Include="Serilog" Version="3.1.2-dev-02097" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
-        <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.1-dev-10373" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.1-dev-00561" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.1-dev-10377" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.1-dev-00572" />
         <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00972" />
         <None Update="config.json" CopyToOutputDirectory="PreserveNewest" />

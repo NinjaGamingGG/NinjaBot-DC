@@ -5,15 +5,14 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
-using RankSystem;
 using RankSystem.Models;
-using Ranksystem.PluginHelper;
 
-namespace Ranksystem;
 
-[SlashCommandGroup("RankSystem", "Ranksystem Plugin Commands")]
+namespace RankSystem.CommandModules;
+
+[SlashCommandGroup("RankSystem-Admin", "RankSystem Plugin Admin Commands",false)]
 // ReSharper disable once ClassNeverInstantiated.Global
-public class RanksystemSubGroupContainer : ApplicationCommandModule
+public class AdminCommandSubGroupContainer : ApplicationCommandModule
 {
     [SlashCommandGroup("blacklist", "Blacklist Commands")]
     [SlashRequirePermissions(Permissions.Administrator)]
@@ -83,7 +82,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             var channelId = channel.Id;
         
             var deleteSuccess = await sqlConnection.ExecuteAsync(
-                $"DELETE FROM RanksystemBlacklistedChannelsIndex WHERE GuildId = {context.Guild.Id} AND ChannelId = {channelId}");
+                $"DELETE FROM RankSystemBlacklistedChannelsIndex WHERE GuildId = {context.Guild.Id} AND ChannelId = {channelId}");
         
             if (deleteSuccess == 0)
             {
@@ -102,7 +101,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
             var deleteSuccess = await sqlConnection.ExecuteAsync(
-                $"DELETE FROM RanksystemBlacklistedRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                $"DELETE FROM RankSystemBlacklistedRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
         
             if (deleteSuccess == 0)
             {
@@ -132,7 +131,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
 
             var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
 
-            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
             if (alreadyExists != 0)
             {
@@ -140,7 +139,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 return;
             }
             
-            var rewardRole = new RanksystemRewardRoleModel()
+            var rewardRole = new RankSystemRewardRoleModel()
             {
                 GuildId = context.Guild.Id,
                 RoleId = role.Id,
@@ -171,7 +170,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
 
             var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
 
-            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
             if (alreadyExists == 0)
             {
@@ -180,7 +179,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             }
             
             var deleteSuccess = await sqlConnection.ExecuteAsync(
-                $"DELETE FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                $"DELETE FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
         
             if (deleteSuccess == 0)
             {
@@ -198,7 +197,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
 
             var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-            var rewardRoles = await sqlConnection.GetAllAsync<RanksystemRewardRoleModel>();
+            var rewardRoles = await sqlConnection.GetAllAsync<RankSystemRewardRoleModel>();
 
             var rewardRoleModels = rewardRoles.ToList();
 
@@ -234,7 +233,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
 
             var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
 
-            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
             if (alreadyExists == 0)
             {
@@ -243,7 +242,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             }
             
             var updateSuccess = await sqlConnection.ExecuteAsync(
-                $"UPDATE RanksystemRewardRolesIndex SET RequiredPoints = {requiredPoints} WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                $"UPDATE RankSystemRewardRolesIndex SET RequiredPoints = {requiredPoints} WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
         
             if (updateSuccess == 0)
             {
@@ -269,14 +268,16 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             [Option("Points-per-reaction", "How much reward points each created reaction should generate")]
             long pointsPerReaction,
             [Option("points-per-voice-minute", "How much reward points each minute in a voice channel should generate")]
-            long pointsPerVoiceMinute)
+            long pointsPerVoiceMinute,
+            [Option("notify-channel", "Channel where Users get messaged about new Ranks gained")] 
+            DiscordChannel notifyChannel)
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
             
             var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RanksystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
+            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
 
             if (alreadyExists != 0)
             {
@@ -284,18 +285,21 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
                 return;
             }
         
-            var rewardConfig = new RanksystemConfigurationModel()
+            var rewardConfig = new RankSystemConfigurationModel()
             {
                 GuildId = context.Guild.Id,
                 PointsPerMessage = (int)pointsPerMessage,
                 PointsPerReaction = (int)pointsPerReaction,
                 PointsPerVoiceActivity = (int)pointsPerVoiceMinute,
-                LogChannelId = logChannel.Id
+                LogChannelId = logChannel.Id,
+                NotifyChannelId = notifyChannel.Id
             };
         
             var insertSuccess = await sqlConnection.InsertAsync(rewardConfig);
+            
+            await sqlConnection.CloseAsync();
         
-            if (insertSuccess == 0)
+            if (insertSuccess != 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to add Reward Config!"));
                 return;
@@ -313,15 +317,19 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             [Option("Points-per-reaction", "How much reward points each created reaction should generate")]
             long pointsPerReaction,
             [Option("points-per-voice-minute", "How much reward points each minute in a voice channel should generate")]
-            long pointsPerVoiceMinute)
+            long pointsPerVoiceMinute,
+            [Option("notify-channel", "Channel where Users get messaged about new Ranks gained")] 
+            DiscordChannel notifyChannel)
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
             var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
             var updateSuccess = await sqlConnection.ExecuteAsync(
-                $"UPDATE RanksystemConfigurationIndex SET PointsPerMessage = {pointsPerMessage}, PointsPerReaction = {pointsPerReaction}, PointsPerVoiceActivity = {pointsPerVoiceMinute}, LogChannelId = {logChannel.Id} WHERE GuildId = {context.Guild.Id}");
+                $"UPDATE RankSystemConfigurationIndex SET PointsPerMessage = {pointsPerMessage}, PointsPerReaction = {pointsPerReaction}, PointsPerVoiceActivity = {pointsPerVoiceMinute}, LogChannelId = {logChannel.Id}, NotifyChannelId = {notifyChannel.Id} WHERE GuildId = {context.Guild.Id}");
 
+            await sqlConnection.CloseAsync();
+            
             if (updateSuccess == 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to update Reward Config!"));
@@ -338,7 +346,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
 
             var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
-            var rewardConfig = await sqlConnection.GetAllAsync<RanksystemConfigurationModel>();
+            var rewardConfig = await sqlConnection.GetAllAsync<RankSystemConfigurationModel>();
 
             var rewardConfigModels = rewardConfig.ToList();
 
@@ -355,10 +363,12 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             foreach (var config in rewardConfigModels)
             {
                 var logChannel = context.Guild.GetChannel(config.LogChannelId);
+                var notifyChannel = context.Guild.GetChannel(config.NotifyChannelId);
                 rewardConfigString.AppendLine($"Points Per Message: {config.PointsPerMessage}");
                 rewardConfigString.AppendLine($"Points Per Reaction: {config.PointsPerReaction}");
                 rewardConfigString.AppendLine($"Points Per Voice Activity: {config.PointsPerVoiceActivity}");
                 rewardConfigString.AppendLine($"Log Channel: {logChannel.Mention}");
+                rewardConfigString.AppendLine($"Notify Channel: {notifyChannel.Mention}");
                 if(rewardConfigModels.Last() != config)
                     rewardConfigString.AppendLine("-------------------------------------------------");
             }
@@ -375,7 +385,7 @@ public class RanksystemSubGroupContainer : ApplicationCommandModule
             var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
             var deleteSuccess = await sqlConnection.ExecuteAsync(
-                $"DELETE FROM RanksystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
+                $"DELETE FROM RankSystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
         
             if (deleteSuccess == 0)
             {

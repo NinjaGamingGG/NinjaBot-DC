@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginBase", "PluginBase\Pl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{AFB40CC2-BAF6-47D7-9128-F7A9A44CCCAE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RanksystemPlugin", "RanksystemPlugin\RanksystemPlugin.csproj", "{C9DF0200-4821-491C-AE70-B2FCEC49238E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RankSystemPlugin", "RankSystemPlugin\RankSystemPlugin.csproj", "{C9DF0200-4821-491C-AE70-B2FCEC49238E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatsPlugin", "StatsPlugin\StatsPlugin.csproj", "{894D1152-9B30-4F8D-9727-6DDD7EB8531A}"
 EndProject

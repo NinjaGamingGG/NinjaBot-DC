@@ -2,11 +2,10 @@
 
 namespace RankSystem.Models;
 
-[Table("RanksystemRewardRolesIndex")]
-public record RanksystemRewardRoleModel
+[Table("RankSystemBlacklistedRolesIndex")]
+public record BlacklistedRolesModel
 {
     [ExplicitKey]
     public ulong GuildId { get; set; }
     public ulong RoleId { get; set; }
-    public int RequiredPoints { get; set; }
 }

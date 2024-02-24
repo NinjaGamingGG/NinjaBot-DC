@@ -1,9 +1,8 @@
 ﻿using DSharpPlus;
 using DSharpPlus.EventArgs;
-using RankSystem;
-using Ranksystem.PluginHelper;
+using RankSystem.PluginHelper;
 
-namespace Ranksystem.Events;
+namespace RankSystem.Events;
 
 public static class MessageReactionAddedEvent
 {

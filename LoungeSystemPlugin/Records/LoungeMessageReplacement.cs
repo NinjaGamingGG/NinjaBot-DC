@@ -6,10 +6,10 @@ namespace LoungeSystemPlugin.Records;
 public record LoungeMessageReplacement
 {
     [ExplicitKey]
-    public int Id { get; set; }
-    public ulong GuildId { get; set; }
-    public ulong TargetChannelId { get; set; }
-    public string? ReplacementHandle { get; set; }
-    public string? ReplacementValue { get; set; } 
+    public int Id { get; init; }
+    public ulong GuildId { get; init; }
+    public ulong TargetChannelId { get; init; }
+    public string? ReplacementHandle { get; init; }
+    public string? ReplacementValue { get; init; } 
     
 }

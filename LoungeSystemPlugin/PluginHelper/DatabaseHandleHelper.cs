@@ -2,29 +2,21 @@ namespace LoungeSystemPlugin.PluginHelper;
 
 public static class DatabaseHandleHelper
 {
+    /// <summary>
+    /// Retrieves the channel handle string from the specified enum value.
+    /// </summary>
+    /// <param name="handle">The enum value representing the channel handle.</param>
+    /// <returns>The channel handle string.</returns>
     public static string GetChannelHandleFromEnum(CommandModules.ReplacementHandleEnum handle)
     {
-
-        switch (handle)
+        return handle switch
         {
-            case CommandModules.ReplacementHandleEnum.Separator:
-                return "Separator";
-            
-            case CommandModules.ReplacementHandleEnum.CustomName:
-                return "Custom_Name";
-
-            case CommandModules.ReplacementHandleEnum.DecoratorDecal:
-                return "Decorator_Decal";
-            
-            case CommandModules.ReplacementHandleEnum.DecoratorEmoji:
-                return "Decorator_Emoji";
-            
-            case CommandModules.ReplacementHandleEnum.DecoratorPrefix:
-                return "Decorator_Prefix";
-            
-            default:
-                return "NoHandle";
-
-        }
+            CommandModules.ReplacementHandleEnum.Separator => "Separator",
+            CommandModules.ReplacementHandleEnum.CustomName => "Custom_Name",
+            CommandModules.ReplacementHandleEnum.DecoratorDecal => "Decorator_Decal",
+            CommandModules.ReplacementHandleEnum.DecoratorEmoji => "Decorator_Emoji",
+            CommandModules.ReplacementHandleEnum.DecoratorPrefix => "Decorator_Prefix",
+            _ => "NoHandle"
+        };
     }
 }

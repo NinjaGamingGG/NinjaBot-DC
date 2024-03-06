@@ -5,6 +5,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records;
+using MySqlConnector;
 
 namespace LoungeSystemPlugin.Events;
 
@@ -14,8 +15,9 @@ public static class VoiceStateUpdated
     {
         if (ReferenceEquals(eventArgs.Channel, null))
             return;
-        
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+
+        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var mySqlConnection = new MySqlConnection(connectionString);
 
         var channels = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId", new { GuildId = eventArgs.Guild.Id});
         
@@ -155,6 +157,7 @@ public static class VoiceStateUpdated
         };
 
         var inserted = await mySqlConnection.InsertAsync(newModel);
+        await mySqlConnection.CloseAsync();
         
         if (inserted == 0)
         {
@@ -213,9 +216,11 @@ public static class VoiceStateUpdated
         if ( ReferenceEquals(eventArgs.Before, null))
             return;
 
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var mySqlConnection = new MySqlConnection(connectionString);    
 
         var loungeList = await mySqlConnection.GetAllAsync<LoungeDbRecord>();
+        await mySqlConnection.CloseAsync();
 
         foreach (var loungeDbModel in loungeList)
         {

@@ -4,6 +4,7 @@ using LoungeSystemPlugin.Events;
 using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
 using CommonPluginHelpers;
+using MySqlConnector;
 using PluginBase;
 using Serilog;
 
@@ -22,7 +23,6 @@ public class LoungeSystemPlugin : IPlugin
     {
         return _mySqlConnectionHelper;
     }
-    
     
     public void OnLoad()
     {
@@ -47,7 +47,8 @@ public class LoungeSystemPlugin : IPlugin
         
         try
         {
-            var connection = _mySqlConnectionHelper.GetMySqlConnection();
+            var connectionString = _mySqlConnectionHelper.GetMySqlConnectionString();
+            var connection = new MySqlConnection(connectionString);
             _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
             connection.Close();
         }

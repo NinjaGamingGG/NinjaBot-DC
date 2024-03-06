@@ -6,6 +6,7 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Net.Models;
 using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records;
+using MySqlConnector;
 
 namespace LoungeSystemPlugin.CommandModules;
 
@@ -46,7 +47,8 @@ public class CommandNextModule : BaseCommandModule
             await message.RespondAsync(errorBuilder);
         }
 
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var mySqlConnection = new MySqlConnection(connectionString);
         
         var channelConfigurations = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId ", new { GuildId = context.Guild.Id});
         
@@ -67,6 +69,9 @@ public class CommandNextModule : BaseCommandModule
         var decoratorDecal = string.Empty;
 
         var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = context.Guild.Id, ChannelId = channelRecord.OriginChannel});
+
+        await mySqlConnection.CloseAsync();
+        
         var loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ?? nameReplacementRecord.ToArray();
         if (loungeMessageReplacementsAsArray.Any())
         {

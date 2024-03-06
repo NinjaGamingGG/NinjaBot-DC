@@ -1,6 +1,7 @@
 ﻿using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using LoungeSystemPlugin.Records;
+using MySqlConnector;
 using NinjaBot_DC;
 using Serilog;
 
@@ -10,7 +11,8 @@ public static class CleanupLounge
 {
     public static async Task Execute(LoungeDbRecord loungeDbRecord)
     {
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();;
+        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var mySqlConnection = new MySqlConnection(connectionString);
         var discordClient = Worker.GetServiceDiscordClient();       
         var loungeChannel = await discordClient.GetChannelAsync(loungeDbRecord.ChannelId);
         var guild = await discordClient.GetGuildAsync(loungeDbRecord.GuildId);
@@ -42,7 +44,9 @@ public static class CleanupLounge
 
 
         var sqlSuccess = await mySqlConnection.DeleteAsync(loungeDbRecord);
-                
+
+        await mySqlConnection.CloseAsync();
+        
         if (sqlSuccess == false)
             Log.Error("Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",loungeChannel.Name, loungeDbRecord.ChannelId, loungeDbRecord.GuildId);
     }

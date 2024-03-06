@@ -1,6 +1,7 @@
 ﻿using Dapper.Contrib.Extensions;
 using LoungeSystemPlugin.Records;
 using MySqlConnector;
+using NinjaBot_DC;
 using Serilog;
 
 namespace LoungeSystemPlugin.PluginHelper;
@@ -25,11 +26,13 @@ public static class StartupCleanup
             Log.Error(ex, "Error while reading lounge db records on StartupCleanup");
             return;
         }
+        
+        var client = Worker.GetServiceDiscordClient();
 
-
-        //If this is run at startup this codes sometimes executes before GuildVoiceStates Intents are registered and will always display an member count of 0 on channels
-        //This is a 3am workaround to wait 5 seconds before executing the code
-        await Task.Delay(TimeSpan.FromSeconds(5));
+        while (!client.IsConnected)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(3));
+        }
         
         foreach (var loungeDbModel in loungeDbRecordList)
         {

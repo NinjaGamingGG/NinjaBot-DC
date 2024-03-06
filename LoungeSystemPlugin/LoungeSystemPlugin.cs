@@ -17,9 +17,9 @@ public class LoungeSystemPlugin : IPlugin
     public string Description => "Simple Discord LoungeSystem Plugin.";
     public string? PluginDirectory { get; set; }
 
-    private static MySqlConnectionHelper _mySqlConnectionHelper;
+    private static MySqlConnectionHelper? _mySqlConnectionHelper;
     
-    public static MySqlConnectionHelper GetMySqlConnectionHelper()
+    public static MySqlConnectionHelper? GetMySqlConnectionHelper()
     {
         return _mySqlConnectionHelper;
     }

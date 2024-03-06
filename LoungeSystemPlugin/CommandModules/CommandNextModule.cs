@@ -100,13 +100,13 @@ public class CommandNextModule : BaseCommandModule
             }
         }
         
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratordecal}"))
-            separatorPattern = separatorPattern.Replace("{decoratordecal}", decoratorDecal);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decorator_decal}"))
+            separatorPattern = separatorPattern.Replace("{decorator_decal}", decoratorDecal);
         
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratoremoji}"))
-            separatorPattern = separatorPattern.Replace("{decoratoremoji}", decoratorEmoji);
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratorprefix}"))
-            separatorPattern = separatorPattern.Replace("{decoratorprefix}", decoratorPrefix);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decorator_emoji}"))
+            separatorPattern = separatorPattern.Replace("{decorator_emoji}", decoratorEmoji);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decorator_prefix}"))
+            separatorPattern = separatorPattern.Replace("{decorator_prefix}", decoratorPrefix);
 
         foreach (var channelConfig in channelConfigurationList.Where(channelConfig => channelRecord.OriginChannel == channelConfig.TargetChannelId))
         {
@@ -118,28 +118,28 @@ public class CommandNextModule : BaseCommandModule
             if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{separator}"))
                 channelNamePattern = channelNamePattern.Replace("{separator}", separatorPattern);
         
-            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{customname}"))
-                channelNamePattern = channelNamePattern.Replace("{customname}", customNamePattern);
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{custom_name}"))
+                channelNamePattern = channelNamePattern.Replace("{custom_name}", customNamePattern);
             
             break;
         }
 
         var channel = context.Channel;
 
-        void NewEditModel(ChannelEditModel editModel)
-        {
-            if (channelNamePattern != null) editModel.Name = channelNamePattern;
-            editModel.Topic = "Test";
-        }
-
         await channel.ModifyAsync(NewEditModel);
-
-
+        
         await context.Message.DeleteAsync();
 
         var referenceMessage = await context.Channel.GetMessageAsync(response.Result.Id);
         await referenceMessage.DeleteAsync();
 
         await message.DeleteAsync();
+        return;
+
+        void NewEditModel(ChannelEditModel editModel)
+        {
+            if (channelNamePattern != null) editModel.Name = channelNamePattern;
+            editModel.Topic = "Test";
+        }
     }
 }

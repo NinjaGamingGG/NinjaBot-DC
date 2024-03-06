@@ -20,9 +20,9 @@ public static class ThrowAwayFollowupMessage
         }
     }
 
-    public static async Task HandleAsync(DiscordMessage followupMessage)
+    public static async Task HandleAsync(DiscordMessage followupMessage, int waitDelay = 15)
     {
-        await Task.Delay(TimeSpan.FromSeconds(15));
+        await Task.Delay(TimeSpan.FromSeconds(waitDelay));
         
         try
         {

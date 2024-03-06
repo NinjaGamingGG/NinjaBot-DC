@@ -58,7 +58,11 @@ public class MySqlConnectionHelper(string envVarPrefix, IConfiguration configura
         return connection;
 
     }
-    
+
+    /// <summary>
+    /// Retrieves the MySQL connection string based on the provided configuration.
+    /// </summary>
+    /// <returns>The MySQL connection string.</returns>
     public string GetMySqlConnectionString()
     {
         var serverString = configuration.GetValue<string>(envVarPrefix +":mysql-server") ?? "127.0.0.1";

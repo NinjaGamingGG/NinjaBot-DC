@@ -2,6 +2,7 @@
 
 using NinjaBot_DC;
 using CommonPluginHelpers;
+using MySqlConnector;
 using PluginBase;
 using RankSystem.CommandModules;
 using RankSystem.Events;
@@ -56,7 +57,8 @@ public class RankSystemPlugin : IPlugin
         
         try
         {
-            var connection = _mySqlConnectionHelper.GetMySqlConnection();
+            var connectionString = _mySqlConnectionHelper.GetMySqlConnectionString();
+            var connection = new MySqlConnection(connectionString);
             _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
             connection.Close();
         }

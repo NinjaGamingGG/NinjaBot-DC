@@ -11,16 +11,16 @@ public static class DatabaseHandleHelper
                 return "Separator";
             
             case CommandModules.ReplacementHandleEnum.CustomName:
-                return "CustomName";
+                return "Custom_Name";
 
             case CommandModules.ReplacementHandleEnum.DecoratorDecal:
-                return "DecoratorDecal";
+                return "Decorator_Decal";
             
             case CommandModules.ReplacementHandleEnum.DecoratorEmoji:
-                return "DecoratorEmoji";
+                return "Decorator_Emoji";
             
             case CommandModules.ReplacementHandleEnum.DecoratorPrefix:
-                return "DecoratorPrefix";
+                return "Decorator_Prefix";
             
             default:
                 return "NoHandle";

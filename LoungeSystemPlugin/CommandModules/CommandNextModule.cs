@@ -10,6 +10,7 @@ using MySqlConnector;
 
 namespace LoungeSystemPlugin.CommandModules;
 
+[Obsolete]
 public class CommandNextModule : BaseCommandModule
 {
     [Command("l")]

@@ -19,6 +19,7 @@ public static class VoiceStateUpdated
 
         var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
         var mySqlConnection = new MySqlConnection(connectionString);
+        await mySqlConnection.OpenAsync();
 
         var channels = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId", new { GuildId = eventArgs.Guild.Id});
         
@@ -153,7 +154,7 @@ public static class VoiceStateUpdated
             OriginChannel = eventArgs.Channel.Id
         };
 
-        var inserted = await mySqlConnection.InsertAsync(newModel);
+        var inserted = await mySqlConnection.ExecuteAsync("INSERT INTO LoungeIndex (ChannelId, GuildId, OwnerId, IsPublic, OriginChannel) VALUES (@ChannelId,@GuildId,@OwnerId,@IsPublic,@OriginChannel)",newModel);
         await mySqlConnection.CloseAsync();
         
         if (inserted == 0)
@@ -216,6 +217,7 @@ public static class VoiceStateUpdated
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
 
             var loungeRecords = await mySqlConnection.GetAllAsync<LoungeDbRecord>();
             await mySqlConnection.CloseAsync();

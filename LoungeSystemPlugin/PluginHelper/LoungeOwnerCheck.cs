@@ -24,6 +24,7 @@ public static class LoungeOwnerCheck
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
             existsAsOwner = await mySqlConnection.ExecuteScalarAsync<int>(
                 "SELECT COUNT(*) FROM LoungeIndex WHERE ChannelId = @ChannelId AND OwnerId = @OwnerId AND GuildId = @GuildId",
                 new {ChannelId = channel.Id ,OwnerId = member.Id, GuildId = guild.Id});
@@ -48,6 +49,7 @@ public static class LoungeOwnerCheck
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
         
             ownerId = await mySqlConnection.ExecuteScalarAsync<ulong>(
                 "SELECT OwnerId FROM LoungeIndex WHERE ChannelId = @ChannelId",

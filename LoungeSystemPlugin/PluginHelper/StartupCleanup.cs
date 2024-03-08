@@ -17,6 +17,7 @@ public static class StartupCleanup
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
             var loungeDbModels = await mySqlConnection.GetAllAsync<LoungeDbRecord>();
             loungeDbRecordList = loungeDbModels.ToList();
             await mySqlConnection.CloseAsync();

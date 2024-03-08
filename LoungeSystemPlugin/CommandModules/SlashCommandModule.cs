@@ -43,6 +43,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
 
             var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
             var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
 
             if (ReferenceEquals(mySqlConnection, null))
             {
@@ -98,6 +99,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             try
             {
                 await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
                 
                 var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
                     "SELECT COUNT(*) FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId AND TargetChannelId = @TargetChannelId",
@@ -143,6 +145,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             try
             {
                 await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
 
                 var configurationRecords = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>(
                     "SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId",
@@ -205,6 +208,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             try
             {
                 await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
                 
                 var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
                     "SELECT COUNT(*) FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId",
@@ -251,6 +255,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             try
             {
                 var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
 
                 var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
                     "SELECT COUNT(*) FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId",
@@ -299,6 +304,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             try
             {
                 var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
 
                 var requiredRoleRecords = await mySqlConnection.QueryAsync<RequiredRoleRecord>(
                     "SELECT * FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId",
@@ -357,6 +363,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             {
                 var replacementHandleString = DatabaseHandleHelper.GetChannelHandleFromEnum(replacementHandle);
                 await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
                 
                 var existingRecordsCount = await mySqlConnection.ExecuteScalarAsync<int>(
                     "SELECT COUNT(*) FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId= @ChannelId AND ReplacementHandle= @ReplacementHandle",
@@ -422,6 +429,8 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             try
             {
                 await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
+                
                 var replacementHandleString = DatabaseHandleHelper.GetChannelHandleFromEnum(replacementHandle);
 
                 var existingRecordsCount = await mySqlConnection.ExecuteScalarAsync<int>(
@@ -481,6 +490,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             try
             {
                 await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
                 
                 var replacementHandleString = DatabaseHandleHelper.GetChannelHandleFromEnum(replacementHandle);
 
@@ -526,6 +536,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             try
             {
                 await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
                 
                 var loungeMessageReplacements = await mySqlConnection.QueryAsync<LoungeMessageReplacement>(
                     "SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId",

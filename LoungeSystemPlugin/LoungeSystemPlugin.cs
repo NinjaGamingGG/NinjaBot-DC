@@ -49,12 +49,13 @@ public class LoungeSystemPlugin : IPlugin
         {
             var connectionString = _mySqlConnectionHelper.GetMySqlConnectionString();
             var connection = new MySqlConnection(connectionString);
+            connection.Open();
             _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
             connection.Close();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Log.Fatal("Canceling the Startup of {PluginName} Plugin!", Name);
+            Log.Fatal(ex,"Canceling the Startup of {PluginName} Plugin!", Name);
             return;
         }
 

@@ -30,6 +30,8 @@ public static class CleanupLounge
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
             deleteSuccess = await mySqlConnection.DeleteAsync(loungeDbRecord);
             await mySqlConnection.CloseAsync();
         }

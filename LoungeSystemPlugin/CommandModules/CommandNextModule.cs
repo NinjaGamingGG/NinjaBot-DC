@@ -50,6 +50,7 @@ public class CommandNextModule : BaseCommandModule
 
         var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
         var mySqlConnection = new MySqlConnection(connectionString);
+        await mySqlConnection.OpenAsync();
         
         var channelConfigurations = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId ", new { GuildId = context.Guild.Id});
         

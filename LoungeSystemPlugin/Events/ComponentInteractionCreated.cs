@@ -100,6 +100,7 @@ public static class ComponentInteractionCreated
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
 
             var loungeDbRecordEnumerable = await mySqlConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId= @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
             await mySqlConnection.CloseAsync();
@@ -126,6 +127,8 @@ public static class ComponentInteractionCreated
         try
         {
             await using var mySqlConnection =  new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
             deleteSuccess = await mySqlConnection.DeleteAsync(loungeDbRecordList.First());
             await mySqlConnection.CloseAsync();
         }
@@ -219,6 +222,7 @@ public static class ComponentInteractionCreated
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
 
             var isPublic =
                 await mySqlConnection.QueryAsync<bool>(
@@ -254,6 +258,8 @@ public static class ComponentInteractionCreated
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
             var requiredRolesQueryResult =
                 await mySqlConnection.QueryAsync<ulong>(
                     "SELECT RoleId FROM RequiredRoleIndex WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
@@ -296,6 +302,8 @@ public static class ComponentInteractionCreated
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
             await mySqlConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = FALSE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
 
             await mySqlConnection.CloseAsync();
@@ -332,6 +340,8 @@ public static class ComponentInteractionCreated
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
             var requiredRolesQueryResult =
                 await mySqlConnection.QueryAsync<ulong>(
                     "SELECT RoleId FROM RequiredRoleIndex WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
@@ -368,6 +378,8 @@ public static class ComponentInteractionCreated
         try
         {
             await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
             await mySqlConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = TRUE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
             await mySqlConnection.CloseAsync();
         }
@@ -461,6 +473,7 @@ public static class ComponentInteractionCreated
         try
         {
             var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
         
             updateCount = await mySqlConnection.ExecuteAsync(
                 "UPDATE LoungeIndex SET OwnerId = @OwnerId WHERE ChannelId = @ChannelId",

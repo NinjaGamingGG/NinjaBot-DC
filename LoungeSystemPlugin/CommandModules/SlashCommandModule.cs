@@ -41,7 +41,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
                 return;
             }
 
-            var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             var mySqlConnection = new MySqlConnection(connectionString);
             await mySqlConnection.OpenAsync();
 
@@ -93,7 +93,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             var deleteSuccess = 0;
 
             try
@@ -140,7 +140,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             var configurationRecordsList = new List<LoungeSystemConfigurationRecord>();
             try
             {
@@ -203,7 +203,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             var insertSuccess = 0;
             try
             {
@@ -249,7 +249,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             [Option("Role", "Role which is Required for this Channel")] DiscordRole role)
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-            var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             var deleteSuccess = 0;
 
             try
@@ -298,7 +298,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             var requiredRoleRecordsList = new List<RequiredRoleRecord>();
                 
             try
@@ -356,7 +356,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             int insertSuccess;
 
             try
@@ -424,7 +424,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             int updateSuccess;
             try
             {
@@ -484,7 +484,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             
             int deleteSuccess;
             try
@@ -530,7 +530,7 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             List<LoungeMessageReplacement> loungeMessageReplacementsList;
 
             try

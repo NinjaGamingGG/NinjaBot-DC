@@ -17,7 +17,7 @@ public static class VoiceStateUpdated
         if (ReferenceEquals(eventArgs.Channel, null))
             return;
 
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         var mySqlConnection = new MySqlConnection(connectionString);
         await mySqlConnection.OpenAsync();
 
@@ -67,13 +67,13 @@ public static class VoiceStateUpdated
             }
         }
         
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decorator_decal}"))
-            separatorPattern = separatorPattern.Replace("{decorator_decal}", decoratorDecal);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Decal}"))
+            separatorPattern = separatorPattern.Replace("{Decorator_Decal}", decoratorDecal);
         
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decorator_emoji}"))
-            separatorPattern = separatorPattern.Replace("{decorator_emoji}", decoratorEmoji);
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decorator_prefix}"))
-            separatorPattern = separatorPattern.Replace("{decorator_prefix}", decoratorPrefix);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Emoji}"))
+            separatorPattern = separatorPattern.Replace("{Decorator_Emoji}", decoratorEmoji);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Prefix}"))
+            separatorPattern = separatorPattern.Replace("{Decorator_Prefix}", decoratorPrefix);
         
         if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{username}"))
             customNamePattern = customNamePattern.Replace("{username}", eventArgs.User.Username);
@@ -87,11 +87,11 @@ public static class VoiceStateUpdated
             channelNamePattern = channelConfig.LoungeNamePattern;
             interfaceChannel = channelConfig.InterfaceChannelId;
 
-            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{separator}"))
-                channelNamePattern = channelNamePattern.Replace("{separator}", separatorPattern);
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{Separator}"))
+                channelNamePattern = channelNamePattern.Replace("{Separator}", separatorPattern);
         
-            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{custom_name}"))
-                channelNamePattern = channelNamePattern.Replace("{custom_name}", customNamePattern);
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{Custom_Name}"))
+                channelNamePattern = channelNamePattern.Replace("{Custom_Name}", customNamePattern);
             
             break;
         }
@@ -208,10 +208,10 @@ public static class VoiceStateUpdated
 
     public static async Task ChannelLeave(DiscordClient client, VoiceStateUpdateEventArgs eventArgs)
     {
-        if (ReferenceEquals(eventArgs.Before.Channel, null))
+        if (ReferenceEquals(eventArgs.Before, null))
             return;
 
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         List<LoungeDbRecord> loungeList;
 
         try

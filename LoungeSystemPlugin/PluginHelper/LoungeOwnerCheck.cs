@@ -19,7 +19,7 @@ public static class LoungeOwnerCheck
         if (ReferenceEquals(member, null))
             return false;
         
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         int existsAsOwner;
         try
         {
@@ -44,7 +44,7 @@ public static class LoungeOwnerCheck
     
     public static async Task<ulong> GetOwnerIdAsync(DiscordChannel channel)
     {
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         ulong ownerId;
         try
         {

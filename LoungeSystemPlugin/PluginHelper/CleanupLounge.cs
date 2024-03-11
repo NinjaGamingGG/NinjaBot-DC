@@ -11,7 +11,7 @@ public static class CleanupLounge
 {
     public static async Task Execute(LoungeDbRecord loungeDbRecord)
     {
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         var discordClient = Worker.GetServiceDiscordClient();       
         var loungeChannel = await discordClient.GetChannelAsync(loungeDbRecord.ChannelId);
         var guild = await discordClient.GetGuildAsync(loungeDbRecord.GuildId);

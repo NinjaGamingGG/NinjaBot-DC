@@ -48,7 +48,7 @@ public class CommandNextModule : BaseCommandModule
             await message.RespondAsync(errorBuilder);
         }
 
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         var mySqlConnection = new MySqlConnection(connectionString);
         await mySqlConnection.OpenAsync();
         
@@ -85,15 +85,15 @@ public class CommandNextModule : BaseCommandModule
                         separatorPattern = replacement.ReplacementValue;
                         break;
 
-                    case"DecoratorDecal":
+                    case"Decorator_Decal":
                         decoratorDecal = replacement.ReplacementValue;
                         break;
                     
-                    case"DecoratorEmoji":
+                    case"Decorator_Emoji":
                         decoratorEmoji = replacement.ReplacementValue;
                         break;
                     
-                    case"DecoratorPrefix":
+                    case"Decorator_Prefix":
                         decoratorPrefix = replacement.ReplacementValue;
                         break;
                 }
@@ -101,13 +101,13 @@ public class CommandNextModule : BaseCommandModule
             }
         }
         
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decorator_decal}"))
-            separatorPattern = separatorPattern.Replace("{decorator_decal}", decoratorDecal);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Decal}"))
+            separatorPattern = separatorPattern.Replace("{Decorator_Decal}", decoratorDecal);
         
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decorator_emoji}"))
-            separatorPattern = separatorPattern.Replace("{decorator_emoji}", decoratorEmoji);
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decorator_prefix}"))
-            separatorPattern = separatorPattern.Replace("{decorator_prefix}", decoratorPrefix);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Emoji}"))
+            separatorPattern = separatorPattern.Replace("{Decorator_Emoji}", decoratorEmoji);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Prefix}"))
+            separatorPattern = separatorPattern.Replace("{Decorator_Prefix}", decoratorPrefix);
 
         foreach (var channelConfig in channelConfigurationList.Where(channelConfig => channelRecord.OriginChannel == channelConfig.TargetChannelId))
         {
@@ -116,11 +116,11 @@ public class CommandNextModule : BaseCommandModule
             
             //if (channelNamePattern != null && channelNamePattern.Contains("{username}"))
             //    channelNamePattern = channelNamePattern.Replace("{username}", eventArgs.User.Username);
-            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{separator}"))
-                channelNamePattern = channelNamePattern.Replace("{separator}", separatorPattern);
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{Separator}"))
+                channelNamePattern = channelNamePattern.Replace("{Separator}", separatorPattern);
         
-            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{custom_name}"))
-                channelNamePattern = channelNamePattern.Replace("{custom_name}", customNamePattern);
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{Custom_Name}"))
+                channelNamePattern = channelNamePattern.Replace("{Custom_Name}", customNamePattern);
             
             break;
         }

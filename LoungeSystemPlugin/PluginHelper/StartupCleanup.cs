@@ -10,7 +10,7 @@ public static class StartupCleanup
 {
     public static async Task Execute()
     {
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         
         List<LoungeDbRecord> loungeDbRecordList;
 

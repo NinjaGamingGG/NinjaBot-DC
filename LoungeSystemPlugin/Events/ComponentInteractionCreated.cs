@@ -95,7 +95,7 @@ public static class ComponentInteractionCreated
         if (!existsAsOwner)
             return;
 
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         List<LoungeDbRecord> loungeDbRecordList;
         try
         {
@@ -217,7 +217,7 @@ public static class ComponentInteractionCreated
         if (!existsAsOwner)
             return;
 
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         bool[] isPublicAsArray;
         try
         {
@@ -253,7 +253,7 @@ public static class ComponentInteractionCreated
 
     private static async Task LockLoungeLogic(ComponentInteractionCreateEventArgs eventArgs)
     {
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         List<ulong> requiresRolesList;
         try
         {
@@ -334,7 +334,7 @@ public static class ComponentInteractionCreated
             overwriteBuilderList.Add(await new DiscordOverwriteBuilder(overwriteMember).FromAsync(overwrite));
         }
         
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         
         List<ulong> requiresRolesList;
         try
@@ -468,7 +468,7 @@ public static class ComponentInteractionCreated
         
         var followupMessage = await eventArgs.Interaction.CreateFollowupMessageAsync(builder);
 
-        var connectionString = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnectionString();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         int updateCount;
         try
         {

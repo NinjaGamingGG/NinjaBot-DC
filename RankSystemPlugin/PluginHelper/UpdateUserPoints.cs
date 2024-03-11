@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using DSharpPlus;
 using DSharpPlus.Entities;
-using RankSystem;
+using MySqlConnector;
 using RankSystem.Models;
 using Serilog;
 
@@ -11,12 +11,23 @@ public static class UpdateUserPoints
 {
     public static async Task Add(DiscordClient client,ulong guildId,DiscordUser user, RankSystemPlugin.ERankSystemReason reason)
     {
-        if (ReferenceEquals(RankSystemPlugin.GetMySqlConnectionHelper(), null))
-            return;
+        var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        RankSystemConfigurationModel? config;
         
-        var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper()!.GetMySqlConnection();
-        
-        var config = await sqlConnection.QueryFirstOrDefaultAsync<RankSystemConfigurationModel>("SELECT * FROM RankSystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+        try
+        {
+            await using var sqlConnection = new MySqlConnection(connectionString);
+            await sqlConnection.OpenAsync();
+            config = await sqlConnection.QueryFirstOrDefaultAsync<RankSystemConfigurationModel>("SELECT * FROM RankSystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+            await sqlConnection.CloseAsync();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex,"Unable to get the RankSystemConfigurationModel from the Database in the RankSystem");
+            throw;
+        }
+
+
         
         if (config == null)
         {
@@ -31,14 +42,23 @@ public static class UpdateUserPoints
             RankSystemPlugin.ERankSystemReason.ChannelVoiceActivity => config.PointsPerVoiceActivity,
             _ => 0
         };
-        
 
-        
-        var addUserPoints = await sqlConnection.ExecuteAsync("UPDATE RankSystemUserPointsIndex SET Points = Points + @PointsToAdd WHERE GuildId = @GuildId AND UserId = @UserId", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
 
-        if (addUserPoints == 0)
+        try
         {
-            await sqlConnection.ExecuteAsync("INSERT INTO RankSystemUserPointsIndex (GuildId, UserId, Points) VALUES (@GuildId, @UserId, @PointsToAdd)", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
+            var sqlConnection = new MySqlConnection(connectionString);
+            await sqlConnection.OpenAsync();
+            var userPointsAdded = await sqlConnection.ExecuteAsync("UPDATE RankSystemUserPointsIndex SET Points = Points + @PointsToAdd WHERE GuildId = @GuildId AND UserId = @UserId", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
+
+            if (userPointsAdded == 0)
+                await sqlConnection.ExecuteAsync("INSERT INTO RankSystemUserPointsIndex (GuildId, UserId, Points) VALUES (@GuildId, @UserId, @PointsToAdd)", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
+
+            await sqlConnection.CloseAsync();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex,"Unable to add User Points in the RankSystem");
+            return;
         }
         
         var guild = await client.GetGuildAsync(guildId);

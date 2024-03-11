@@ -22,12 +22,7 @@ public class RankSystemPlugin : IPlugin
     public string Description => "Simple Discord RankSystem.";
     public string? PluginDirectory { get; set; }
 
-    private static MySqlConnectionHelper? _mySqlConnectionHelper;
-    
-    public static MySqlConnectionHelper? GetMySqlConnectionHelper()
-    {
-        return _mySqlConnectionHelper;
-    }
+    public static MySqlConnectionHelper MySqlConnectionHelper { get; private set; } = null!;
     
 
     public void OnLoad()
@@ -53,13 +48,15 @@ public class RankSystemPlugin : IPlugin
             
         };
 
-        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
+        MySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
         
         try
         {
-            var connectionString = _mySqlConnectionHelper.GetMySqlConnectionString();
+            var connectionString = MySqlConnectionHelper.GetMySqlConnectionString();
             var connection = new MySqlConnection(connectionString);
-            _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
+            connection.Open();
+            
+            MySqlConnectionHelper.InitializeTables(tableStrings,connection);
             connection.Close();
         }
         catch (Exception)

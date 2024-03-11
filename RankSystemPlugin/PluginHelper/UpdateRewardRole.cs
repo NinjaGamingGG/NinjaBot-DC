@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using DSharpPlus;
+using MySqlConnector;
 using RankSystem;
 using RankSystem.Models;
 using Serilog;
@@ -10,17 +11,35 @@ public static class UpdateRewardRole
 {
     public static async Task ForUserAsync(DiscordClient client, ulong  guildId, ulong userId)
     {
-        var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+        List<RankSystemRewardRoleModel> rewardRolesAsList;
+        var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        int userPointsForGuild;
+        RankSystemConfigurationModel? rankSystemConfiguration;
         
-        var userPointsForGuild = await sqlConnection.QueryFirstOrDefaultAsync<int>("SELECT Points FROM RankSystemUserPointsIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = guildId, UserId = userId});
+        try
+        {
+            await using var sqlConnection = new MySqlConnection(connectionString);
+            await sqlConnection.OpenAsync();
+        
+            userPointsForGuild = await sqlConnection.QueryFirstOrDefaultAsync<int>("SELECT Points FROM RankSystemUserPointsIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = guildId, UserId = userId});
 
-        var rankSystemConfiguration = await sqlConnection.QueryFirstOrDefaultAsync<RankSystemConfigurationModel>("SELECT * FROM RankSystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+            rankSystemConfiguration = await sqlConnection.QueryFirstOrDefaultAsync<RankSystemConfigurationModel>("SELECT * FROM RankSystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
         
-        var rewardRoles = await sqlConnection.QueryAsync<RankSystemRewardRoleModel>("SELECT * FROM RankSystemRewardRolesIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+            var rewardRoles = await sqlConnection.QueryAsync<RankSystemRewardRoleModel>("SELECT * FROM RankSystemRewardRolesIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+            
+            rewardRolesAsList = rewardRoles.ToList();
+            await sqlConnection.CloseAsync();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex,"Error while Querying MysqlData for RankSystem User Reward Role for {UserId} on {GuildId}", userId,guildId);
+            return;
+        }
+
         
-        var rewardRolesAsList = rewardRoles.ToList();
+
         
-        if (!rewardRolesAsList.Any())
+        if (rewardRolesAsList.Count == 0)
         {
             Log.Error("No reward role found for Guild {GuildId}!", guildId);
             return;

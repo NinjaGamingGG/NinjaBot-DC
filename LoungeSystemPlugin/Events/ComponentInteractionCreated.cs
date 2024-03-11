@@ -6,6 +6,7 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.Net.Models;
 using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records;
+using MySqlConnector;
 using NinjaBot_DC;
 using Serilog;
 
@@ -94,25 +95,51 @@ public static class ComponentInteractionCreated
         if (!existsAsOwner)
             return;
 
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();;
-
-        var loungeDbRecordEnumerable = await mySqlConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId= @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
-
-        var loungeDbRecordList = loungeDbRecordEnumerable.ToList();
-
-        if (!loungeDbRecordList.Any())
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        List<LoungeDbRecord> loungeDbRecordList;
+        try
         {
-            Log.Error("Unable to Load the LoungeDbRecord from Lounge Index on Guild {GuildId} at Channel {ChannelId}", eventArgs.Guild.Id, eventArgs.Channel.Id);
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+
+            var loungeDbRecordEnumerable = await mySqlConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId= @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
+            await mySqlConnection.CloseAsync();
+            loungeDbRecordList = loungeDbRecordEnumerable.ToList();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex, "Error while querying lounge-db-records in the LoungeSystem Delete Button Logic. Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
+                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id);
+            return;
+        }
+
+
+        if (loungeDbRecordList.Count == 0)
+        {
+            Log.Error("No LoungeDbRecord from Lounge Index on Guild {GuildId} at Channel {ChannelId}", eventArgs.Guild.Id, eventArgs.Channel.Id);
             return;
         }
 
         var loungeChannel = eventArgs.Channel;
 
         await loungeChannel.DeleteAsync();
+        bool deleteSuccess;
+        try
+        {
+            await using var mySqlConnection =  new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
+            deleteSuccess = await mySqlConnection.DeleteAsync(loungeDbRecordList.First());
+            await mySqlConnection.CloseAsync();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex, "Unable to delete lounge database record in LoungeSystem. Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
+                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id);
+            return;
+        }
         
-        var sqlSuccess = await mySqlConnection.DeleteAsync(loungeDbRecordList.First());
-                
-        if (sqlSuccess == false)
+        if (deleteSuccess == false)
             Log.Error("Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",loungeChannel.Name, eventArgs.Channel.Id, eventArgs.Guild.Id);
 
     }
@@ -190,15 +217,30 @@ public static class ComponentInteractionCreated
         if (!existsAsOwner)
             return;
 
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();;
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        bool[] isPublicAsArray;
+        try
+        {
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
 
-        var isPublic =
-            await mySqlConnection.QueryAsync<bool>(
-                "SELECT isPublic FROM LoungeIndex where GuildId=@GuildId and ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId= eventArgs.Channel.Id});
+            var isPublic =
+                await mySqlConnection.QueryAsync<bool>(
+                    "SELECT isPublic FROM LoungeIndex where GuildId=@GuildId and ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId= eventArgs.Channel.Id});
 
-        var isPublicAsArray = isPublic as bool[] ?? isPublic.ToArray();
-        if (isPublicAsArray.Any() == false)
-            Log.Error("[Ranksystem] Unable to load isPublic variable for Channel {ChannelId} on Guild {GuildId}", eventArgs.Channel.Id, eventArgs.Guild.Id);
+            await mySqlConnection.CloseAsync();
+
+            isPublicAsArray = isPublic as bool[] ?? isPublic.ToArray();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex,"Unable to retrieve lounge privacy state in LoungeSystem Lock Button Logic. Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
+                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id);
+            throw;
+        }
+       
+        if (isPublicAsArray.Length != 0 == false)
+            Log.Error("[RankSystem] Unable to load isPublic variable for Channel {ChannelId} on Guild {GuildId}", eventArgs.Channel.Id, eventArgs.Guild.Id);
 
         if (isPublicAsArray[0] == false)
         {
@@ -211,12 +253,25 @@ public static class ComponentInteractionCreated
 
     private static async Task LockLoungeLogic(ComponentInteractionCreateEventArgs eventArgs)
     {
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-        var requiredRolesQueryResult =
-           await mySqlConnection.QueryAsync<ulong>(
-                "SELECT RoleId FROM RequiredRoleIndex WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        List<ulong> requiresRolesList;
+        try
+        {
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
+            var requiredRolesQueryResult =
+                await mySqlConnection.QueryAsync<ulong>(
+                    "SELECT RoleId FROM RequiredRoleIndex WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
 
-        var requiresRolesList = requiredRolesQueryResult.ToList();
+            requiresRolesList = requiredRolesQueryResult.ToList();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex, "Error while retrieving required roles from database on Lounge System Lock Logic. Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
+                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id);
+            return;
+        }
 
         var lounge = eventArgs.Channel;
 
@@ -232,7 +287,7 @@ public static class ComponentInteractionCreated
             overwriteBuilderList.Add(await new DiscordOverwriteBuilder(overwriteMember).FromAsync(overwrite));
         }
         
-        if (!requiresRolesList.Any())
+        if (requiresRolesList.Count == 0)
             requiresRolesList.Add(eventArgs.Guild.EveryoneRole.Id);
 
         overwriteBuilderList.AddRange(requiresRolesList.Select(requiredRole => eventArgs.Guild.GetRole(requiredRole))
@@ -244,20 +299,27 @@ public static class ComponentInteractionCreated
         
         await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
 
-        await mySqlConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = FALSE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+        try
+        {
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
+            await mySqlConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = FALSE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+
+            await mySqlConnection.CloseAsync();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex, "Unable to change Lounge privacy state in Database on LoungeSystem Lock Logic Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
+                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id);
+        }
+
     }
     
     
     
     private static async Task UnLockLoungeLogic(ComponentInteractionCreateEventArgs eventArgs)
     {
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-        var requiredRolesQueryResult =
-            await mySqlConnection.QueryAsync<ulong>(
-                "SELECT RoleId FROM RequiredRoleIndex WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
-
-        var requiresRolesList = requiredRolesQueryResult.ToList();
-
         var lounge = eventArgs.Channel;
 
         var existingOverwrites = lounge.PermissionOverwrites;
@@ -272,7 +334,29 @@ public static class ComponentInteractionCreated
             overwriteBuilderList.Add(await new DiscordOverwriteBuilder(overwriteMember).FromAsync(overwrite));
         }
         
-        if (!requiresRolesList.Any())
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        
+        List<ulong> requiresRolesList;
+        try
+        {
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
+            var requiredRolesQueryResult =
+                await mySqlConnection.QueryAsync<ulong>(
+                    "SELECT RoleId FROM RequiredRoleIndex WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+
+            await mySqlConnection.CloseAsync();
+            requiresRolesList = requiredRolesQueryResult.ToList();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex,"Unable to retrieve required roles for Lounge on Lounge System Unlock Button Logic. Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
+                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id);
+            return;
+        }
+        
+        if (requiresRolesList.Count == 0)
             requiresRolesList.Add(eventArgs.Guild.EveryoneRole.Id);
         else
             overwriteBuilderList.Add(new DiscordOverwriteBuilder(eventArgs.Guild.EveryoneRole)
@@ -291,7 +375,20 @@ public static class ComponentInteractionCreated
 
         await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
 
-        await mySqlConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = TRUE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+        try
+        {
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            
+            await mySqlConnection.ExecuteAsync("UPDATE LoungeIndex SET isPublic = TRUE WHERE GuildId=@GuildId AND ChannelId=@ChannelId", new {GuildId = eventArgs.Guild.Id,ChannelId = eventArgs.Channel.Id});
+            await mySqlConnection.CloseAsync();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex,"Unable to update privacy status of lounge in Lounge System unlock button logic. Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
+                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id); 
+        }
+
 
     }
 
@@ -371,11 +468,26 @@ public static class ComponentInteractionCreated
         
         var followupMessage = await eventArgs.Interaction.CreateFollowupMessageAsync(builder);
 
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        int updateCount;
+        try
+        {
+            var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
         
-        var updateCount = await mySqlConnection.ExecuteAsync(
-            "UPDATE LoungeIndex SET OwnerId = @OwnerId WHERE ChannelId = @ChannelId",
-            new {OwnerId = eventArgs.User.Id, ChannelId = eventArgs.Channel.Id});
+            updateCount = await mySqlConnection.ExecuteAsync(
+                "UPDATE LoungeIndex SET OwnerId = @OwnerId WHERE ChannelId = @ChannelId",
+                new {OwnerId = eventArgs.User.Id, ChannelId = eventArgs.Channel.Id});
+
+            await mySqlConnection.CloseAsync();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex, "Unable to Change owner of Lounge in LoungeSystem Plugin. Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
+                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id); 
+            return;
+        }
+
         
         if (updateCount == 0)
         {

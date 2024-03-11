@@ -2,6 +2,7 @@
 
 using NinjaBot_DC;
 using CommonPluginHelpers;
+using MySqlConnector;
 using PluginBase;
 using RankSystem.CommandModules;
 using RankSystem.Events;
@@ -21,12 +22,7 @@ public class RankSystemPlugin : IPlugin
     public string Description => "Simple Discord RankSystem.";
     public string? PluginDirectory { get; set; }
 
-    private static MySqlConnectionHelper? _mySqlConnectionHelper;
-    
-    public static MySqlConnectionHelper? GetMySqlConnectionHelper()
-    {
-        return _mySqlConnectionHelper;
-    }
+    public static MySqlConnectionHelper MySqlConnectionHelper { get; private set; } = null!;
     
 
     public void OnLoad()
@@ -52,12 +48,15 @@ public class RankSystemPlugin : IPlugin
             
         };
 
-        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
+        MySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
         
         try
         {
-            var connection = _mySqlConnectionHelper.GetMySqlConnection();
-            _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
+            var connectionString = MySqlConnectionHelper.GetMySqlConnectionString();
+            var connection = new MySqlConnection(connectionString);
+            connection.Open();
+            
+            MySqlConnectionHelper.InitializeTables(tableStrings,connection);
             connection.Close();
         }
         catch (Exception)

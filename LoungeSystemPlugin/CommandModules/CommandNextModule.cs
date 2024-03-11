@@ -6,9 +6,11 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Net.Models;
 using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records;
+using MySqlConnector;
 
 namespace LoungeSystemPlugin.CommandModules;
 
+[Obsolete]
 public class CommandNextModule : BaseCommandModule
 {
     [Command("l")]
@@ -46,7 +48,9 @@ public class CommandNextModule : BaseCommandModule
             await message.RespondAsync(errorBuilder);
         }
 
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        var mySqlConnection = new MySqlConnection(connectionString);
+        await mySqlConnection.OpenAsync();
         
         var channelConfigurations = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId ", new { GuildId = context.Guild.Id});
         
@@ -67,6 +71,9 @@ public class CommandNextModule : BaseCommandModule
         var decoratorDecal = string.Empty;
 
         var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = context.Guild.Id, ChannelId = channelRecord.OriginChannel});
+
+        await mySqlConnection.CloseAsync();
+        
         var loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ?? nameReplacementRecord.ToArray();
         if (loungeMessageReplacementsAsArray.Any())
         {
@@ -78,15 +85,15 @@ public class CommandNextModule : BaseCommandModule
                         separatorPattern = replacement.ReplacementValue;
                         break;
 
-                    case"DecoratorDecal":
+                    case"Decorator_Decal":
                         decoratorDecal = replacement.ReplacementValue;
                         break;
                     
-                    case"DecoratorEmoji":
+                    case"Decorator_Emoji":
                         decoratorEmoji = replacement.ReplacementValue;
                         break;
                     
-                    case"DecoratorPrefix":
+                    case"Decorator_Prefix":
                         decoratorPrefix = replacement.ReplacementValue;
                         break;
                 }
@@ -94,13 +101,13 @@ public class CommandNextModule : BaseCommandModule
             }
         }
         
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratordecal}"))
-            separatorPattern = separatorPattern.Replace("{decoratordecal}", decoratorDecal);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Decal}"))
+            separatorPattern = separatorPattern.Replace("{Decorator_Decal}", decoratorDecal);
         
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratoremoji}"))
-            separatorPattern = separatorPattern.Replace("{decoratoremoji}", decoratorEmoji);
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{decoratorprefix}"))
-            separatorPattern = separatorPattern.Replace("{decoratorprefix}", decoratorPrefix);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Emoji}"))
+            separatorPattern = separatorPattern.Replace("{Decorator_Emoji}", decoratorEmoji);
+        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Prefix}"))
+            separatorPattern = separatorPattern.Replace("{Decorator_Prefix}", decoratorPrefix);
 
         foreach (var channelConfig in channelConfigurationList.Where(channelConfig => channelRecord.OriginChannel == channelConfig.TargetChannelId))
         {
@@ -109,31 +116,31 @@ public class CommandNextModule : BaseCommandModule
             
             //if (channelNamePattern != null && channelNamePattern.Contains("{username}"))
             //    channelNamePattern = channelNamePattern.Replace("{username}", eventArgs.User.Username);
-            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{separator}"))
-                channelNamePattern = channelNamePattern.Replace("{separator}", separatorPattern);
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{Separator}"))
+                channelNamePattern = channelNamePattern.Replace("{Separator}", separatorPattern);
         
-            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{customname}"))
-                channelNamePattern = channelNamePattern.Replace("{customname}", customNamePattern);
+            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{Custom_Name}"))
+                channelNamePattern = channelNamePattern.Replace("{Custom_Name}", customNamePattern);
             
             break;
         }
 
         var channel = context.Channel;
 
-        void NewEditModel(ChannelEditModel editModel)
-        {
-            if (channelNamePattern != null) editModel.Name = channelNamePattern;
-            editModel.Topic = "Test";
-        }
-
         await channel.ModifyAsync(NewEditModel);
-
-
+        
         await context.Message.DeleteAsync();
 
         var referenceMessage = await context.Channel.GetMessageAsync(response.Result.Id);
         await referenceMessage.DeleteAsync();
 
         await message.DeleteAsync();
+        return;
+
+        void NewEditModel(ChannelEditModel editModel)
+        {
+            if (channelNamePattern != null) editModel.Name = channelNamePattern;
+            editModel.Topic = "Test";
+        }
     }
 }

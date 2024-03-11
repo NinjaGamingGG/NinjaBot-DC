@@ -1,6 +1,7 @@
 ﻿using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using LoungeSystemPlugin.Records;
+using MySqlConnector;
 using NinjaBot_DC;
 using Serilog;
 
@@ -10,7 +11,7 @@ public static class CleanupLounge
 {
     public static async Task Execute(LoungeDbRecord loungeDbRecord)
     {
-        var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();;
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         var discordClient = Worker.GetServiceDiscordClient();       
         var loungeChannel = await discordClient.GetChannelAsync(loungeDbRecord.ChannelId);
         var guild = await discordClient.GetGuildAsync(loungeDbRecord.GuildId);
@@ -20,30 +21,27 @@ public static class CleanupLounge
 
         var channelExits  = await IsChannelInGuildAsync(discordClient, loungeDbRecord.ChannelId, loungeDbRecord.GuildId);
 
-        if (channelExits == false)
+        if (channelExits)
         {
-            var deleteSuccess = await mySqlConnection.DeleteAsync(loungeDbRecord);
-                
-            if (deleteSuccess == false)
-                Log.Error("Unable to delete the Sql Record for Lounge with the Id {LoungeId} in Guild {GuildId}",loungeDbRecord.ChannelId, loungeDbRecord.GuildId);
-            return;
+            await loungeChannel.DeleteAsync();
         }
         
+        bool deleteSuccess;
+        try
+        {
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
             
-        await loungeChannel.DeleteAsync();
-
-        var noDeleteSuccess = await IsChannelInGuildAsync(discordClient, loungeDbRecord.ChannelId, loungeDbRecord.GuildId);
-        
-        if (noDeleteSuccess)
+            deleteSuccess = await mySqlConnection.DeleteAsync(loungeDbRecord);
+            await mySqlConnection.CloseAsync();
+        }
+        catch (MySqlException ex)
         {
-            Log.Error("Unable to delete the Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}", loungeChannel.Name, loungeDbRecord.ChannelId, loungeDbRecord.GuildId);
+            Log.Error(ex, "Unable to delete Lounge Record on Initial Cleanup of LoungeSystem");
             return;
         }
-
-
-        var sqlSuccess = await mySqlConnection.DeleteAsync(loungeDbRecord);
-                
-        if (sqlSuccess == false)
+        
+        if (deleteSuccess == false)
             Log.Error("Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",loungeChannel.Name, loungeDbRecord.ChannelId, loungeDbRecord.GuildId);
     }
     

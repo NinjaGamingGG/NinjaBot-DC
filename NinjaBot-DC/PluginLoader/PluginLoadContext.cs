@@ -3,9 +3,9 @@ using System.Runtime.Loader;
 
 namespace NinjaBot_DC.PluginLoader;
 
-class PluginLoadContext : AssemblyLoadContext
+internal class PluginLoadContext : AssemblyLoadContext
 {
-    private AssemblyDependencyResolver _resolver;
+    private readonly AssemblyDependencyResolver _resolver;
 
     public PluginLoadContext(string pluginPath)
     {
@@ -15,22 +15,13 @@ class PluginLoadContext : AssemblyLoadContext
     protected override Assembly Load(AssemblyName assemblyName)
     {
         var assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
-        if (assemblyPath != null)
-        {
-            return LoadFromAssemblyPath(assemblyPath);
-        }
-
-        return null!;
+        
+        return assemblyPath != null ? LoadFromAssemblyPath(assemblyPath) : null!;
     }
 
     protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
     {
         var libraryPath = _resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
-        if (libraryPath != null)
-        {
-            return LoadUnmanagedDllFromPath(libraryPath);
-        }
-
-        return IntPtr.Zero;
+        return libraryPath != null ? LoadUnmanagedDllFromPath(libraryPath) : IntPtr.Zero;
     }
 }

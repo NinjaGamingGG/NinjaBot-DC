@@ -1,14 +1,15 @@
-﻿using DSharpPlus.CommandsNext;
-using LoungeSystemPlugin.CommandModules;
+﻿using LoungeSystemPlugin.CommandModules;
 using LoungeSystemPlugin.Events;
 using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
 using CommonPluginHelpers;
+using MySqlConnector;
 using PluginBase;
 using Serilog;
 
 namespace LoungeSystemPlugin;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public class LoungeSystemPlugin : IPlugin
 {
     public string Name => "LoungeSystem Plugin";
@@ -16,14 +17,8 @@ public class LoungeSystemPlugin : IPlugin
     public string Description => "Simple Discord LoungeSystem Plugin.";
     public string? PluginDirectory { get; set; }
 
-    private static MySqlConnectionHelper _mySqlConnectionHelper;
-    
-    public static MySqlConnectionHelper GetMySqlConnectionHelper()
-    {
-        return _mySqlConnectionHelper;
-    }
-    
-    
+    public static MySqlConnectionHelper MySqlConnectionHelper { get; private set; } = null!;
+
     public void OnLoad()
     {
         if (ReferenceEquals(PluginDirectory, null))
@@ -43,17 +38,19 @@ public class LoungeSystemPlugin : IPlugin
             "CREATE TABLE IF NOT EXISTS LoungeMessageReplacementIndex (Id INTEGER PRIMARY KEY AUTO_INCREMENT, GuildId BIGINT, ChannelId BIGINT, ReplacementHandle TEXT,ReplacementValue TEXT)"
         };
         
-        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
+        MySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
         
         try
         {
-            var connection = _mySqlConnectionHelper.GetMySqlConnection();
-            _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
+            var connectionString = MySqlConnectionHelper.GetMySqlConnectionString();
+            var connection = new MySqlConnection(connectionString);
+            connection.Open();
+            MySqlConnectionHelper.InitializeTables(tableStrings,connection);
             connection.Close();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Log.Fatal("Canceling the Startup of {PluginName} Plugin!", Name);
+            Log.Fatal(ex,"Canceling the Startup of {PluginName} Plugin!", Name);
             return;
         }
 
@@ -62,8 +59,8 @@ public class LoungeSystemPlugin : IPlugin
 
         var client = Worker.GetServiceDiscordClient();
 
-        var commandsNext = client.GetCommandsNext();
-        commandsNext.RegisterCommands<CommandNextModule>();
+        //var commandsNext = client.GetCommandsNext();
+        //commandsNext.RegisterCommands<CommandNextModule>();
         
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelEnter;
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelLeave;

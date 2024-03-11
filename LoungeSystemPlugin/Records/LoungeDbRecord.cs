@@ -6,12 +6,10 @@ namespace LoungeSystemPlugin.Records;
 public record LoungeDbRecord
 {
     [ExplicitKey]
-    public ulong ChannelId { get; set; }
-    public ulong GuildId { get; set; }
-    public ulong OwnerId { get; set; }
-    
-    public bool IsPublic { get; set; }
-    
-    public ulong OriginChannel { get; set; }
+    public ulong ChannelId { get; init; }
+    public ulong GuildId { get; init; }
+    public ulong OwnerId { get; init; }
+    public bool IsPublic { get; init; }
+    public ulong OriginChannel { get; init; }
 
 }

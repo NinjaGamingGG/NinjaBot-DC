@@ -13,8 +13,6 @@ namespace NinjaBot_DC;
 public sealed class Worker : BackgroundService
 {
     private static readonly IConfigurationRoot Configuration;
-
-    //private static readonly SQLiteConnection SqLiteConnection;
     
     private static readonly DiscordClient DiscordClient;
 
@@ -204,10 +202,6 @@ public sealed class Worker : BackgroundService
     private static Task RegisterEvents()
     {
         Log.Information("Registering Events");
-        //Lounge System Events
-        //DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelEnter;
-        //DiscordClient.VoiceStateUpdated += LoungeSystem.VoiceStateUpdated_ChanelLeave;
-        
         return Task.CompletedTask;
     }
 }

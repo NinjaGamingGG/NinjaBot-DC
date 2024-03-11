@@ -6,11 +6,14 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records;
+using MySqlConnector;
+using Serilog;
 
 namespace LoungeSystemPlugin.CommandModules;
 
 
 [SlashCommandGroup("lounge", "Lounge System Commands")]
+// ReSharper disable once ClassNeverInstantiated.Global
 public class LoungeSystemSubGroupContainer : ApplicationCommandModule
 {
     [RequirePermissions(Permissions.Administrator)]
@@ -38,12 +41,14 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
                 return;
             }
 
-            var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
 
             if (ReferenceEquals(mySqlConnection, null))
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+                Log.Error("[LoungeSystem] Unable to connect to database!");
+                return;
             }
 
             var newConfigRecord = new LoungeSystemConfigurationRecord()
@@ -69,6 +74,8 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
                 "INSERT INTO LoungeSystemConfigurationIndex (GuildId, TargetChannelId, InterfaceChannelId, LoungeNamePattern) VALUES (@GuildId, @TargetChannelId, @InterfaceChannelId, @LoungeNamePattern)",
                 newConfigRecord);
 
+            await mySqlConnection.CloseAsync();
+
             if (insertSuccess == 0)
             {
                 await context.EditResponseAsync(
@@ -86,28 +93,36 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            var deleteSuccess = 0;
 
-            if (ReferenceEquals(mySqlConnection, null))
+            try
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+                await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
+                
+                var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(*) FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId AND TargetChannelId = @TargetChannelId",
+                    new { GuildId = context.Guild.Id, TargetChannelId = channel.Id });
+
+                if (alreadyExists == 0)
+                {
+                    await context.EditResponseAsync(
+                        new DiscordWebhookBuilder().WithContent("Error. Configuration does not exists!"));
+                    return;
+                }
+
+                deleteSuccess = await mySqlConnection.ExecuteAsync(
+                    "DELETE FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId AND TargetChannelId = @TargetChannelId",
+                    new { GuildId = context.Guild.Id, TargetChannelId = channel.Id });
+
+                await mySqlConnection.CloseAsync();
             }
-
-            var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId AND TargetChannelId = @TargetChannelId",
-                new { GuildId = context.Guild.Id, TargetChannelId = channel.Id });
-
-            if (alreadyExists == 0)
+            catch (MySqlException ex)
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Configuration does not exists!"));
-                return;
+                Log.Error(ex, "Error while Executing Lounge-System Remove-Config-Command");
             }
-
-            var deleteSuccess = await mySqlConnection.ExecuteAsync(
-                "DELETE FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId AND TargetChannelId = @TargetChannelId",
-                new { GuildId = context.Guild.Id, TargetChannelId = channel.Id });
+            
 
             if (deleteSuccess == 0)
             {
@@ -125,21 +140,28 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-
-            if (ReferenceEquals(mySqlConnection, null))
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            var configurationRecordsList = new List<LoungeSystemConfigurationRecord>();
+            try
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+                await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
+
+                var configurationRecords = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>(
+                    "SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId",
+                    new { GuildId = context.Guild.Id });
+
+                await mySqlConnection.CloseAsync();
+
+                configurationRecordsList = configurationRecords.ToList();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Error while Executing Lounge-System List-Config-Command");
             }
 
-            var configurationRecords = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>(
-                "SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId",
-                new { GuildId = context.Guild.Id });
-
-            var configurationRecordsList = configurationRecords.ToList();
-
-            if (!configurationRecordsList.Any())
+            
+            if (configurationRecordsList.Count == 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("No configurations found!"));
                 return;
@@ -181,29 +203,34 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-
-            if (ReferenceEquals(mySqlConnection, null))
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            var insertSuccess = 0;
+            try
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+                await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
+                
+                var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(*) FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId",
+                    new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
+
+                if (alreadyExists != 0)
+                {
+                    await context.EditResponseAsync(
+                        new DiscordWebhookBuilder().WithContent(
+                            "Error. Role is already listed as required for this channel!"));
+                    return;
+                }
+
+                insertSuccess = await mySqlConnection.ExecuteAsync(
+                    "INSERT INTO RequiredRoleIndex (GuildId, ChannelId, RoleId) VALUES (@GuildId, @ChannelId, @RoleId)",
+                    new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
+                await mySqlConnection.CloseAsync();
             }
-
-            var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId",
-                new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
-
-            if (alreadyExists != 0)
+            catch (MySqlException ex)
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent(
-                        "Error. Role is already listed as required for this channel!"));
-                return;
+                Log.Error(ex,"Error while Executing Lounge-System Add-Required-Role-Command");
             }
-
-            var insertSuccess = await mySqlConnection.ExecuteAsync(
-                "INSERT INTO RequiredRoleIndex (GuildId, ChannelId, RoleId) VALUES (@GuildId, @ChannelId, @RoleId)",
-                new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
 
             if (insertSuccess == 0)
             {
@@ -222,29 +249,37 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             [Option("Role", "Role which is Required for this Channel")] DiscordRole role)
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            var deleteSuccess = 0;
 
-            var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-
-            if (ReferenceEquals(mySqlConnection, null))
+            try
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+                var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
+
+                var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(*) FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId",
+                    new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
+
+                if (alreadyExists == 0)
+                {
+                    await context.EditResponseAsync(
+                        new DiscordWebhookBuilder().WithContent(
+                            "Error. Role is not listed as required for this channel!"));
+                    return;
+                }
+
+                deleteSuccess = await mySqlConnection.ExecuteAsync(
+                    "DELETE FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId",
+                    new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
+
+                await mySqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Error while Executing Lounge-System Remove-Required-Role-Command");
             }
 
-            var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId",
-                new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
-
-            if (alreadyExists == 0)
-            {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Role is not listed as required for this channel!"));
-                return;
-            }
-
-            var deleteSuccess = await mySqlConnection.ExecuteAsync(
-                "DELETE FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId AND RoleId = @RoleId",
-                new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
 
             if (deleteSuccess == 0)
             {
@@ -263,21 +298,28 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-
-            if (ReferenceEquals(mySqlConnection, null))
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            var requiredRoleRecordsList = new List<RequiredRoleRecord>();
+                
+            try
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+                var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
+
+                var requiredRoleRecords = await mySqlConnection.QueryAsync<RequiredRoleRecord>(
+                    "SELECT * FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId",
+                    new { GuildId = context.Guild.Id, ChannelId = channel.Id });
+
+                await mySqlConnection.CloseAsync();
+
+                requiredRoleRecordsList = requiredRoleRecords.ToList();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Error while Executing Lounge-System List-Required-Role-Command");
             }
 
-            var requiredRoleRecords = await mySqlConnection.QueryAsync<RequiredRoleRecord>(
-                "SELECT * FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId",
-                new { GuildId = context.Guild.Id, ChannelId = channel.Id });
-
-            var requiredRoleRecordsList = requiredRoleRecords.ToList();
-
-            if (!requiredRoleRecordsList.Any())
+            if (requiredRoleRecordsList.Count == 0)
             {
                 await context.EditResponseAsync(
                     new DiscordWebhookBuilder().WithContent("No required roles found for this channel!"));
@@ -310,34 +352,35 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
             [Option("Replacement-Handle", "Handle of the Replacement you want so set")]
             ReplacementHandleEnum replacementHandle,
             [Option("Replacement-Value", "Value of the decorator you want to add")]
-            string replacementValue,
-            [Option("Allow-Replace", "If this Record already Exists do you want to Update it?")]
-            bool allowUpdate = true)
+            string replacementValue)
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            int insertSuccess;
 
-            if (ReferenceEquals(mySqlConnection, null))
+            try
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
-            }
+                var replacementHandleString = DatabaseHandleHelper.GetChannelHandleFromEnum(replacementHandle);
+                await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
+                
+                var existingRecordsCount = await mySqlConnection.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(*) FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId= @ChannelId AND ReplacementHandle= @ReplacementHandle",
+                    new
+                    {
+                        GuildId = context.Guild.Id, ChannelId = targetChannel.Id,
+                        ReplacementHandle = replacementHandleString
+                    });
 
-            var replacementHandleString = DatabaseHandleHelper.GetChannelHandleFromEnum(replacementHandle);
-
-            var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId= @ChannelId AND ReplacementHandle= @ReplacementHandle",
-                new
+                if (existingRecordsCount != 0)
                 {
-                    GuildId = context.Guild.Id, ChannelId = targetChannel.Id,
-                    ReplacementHandle = replacementHandleString
-                });
+                    await context.EditResponseAsync(
+                        new DiscordWebhookBuilder().WithContent("Record for the name replacement already exists!"));
+                    return;
+                }
 
-            if (alreadyExists == 0)
-            {
-                // var insertSuccess = await sqLiteConnection.ExecuteAsync("INSERT INTO RequiredRoleIndex (GuildId, ChannelId, RoleId) VALUES (@GuildId, @ChannelId, @RoleId)", new { GuildId = context.Guild.Id, ChannelId = channel.Id, RoleId = role.Id });
-                var insertSuccess = await mySqlConnection.ExecuteAsync(
+                insertSuccess = await mySqlConnection.ExecuteAsync(
                     "INSERT INTO LoungeMessageReplacementIndex (GuildId, ChannelId, ReplacementHandle, ReplacementValue) VALUES (@GuildId, @ChannelId, @ReplacementHandle, @ReplacementValue)",
                     new
                     {
@@ -345,27 +388,82 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
                         ReplacementHandle = replacementHandleString, ReplacementValue = replacementValue
                     });
 
-                if (insertSuccess == 0)
-                {
-                    await context.EditResponseAsync(
-                        new DiscordWebhookBuilder().WithContent(
-                            "Error. Unable to insert new name replacement record!"));
-                    return;
-                }
+                await mySqlConnection.CloseAsync();
 
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Error while Executing Lounge-System Add-name-replacement-Command");
+                throw;
+            }
+            
+            if (insertSuccess == 0)
+            {
                 await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Successfully created new name replacement record!"));
+                    new DiscordWebhookBuilder().WithContent(
+                        "Error. Unable to insert new name replacement record!"));
                 return;
             }
 
-            var updateSuccess = await mySqlConnection.ExecuteAsync(
-                "UPDATE LoungeMessageReplacementIndex SET ReplacementValue=@ReplacementValue WHERE GuildId=@GuildId AND ChannelId= @ChannelId AND ReplacementHandle= @ReplacementHandle",
-                new
-                {
-                    GuildId = context.Guild.Id, ChannelId = targetChannel.Id,
-                    ReplacementHandle = replacementHandleString, ReplacementValue = @replacementValue
-                });
+            await context.EditResponseAsync(
+                new DiscordWebhookBuilder().WithContent("Successfully created new name replacement record!"));
+            
 
+            await context.EditResponseAsync(
+                new DiscordWebhookBuilder().WithContent("Successfully updated the name replacement record!"));
+        }
+        
+                [SlashCommand("update-name-replacement", "Updates an Existing name Replacement for lounge (eg {prefix})")]
+        public async Task UpdateNameReplacement(InteractionContext context,
+            [Option("Target-Channel", "Targeted Channel Configuration")]
+            DiscordChannel targetChannel,
+            [Option("Replacement-Handle", "Handle of the Replacement you want so update")]
+            ReplacementHandleEnum replacementHandle,
+            [Option("Replacement-Value", "Value of the decorator you want to update")]
+            string replacementValue)
+        {
+            await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            int updateSuccess;
+            try
+            {
+                await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
+                
+                var replacementHandleString = DatabaseHandleHelper.GetChannelHandleFromEnum(replacementHandle);
+
+                var existingRecordsCount = await mySqlConnection.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(*) FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId= @ChannelId AND ReplacementHandle= @ReplacementHandle",
+                    new
+                    {
+                        GuildId = context.Guild.Id, ChannelId = targetChannel.Id,
+                        ReplacementHandle = replacementHandleString
+                    });
+
+                if (existingRecordsCount == 0)
+                {
+                    await context.EditResponseAsync(
+                        new DiscordWebhookBuilder().WithContent("Error. Unable to find the specified record!"));
+                    return;
+                }
+
+                updateSuccess = await mySqlConnection.ExecuteAsync(
+                    "UPDATE LoungeMessageReplacementIndex SET ReplacementValue=@ReplacementValue WHERE GuildId=@GuildId AND ChannelId= @ChannelId AND ReplacementHandle= @ReplacementHandle",
+                    new
+                    {
+                        GuildId = context.Guild.Id, ChannelId = targetChannel.Id,
+                        ReplacementHandle = replacementHandleString, ReplacementValue = @replacementValue
+                    });
+
+                await mySqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex, "Error while Executing Lounge-System Update-Required-name-replacement-Command");
+                return;
+            }
+            
             if (updateSuccess == 0)
             {
                 await context.EditResponseAsync(
@@ -386,23 +484,33 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-
-            if (ReferenceEquals(mySqlConnection, null))
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            
+            int deleteSuccess;
+            try
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+                await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
+                
+                var replacementHandleString = DatabaseHandleHelper.GetChannelHandleFromEnum(replacementHandle);
+
+                deleteSuccess = await mySqlConnection.ExecuteAsync(
+                    "DELETE FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId= @ChannelId and ReplacementHandle=@ReplacementHandle",
+                    new
+                    {
+                        GuildId = context.Guild.Id, ChannelId = targetChannel.Id,
+                        ReplacementHandle = replacementHandleString
+                    });
+
+                await mySqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex, "Error while Executing Lounge-System remove-Required-name-replacement-Command");
+                return;
             }
 
-            var replacementHandleString = DatabaseHandleHelper.GetChannelHandleFromEnum(replacementHandle);
-
-            var deleteSuccess = await mySqlConnection.ExecuteAsync(
-                "DELETE FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId= @ChannelId and ReplacementHandle=@ReplacementHandle",
-                new
-                {
-                    GuildId = context.Guild.Id, ChannelId = targetChannel.Id,
-                    ReplacementHandle = replacementHandleString
-                });
+            
             
             if (deleteSuccess == 0)
             {
@@ -422,21 +530,33 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var mySqlConnection = LoungeSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+            var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            List<LoungeMessageReplacement> loungeMessageReplacementsList;
 
-            if (ReferenceEquals(mySqlConnection, null))
+            try
             {
-                await context.EditResponseAsync(
-                    new DiscordWebhookBuilder().WithContent("Error. Unable to connect with Database!"));
+                await using var mySqlConnection = new MySqlConnection(connectionString);
+                await mySqlConnection.OpenAsync();
+                
+                var loungeMessageReplacements = await mySqlConnection.QueryAsync<LoungeMessageReplacement>(
+                    "SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId",
+                    new { GuildId = context.Guild.Id, ChannelId = channel.Id });
+
+                await mySqlConnection.CloseAsync();
+            
+                loungeMessageReplacementsList = loungeMessageReplacements.ToList();
             }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex, "Error while Executing Lounge-System list-Required-name-replacement-Command");
+                return;
+            }
+            
 
-            var requiredRoleRecords = await mySqlConnection.QueryAsync<LoungeMessageReplacement>(
-                "SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId",
-                new { GuildId = context.Guild.Id, ChannelId = channel.Id });
 
-            var requiredRoleRecordsList = requiredRoleRecords.ToList();
+            
 
-            if (!requiredRoleRecordsList.Any())
+            if (loungeMessageReplacementsList.Count == 0)
             {
                 await context.EditResponseAsync(
                     new DiscordWebhookBuilder().WithContent("No records found for this channel!"));
@@ -447,12 +567,12 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
 
             requiredRoleStringBuilder.AppendLine("Found the following name replacements:\n");
 
-            foreach (var requiredRoleRecord in requiredRoleRecordsList)
+            foreach (var requiredRoleRecord in loungeMessageReplacementsList)
             {
                 requiredRoleStringBuilder.AppendLine($"Replacement Handle= {requiredRoleRecord.ReplacementHandle}");
                 requiredRoleStringBuilder.AppendLine($"Replacement Handle= {requiredRoleRecord.ReplacementValue}");
 
-                if (requiredRoleRecordsList.Last() != requiredRoleRecord)
+                if (loungeMessageReplacementsList.Last() != requiredRoleRecord)
                     requiredRoleStringBuilder.AppendLine("-------------------------------------------------");
 
             }
@@ -469,8 +589,10 @@ public class LoungeSystemSubGroupContainer : ApplicationCommandModule
 
 }
 
-    
-    public enum ReplacementHandleEnum
+/// <summary>
+/// Represents the handle options for lounge system configurations.
+/// </summary>
+public enum ReplacementHandleEnum
     {
      [ChoiceName("Custom Name")] 
      CustomName,

@@ -6,6 +6,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.Net.Models;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
+using MySqlConnector;
 using Serilog;
 using StatsPlugin.Models;
 using StatsPlugin.PluginHelper;
@@ -26,22 +27,6 @@ public class SlashCommandModule : ApplicationCommandModule
         var guild = ctx.Guild;
         var newCategory = await guild.CreateChannelCategoryAsync(@"· • ●  📊 Stats 📊 ● • ·");
 
-        void NewEditModel(ChannelEditModel editModel)
-        {
-            editModel.PermissionOverwrites = new List<DiscordOverwriteBuilder>()
-            {
-                new DiscordOverwriteBuilder(guild.EveryoneRole)
-                    .Allow(Permissions.AccessChannels)
-                    .Deny(Permissions.SendMessages)
-                    .Deny(Permissions.UseVoice)
-                    .Deny(Permissions.SendMessages)
-                    .Deny(Permissions.CreatePublicThreads)
-                    .Deny(Permissions.CreatePrivateThreads)
-                    .Deny(Permissions.ManageThreads)
-                    .For(guild.EveryoneRole)
-            };
-        }
-        
         await newCategory.ModifyAsync(NewEditModel);
         
         var memberCountChannel = await guild.CreateChannelAsync("╔😎～Mitglieder:", ChannelType.Voice, newCategory);
@@ -57,15 +42,43 @@ public class SlashCommandModule : ApplicationCommandModule
             TeamCountChannelId = teamCountChannel.Id
         };
 
-        var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
-        
-        var hasUpdated = await sqlite.UpdateAsync(statsChannelModel);
-        
-        if (hasUpdated == false)
-            await sqlite.InsertAsync(statsChannelModel);
 
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+        var connectionString = StatsPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        try
+        {
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            var hasUpdated = await mySqlConnection.UpdateAsync(statsChannelModel);
+            await mySqlConnection.CloseAsync();
+            
+            if (hasUpdated == false)
+                await mySqlConnection.InsertAsync(statsChannelModel);
+            await mySqlConnection.CloseAsync();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex,"Error while inserting new Stats Plugin Guild config into database");
+            return;
+        }
         
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+        return;
+
+        void NewEditModel(ChannelEditModel editModel)
+        {
+            editModel.PermissionOverwrites = new List<DiscordOverwriteBuilder>()
+            {
+                new DiscordOverwriteBuilder(guild.EveryoneRole)
+                    .Allow(Permissions.AccessChannels)
+                    .Deny(Permissions.SendMessages)
+                    .Deny(Permissions.UseVoice)
+                    .Deny(Permissions.SendMessages)
+                    .Deny(Permissions.CreatePublicThreads)
+                    .Deny(Permissions.CreatePrivateThreads)
+                    .Deny(Permissions.ManageThreads)
+                    .For(guild.EveryoneRole)
+            };
+        }
     }
 
     [SlashCommand("Link-Channel", "Links Stats Channel")]
@@ -75,67 +88,101 @@ public class SlashCommandModule : ApplicationCommandModule
 ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        int hasUpdated;
 
-            var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
+        var connectionString = StatsPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+
+        try
+        {
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
 
             var channelHandleInDb = DatabaseHandleHelper.GetChannelHandleFromEnum(channelHandle);
-        
+
             if (channelHandleInDb == "NoChannel")
             {
                 await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Invalid Channel Handle!"));
                 return;
             }
-        
-            var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelsIndex SET " + channelHandleInDb + " = @ChannelId WHERE GuildId = @GuildId", new { ChannelId = channel.Id, GuildId = ctx.Guild.Id });
 
-            if (hasUpdated == 0)
-            {
-                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Unable to Update Channel in Database!"));
-                return;
-            }
+            hasUpdated = await mySqlConnection.ExecuteAsync(
+                "UPDATE StatsChannelsIndex SET " + channelHandleInDb + " = @ChannelId WHERE GuildId = @GuildId",
+                new { ChannelId = channel.Id, GuildId = ctx.Guild.Id });
 
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
-        } 
-        
-        [SlashCommand("Link-Role", "Links Stats Role")]
-        [SuppressMessage("Performance", "CA1822:Member als statisch markieren")] 
-        public async Task LinkRoleCommand(InteractionContext ctx, [Option("role", "Target role to Link")] DiscordRole role, 
-            [Option("Role-Handle", "Handle of the Role you want to Link")]
-            RoleHandleEnum roleHandle = RoleHandleEnum.NoRole)
+            await mySqlConnection.CloseAsync();
+        }
+        catch (MySqlException ex)
         {
-            await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+            Log.Error(ex, "Error while Updating Database Channel Handle Link for Stats Plugin");
+            return;
+        }
 
-            var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
+        if (hasUpdated == 0)
+        {
+            await ctx.EditResponseAsync(
+                new DiscordWebhookBuilder().WithContent("Error, Unable to Update Channel in Database!"));
+            return;
+        }
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+    }
+
+    [SlashCommand("Link-Role", "Links Stats Role")]
+    [SuppressMessage("Performance", "CA1822:Member als statisch markieren")]
+    public async Task LinkRoleCommand(InteractionContext ctx, [Option("role", "Target role to Link")] DiscordRole role,
+        [Option("Role-Handle", "Handle of the Role you want to Link")]
+        RoleHandleEnum roleHandle = RoleHandleEnum.NoRole)
+    {
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+
+        int hasInserted;
+        var connectionString = StatsPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+
+        
+        try
+        {
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
 
             var roleHandleInDb = DatabaseHandleHelper.GetRoleHandleFromEnum(roleHandle);
-        
+
             if (roleHandleInDb == "NoRole")
             {
                 await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Invalid Role Handle!"));
                 return;
             }
-        
-            var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelLinkedRolesIndex SET RoleHandle = @RoleHandle WHERE RoleId = @RoleId AND GuildId = @GuildId", new { RoleId = role.Id, GuildId = ctx.Guild.Id , RoleHandle = roleHandleInDb});
-        
+
+            var hasUpdated = await mySqlConnection.ExecuteAsync(
+                "UPDATE StatsChannelLinkedRolesIndex SET RoleHandle = @RoleHandle WHERE RoleId = @RoleId AND GuildId = @GuildId",
+                new { RoleId = role.Id, GuildId = ctx.Guild.Id, RoleHandle = roleHandleInDb });
+
             if (hasUpdated == 1)
             {
                 await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
                 return;
             }
 
-            var hasInserted = await sqlite.ExecuteAsync("INSERT INTO StatsChannelLinkedRolesIndex (GuildId, RoleId, RoleHandle) VALUES (@GuildId, @RoleId, @RoleHandle)", new { RoleId = role.Id, GuildId = ctx.Guild.Id , RoleHandle = roleHandleInDb});
-
-            if (hasInserted == 0)
-            {
-                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Unable to Update Role in Database!"));
-                return;
-            }
-            
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
-
-            
-
+            hasInserted = await mySqlConnection.ExecuteAsync(
+                "INSERT INTO StatsChannelLinkedRolesIndex (GuildId, RoleId, RoleHandle) VALUES (@GuildId, @RoleId, @RoleHandle)",
+                new { RoleId = role.Id, GuildId = ctx.Guild.Id, RoleHandle = roleHandleInDb });
+            await mySqlConnection.CloseAsync();
         }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex, "Error while Linking Role for Stats Plugin");
+            return;
+        }
+
+
+        if (hasInserted == 0)
+        {
+            await ctx.EditResponseAsync(
+                new DiscordWebhookBuilder().WithContent("Error, Unable to Update Role in Database!"));
+            return;
+        }
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
+    }
 
     [SlashCommand("rename","Set a custom name for the specified channel")]
     [SuppressMessage("Performance", "CA1822:Member als statisch markieren")]
@@ -150,24 +197,33 @@ ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error, Invalid Channel Handle!"));
             return;
         }
-        
-        var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
-        
-        var hasUpdated = await sqlite.ExecuteAsync("UPDATE StatsChannelCustomNamesIndex SET CustomName = @Name WHERE GuildId = @GuildId AND ChannelHandle = @ChannelHandle", new { Name = name, GuildId = ctx.Guild.Id, ChannelHandle = channelHandleInDb });
-        
-        if (hasUpdated == 0)
+
+        var connectionString = StatsPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+
+        try
         {
-            var renameRecord = new StatsChannelCustomNamesIndex()
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+        
+            var hasUpdated = await mySqlConnection.ExecuteAsync("UPDATE StatsChannelCustomNamesIndex SET CustomName = @Name WHERE GuildId = @GuildId AND ChannelHandle = @ChannelHandle", new { Name = name, GuildId = ctx.Guild.Id, ChannelHandle = channelHandleInDb });
+        
+            if (hasUpdated == 0)
             {
-                GuildId = ctx.Guild.Id,
-                ChannelHandle = channelHandleInDb,
-                CustomName = name
-            };
+                var renameRecord = new StatsChannelCustomNamesIndex()
+                {
+                    GuildId = ctx.Guild.Id,
+                    ChannelHandle = channelHandleInDb,
+                    CustomName = name
+                };
 
-            await sqlite.InsertAsync(renameRecord);
+                await mySqlConnection.InsertAsync(renameRecord);
+                await mySqlConnection.CloseAsync();
+            }
         }
-
-
+        catch (MySqlException ex)
+        {
+            Log.Error(ex,"Error while Renaming Custom name for StatsPlugin Command");
+            return;
+        }
         
         await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Done!"));
     }
@@ -179,30 +235,43 @@ ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
 
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
         
-        var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
-        
-        var entry = await sqlite.GetAsync<StatsChannelIndexModel>(ctx.Guild.Id);
-        
-        if (entry == null)
+        var connectionString = StatsPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        int hasUpdated;
+        try
         {
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("This functionality is already disabled!"));
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+            var entry = await mySqlConnection.GetAsync<StatsChannelIndexModel>(ctx.Guild.Id);
+        
+            if (entry == null)
+            {
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().WithContent("This functionality is already disabled!"));
+                return;
+            }
+
+            try
+            {
+                await ctx.Guild.GetChannel(entry.MemberCountChannelId).DeleteAsync();
+                await ctx.Guild.GetChannel(entry.BotCountChannelId).DeleteAsync();
+                await ctx.Guild.GetChannel(entry.TeamCountChannelId).DeleteAsync();
+                await ctx.Guild.GetChannel(entry.CategoryChannelId).DeleteAsync();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e,"Unable to delete Stat-Channels on Guild:{GuildId}",ctx.Guild.Id);
+            }
+
+        
+            hasUpdated = await mySqlConnection.ExecuteAsync("DELETE FROM StatsChannelsIndex WHERE GuildId = @GuildId", new { GuildId = ctx.Guild.Id });
+            await mySqlConnection.OpenAsync();
+
+        }
+        catch (MySqlException ex)
+        {
+            Log.Fatal(ex,"Unable to delete Stats Plugin Config from Database");
             return;
         }
 
-        try
-        {
-            await ctx.Guild.GetChannel(entry.MemberCountChannelId).DeleteAsync();
-            await ctx.Guild.GetChannel(entry.BotCountChannelId).DeleteAsync();
-            await ctx.Guild.GetChannel(entry.TeamCountChannelId).DeleteAsync();
-            await ctx.Guild.GetChannel(entry.CategoryChannelId).DeleteAsync();
-        }
-        catch (Exception e)
-        {
-            Log.Fatal(e,"Unable to delete Stat-Channels on Guild:{GuildId}",ctx.Guild.Id);
-        }
-
-        
-        var hasUpdated = await sqlite.ExecuteAsync("DELETE FROM StatsChannelsIndex WHERE GuildId = @GuildId", new { GuildId = ctx.Guild.Id });
         
         if (hasUpdated == 0)
         {
@@ -220,19 +289,33 @@ ChannelHandleEnum channelHandle = ChannelHandleEnum.NoChannel  )
 
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
         
-        var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
-
+        var connectionString = StatsPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         int hasUpdated;
+
+        try
+        {
+            await using var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
         
-        if (roleHandle == RoleHandleEnum.NoRole)
-        {
-            hasUpdated = await sqlite.ExecuteAsync("DELETE FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleId = @RoleId", new { GuildId = ctx.Guild.Id, RoleId = role.Id });
+            if (roleHandle == RoleHandleEnum.NoRole)
+            {
+                hasUpdated = await mySqlConnection.ExecuteAsync("DELETE FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleId = @RoleId", new { GuildId = ctx.Guild.Id, RoleId = role.Id });
+            }
+            else
+            {
+                var roleHandleInDb = DatabaseHandleHelper.GetRoleHandleFromEnum(roleHandle);
+                hasUpdated = await mySqlConnection.ExecuteAsync("DELETE FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleId = @RoleId AND RoleHandle = @RoleHandle", new { GuildId = ctx.Guild.Id, RoleId = role.Id, RoleHandle = roleHandleInDb });
+            }
+            
+            await mySqlConnection.CloseAsync();
+
         }
-        else
+        catch (MySqlException ex)
         {
-            var roleHandleInDb = DatabaseHandleHelper.GetRoleHandleFromEnum(roleHandle);
-            hasUpdated = await sqlite.ExecuteAsync("DELETE FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleId = @RoleId AND RoleHandle = @RoleHandle", new { GuildId = ctx.Guild.Id, RoleId = role.Id, RoleHandle = roleHandleInDb });
+            Log.Error(ex,"Error while unlinking role in Stats Plugin Config");
+            throw;
         }
+        
 
         if (hasUpdated == 0)
         {

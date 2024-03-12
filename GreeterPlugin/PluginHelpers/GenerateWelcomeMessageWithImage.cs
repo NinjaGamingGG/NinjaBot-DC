@@ -14,7 +14,7 @@ public static class GenerateWelcomeMessageWithImage
         GuildSettingsRecord guildSettingsRecord, UserJoinedDataRecord userJoinedDataRecord, DiscordChannel welcomeChannel,
         MySqlConnection connection, DiscordGuild guild)
     {
-        var welcomeCard = Path.Combine(GreeterPlugin.StaticPluginDirectory, "temp", $"welcomeCard{member.Id}.png");
+        var welcomeCard = Path.Combine(GreeterPlugin.GetStaticPluginDirectory(), "temp", $"welcomeCard{member.Id}.png");
 
         await GenerateWelcomeImage.Generator(member.Username,
             member.AvatarUrl,

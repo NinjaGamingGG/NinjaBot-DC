@@ -13,13 +13,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Dapper" Version="2.1.28" />
+      <PackageReference Include="Dapper" Version="2.1.35" />
       <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
       <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="copy &quot;$(TargetDir)$(AssemblyName)$(TargetExt)&quot; &quot;$(ProjectDir)..\NinjaBot-DC\plugins&quot;  " />
+      <Exec Command="copy &quot;$(TargetDir)$(AssemblyName)$(TargetExt)&quot; &quot;$(ProjectDir)..\NinjaBot-DC\plugins&quot;  &#xA;copy &quot;$(ProjectDir)\plugin.xml&quot; &quot;$(ProjectDir)..\NinjaBot-DC\plugins\$(ProjectName)\&quot;" />
     </Target>
 
 </Project>

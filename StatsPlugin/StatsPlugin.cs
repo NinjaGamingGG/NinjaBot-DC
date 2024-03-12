@@ -5,16 +5,9 @@ using StatsPlugin.PluginHelper;
 
 namespace StatsPlugin;
 
-public class StatsPlugin : IPlugin
+public class StatsPlugin : DefaultPlugin
 {
-
-    public string Name => "Stats Plugin";
-    public string EnvironmentVariablePrefix => "stats-plugin";
-    public string Description => "Simple Discord Server Stats Plugin.";
-    public string? PluginDirectory { get; set; }
-
-
-    public void OnLoad()
+    public override void OnLoad()
     {
         var client = Worker.GetServiceDiscordClient();
 
@@ -23,11 +16,7 @@ public class StatsPlugin : IPlugin
             OnUnload();
             return;
         }
-
-
-        //Nullable warning suppressed, check for null is not needed, because it is checked above.
-        Directory.CreateDirectory(PluginDirectory!); 
-        SqLiteConnectionHelper.OpenSqLiteConnection(PluginDirectory!);
+        SqLiteConnectionHelper.OpenSqLiteConnection(PluginDirectory);
 
         SqLiteConnectionHelper.InitializeSqliteTables();
 
@@ -43,7 +32,7 @@ public class StatsPlugin : IPlugin
         Log.Information("[Stats Plugin] Plugin Loaded!");
     }
 
-    public void OnUnload()
+    public override void OnUnload()
     {
         SqLiteConnectionHelper.CloseSqLiteConnection();
         Log.Information("[Stats Plugin] Plugin Unloaded!");

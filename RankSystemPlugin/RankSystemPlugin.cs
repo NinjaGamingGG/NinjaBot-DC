@@ -14,13 +14,8 @@ namespace RankSystem;
 
 [SuppressMessage("ReSharper", "IdentifierTypo")]
 // ReSharper disable once ClassNeverInstantiated.Global
-public class RankSystemPlugin : IPlugin
+public class RankSystemPlugin : DefaultPlugin
 {
-    public string Name => "RankSystem Plugin";
-    public string EnvironmentVariablePrefix => "rank_system-plugin";
-    public string Description => "Simple Discord RankSystem.";
-    public string? PluginDirectory { get; set; }
-
     private static MySqlConnectionHelper? _mySqlConnectionHelper;
     
     public static MySqlConnectionHelper? GetMySqlConnectionHelper()
@@ -29,7 +24,7 @@ public class RankSystemPlugin : IPlugin
     }
     
 
-    public void OnLoad()
+    public override void OnLoad()
     {
         var client = Worker.GetServiceDiscordClient();
 
@@ -80,7 +75,7 @@ public class RankSystemPlugin : IPlugin
     
     public enum ERankSystemReason {ChannelVoiceActivity, ChannelMessageAdded, MessageReactionAdded}
 
-    public void OnUnload()
+    public override void OnUnload()
     {
         Log.Information("[{Name}] Plugin Unloaded", Name);
     }

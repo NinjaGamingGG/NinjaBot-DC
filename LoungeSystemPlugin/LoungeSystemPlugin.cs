@@ -9,12 +9,8 @@ using Serilog;
 
 namespace LoungeSystemPlugin;
 
-public class LoungeSystemPlugin : IPlugin
+public class LoungeSystemPlugin : DefaultPlugin
 {
-    public string Name => "LoungeSystem Plugin";
-    public string EnvironmentVariablePrefix => "lounge_system-plugin";
-    public string Description => "Simple Discord LoungeSystem Plugin.";
-    public string? PluginDirectory { get; set; }
 
     private static MySqlConnectionHelper _mySqlConnectionHelper;
     
@@ -24,7 +20,7 @@ public class LoungeSystemPlugin : IPlugin
     }
     
     
-    public void OnLoad()
+    public override void OnLoad()
     {
         if (ReferenceEquals(PluginDirectory, null))
         {
@@ -69,9 +65,6 @@ public class LoungeSystemPlugin : IPlugin
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelLeave;
 
         client.ComponentInteractionCreated += ComponentInteractionCreated.InterfaceButtonPressed;
-        
-        
-        Directory.CreateDirectory(PluginDirectory!);
 
         Task.Run(async () =>
         {
@@ -81,7 +74,7 @@ public class LoungeSystemPlugin : IPlugin
         Log.Information("[{Name}] Plugin Loaded", Name);
     }
 
-    public void OnUnload()
+    public override void OnUnload()
     {
         var client = Worker.GetServiceDiscordClient();
         

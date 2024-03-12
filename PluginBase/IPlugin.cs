@@ -5,8 +5,7 @@ public interface IPlugin
     string Name { get; }
     string EnvironmentVariablePrefix { get;}
     string Description { get; }
-    
-    public string? PluginDirectory { set; get; }
+    string PluginDirectory { get; }
     
     void OnLoad();
     void OnUnload();

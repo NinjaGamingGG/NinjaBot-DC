@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="copy &quot;$(TargetDir)$(AssemblyName)$(TargetExt)&quot; &quot;$(ProjectDir)..\NinjaBot-DC\plugins&quot;  &#xA;mkdir &quot;$(ProjectDir)..\NinjaBot-DC\plugins\$(ProjectName)&quot;&#xA;copy &quot;$(ProjectDir)\config.json&quot; &quot;$(ProjectDir)..\NinjaBot-DC\plugins\$(ProjectName)\&quot;" />
+      <Exec Command="copy &quot;$(TargetDir)$(AssemblyName)$(TargetExt)&quot; &quot;$(ProjectDir)..\NinjaBot-DC\plugins&quot;  &#xA;mkdir &quot;$(ProjectDir)..\NinjaBot-DC\plugins\$(ProjectName)&quot;&#xA;copy &quot;$(ProjectDir)\config.json&quot; &quot;$(ProjectDir)..\NinjaBot-DC\plugins\$(ProjectName)\&quot;&#xA;copy &quot;$(ProjectDir)\plugin.xml&quot; &quot;$(ProjectDir)..\NinjaBot-DC\plugins\$(ProjectName)\&quot;" />
     </Target>
 
 </Project>

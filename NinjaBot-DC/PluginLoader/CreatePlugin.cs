@@ -11,23 +11,19 @@ public static class CreatePlugin
 
         foreach (var type in assembly.GetTypes())
         {
-            if (typeof(IPlugin).IsAssignableFrom(type))
-            {
-                var result = Activator.CreateInstance(type) as IPlugin;
-                if (result != null)
-                {
-                    count++;
-                    yield return result;
-                }
-            }
+            if (!typeof(IPlugin).IsAssignableFrom(type)) continue;
+
+            if (Activator.CreateInstance(type) is not IPlugin result) continue;
+            
+            count++;
+            yield return result;
         }
 
-        if (count == 0)
-        {
-            string availableTypes = string.Join(",", assembly.GetTypes().Select(t => t.FullName));
-            throw new ApplicationException(
-                $"Can't find any type which implements ICommand in {assembly} from {assembly.Location}.\n" +
-                $"Available types: {availableTypes}");
-        }
+        if (count != 0) yield break;
+        
+        var availableTypes = string.Join(",", assembly.GetTypes().Select(t => t.FullName));
+        throw new ApplicationException(
+            $"Can't find any type which implements ICommand in {assembly} from {assembly.Location}.\n" +
+            $"Available types: {availableTypes}");
     }
 }

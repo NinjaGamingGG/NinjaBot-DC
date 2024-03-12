@@ -8,25 +8,25 @@ public static class ThrowAwayFollowupMessage
     {
         var followupMessage = await interaction.CreateFollowupMessageAsync(builder);
         
-        await Task.Delay(TimeSpan.FromSeconds(waitDelay));
-
-        try
-        {
-            await followupMessage.DeleteAsync();
-        }
-        catch (DSharpPlus.Exceptions.NotFoundException)
-        {
-            //Do nothing
-        }
+        HandleAndDelete(followupMessage, waitDelay);
     }
 
-    public static async Task HandleAsync(DiscordMessage followupMessage, int waitDelay = 15)
+    public static void Handle(DiscordMessage followupMessage, int waitDelay = 15)
     {
-        await Task.Delay(TimeSpan.FromSeconds(waitDelay));
+        HandleAndDelete(followupMessage, waitDelay);
+    }
+
+    private static void HandleAndDelete(DiscordMessage message, int waitDelay)
+    {
+        var waitTask = Task.Delay(TimeSpan.FromSeconds(waitDelay));
+
+        while (!waitTask.IsCompleted)
+        {
+        }
         
         try
         {
-            await followupMessage.DeleteAsync();
+            message.DeleteAsync();
         }
         catch (DSharpPlus.Exceptions.NotFoundException)
         {

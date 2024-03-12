@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using DSharpPlus;
 using MySqlConnector;
-using RankSystem;
 using RankSystem.Models;
 using Serilog;
 

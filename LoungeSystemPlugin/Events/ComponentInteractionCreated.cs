@@ -497,7 +497,7 @@ public static class ComponentInteractionCreated
         
         await followupMessage.ModifyAsync("Lounge claimed successfully, you are now the owner");
 
-        await ThrowAwayFollowupMessage.HandleAsync(followupMessage);
+        ThrowAwayFollowupMessage.Handle(followupMessage);
 
     }
 

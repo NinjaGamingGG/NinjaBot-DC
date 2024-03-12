@@ -63,7 +63,7 @@ public class LoungeSystemPlugin : DefaultPlugin
         client.ComponentInteractionCreated += ComponentInteractionCreated.InterfaceButtonPressed;
         
         
-        Directory.CreateDirectory(PluginDirectory!);
+        Directory.CreateDirectory(PluginDirectory);
 
         Task.Run(async () =>
         {

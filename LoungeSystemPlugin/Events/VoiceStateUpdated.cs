@@ -232,6 +232,9 @@ public static class VoiceStateUpdated
         
         foreach (var loungeDbModel in loungeList)
         {
+            if (ReferenceEquals(eventArgs.Before.Channel,null))
+                return;
+            
             if (loungeDbModel.ChannelId != eventArgs.Before.Channel.Id)
                 continue;
             

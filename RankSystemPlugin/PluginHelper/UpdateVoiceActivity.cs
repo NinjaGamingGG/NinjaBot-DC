@@ -39,6 +39,10 @@ public static class UpdateVoiceActivity
                 continue;
 
             var userChannel = member.VoiceState.Channel;
+            
+            if (ReferenceEquals(userChannel,null))
+                continue;
+            
             if (Blacklist.CheckUserChannel(userChannel))
                 continue;
                 

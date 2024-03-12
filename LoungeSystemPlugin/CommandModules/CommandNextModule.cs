@@ -112,10 +112,7 @@ public class CommandNextModule : BaseCommandModule
         foreach (var channelConfig in channelConfigurationList.Where(channelConfig => channelRecord.OriginChannel == channelConfig.TargetChannelId))
         {
             channelNamePattern = channelConfig.LoungeNamePattern;
-
             
-            //if (channelNamePattern != null && channelNamePattern.Contains("{username}"))
-            //    channelNamePattern = channelNamePattern.Replace("{username}", eventArgs.User.Username);
             if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{Separator}"))
                 channelNamePattern = channelNamePattern.Replace("{Separator}", separatorPattern);
         

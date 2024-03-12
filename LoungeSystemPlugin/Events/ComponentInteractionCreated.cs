@@ -68,12 +68,13 @@ public static class ComponentInteractionCreated
                 await LoungeResizeButton.DropdownInteracted(eventArgs, member);
                 break;
             
-            case "lounge_trust_dropdown":
-                await LoungeTrustUserButton.DropdownInteracted(eventArgs, member);
-                break;
-            
             case "lounge_un-trust_dropdown":
                 await LoungeUnTrustUserButton.DropdownInteracted(eventArgs, member);
+                break;
+            
+            case "lounge_trust_user-selection":
+                await LoungeTrustUserButton.UserSelected(eventArgs, member);
+
                 break;
             
             default:

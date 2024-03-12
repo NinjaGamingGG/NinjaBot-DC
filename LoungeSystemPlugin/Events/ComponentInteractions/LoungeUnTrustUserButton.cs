@@ -83,5 +83,6 @@ public static class LoungeUnTrustUserButton
         }
         
         await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
+        await eventArgs.Interaction.DeleteOriginalResponseAsync();
     }
 }

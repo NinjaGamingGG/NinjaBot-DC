@@ -12,10 +12,8 @@ public static class CreatePlugin
         foreach (var type in assembly.GetTypes())
         {
             if (!typeof(IPlugin).IsAssignableFrom(type)) continue;
-            
-            var result = Activator.CreateInstance(type) as IPlugin;
-            
-            if (result == null) continue;
+
+            if (Activator.CreateInstance(type) is not IPlugin result) continue;
             count++;
             yield return result;
         }

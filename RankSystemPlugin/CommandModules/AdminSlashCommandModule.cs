@@ -87,7 +87,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 await using var sqlConnection = new MySqlConnection(connectionString);
                 await sqlConnection.OpenAsync();
                 
-                insertSuccess = await sqlConnection.InsertAsync(blackListedRole);
+                insertSuccess = await sqlConnection.ExecuteAsync("INSERT INTO RankSystemBlacklistedRolesIndex (GuildId, RoleId) VALUES (@GuildId, @RoleId)", blackListedRole);
                 await sqlConnection.CloseAsync();
             }
             catch (MySqlException ex)

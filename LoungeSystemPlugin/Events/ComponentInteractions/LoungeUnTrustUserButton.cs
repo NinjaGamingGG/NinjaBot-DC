@@ -9,6 +9,8 @@ public static class LoungeUnTrustUserButton
 {
     internal static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
+        await eventArgs.Interaction.DeferAsync();
+
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
 
         if (existsAsOwner == false)
@@ -43,6 +45,8 @@ public static class LoungeUnTrustUserButton
     
     internal static async Task DropdownInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
+        await eventArgs.Interaction.DeferAsync();
+
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
 
         if (existsAsOwner == false)

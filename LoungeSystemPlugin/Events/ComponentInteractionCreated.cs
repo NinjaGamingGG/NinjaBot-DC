@@ -9,10 +9,12 @@ public static class ComponentInteractionCreated
 {
     public static async Task InterfaceButtonPressed(DiscordClient sender, ComponentInteractionCreateEventArgs eventArgs)
     {
-        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        
         if (ReferenceEquals(eventArgs.User, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
             return;
+        }
+
 
         var member = await eventArgs.Guild.GetMemberAsync(eventArgs.User.Id);
         

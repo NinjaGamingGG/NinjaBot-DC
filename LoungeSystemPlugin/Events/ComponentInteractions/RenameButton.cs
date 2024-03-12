@@ -1,6 +1,10 @@
-﻿using DSharpPlus.Entities;
+﻿using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Interactivity.Extensions;
 using LoungeSystemPlugin.PluginHelper;
+using NinjaBot_DC;
+using Serilog;
 
 namespace LoungeSystemPlugin.Events.ComponentInteractions;
 
@@ -12,9 +16,12 @@ public static class RenameButton
         
         if (existsAsOwner == false)
             return;
+
+        var modal = new DiscordInteractionResponseBuilder();
         
-        var builder = new DiscordFollowupMessageBuilder().WithContent("Please use *!l rename* to rename your channel");
-        
-        await ThrowAwayFollowupMessage.HandleAsync(builder, eventArgs.Interaction);
+        modal.WithTitle("Rename your Lounge").WithCustomId("lounge_rename_modal").
+            AddComponents(new TextInputComponent("New Lounge Name", "lounge_new_name", required: true, min_length: 4, max_length: 12));
+
+        await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.Modal, modal);
     }
 }

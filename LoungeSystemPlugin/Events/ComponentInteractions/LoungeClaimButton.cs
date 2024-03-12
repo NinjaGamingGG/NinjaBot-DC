@@ -11,6 +11,8 @@ public static class LoungeClaimButton
 {
     internal static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
+        await eventArgs.Interaction.DeferAsync();
+
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
         
         //Only non owners can claim

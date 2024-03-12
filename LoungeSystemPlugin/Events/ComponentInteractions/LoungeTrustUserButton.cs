@@ -10,6 +10,8 @@ public static class LoungeTrustUserButton
 {
     internal static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
+        await eventArgs.Interaction.DeferAsync();
+
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
 
         if (existsAsOwner == false)
@@ -18,6 +20,8 @@ public static class LoungeTrustUserButton
         var optionsList = new List<DiscordSelectComponentOption>();
         
         var client = Worker.GetServiceDiscordClient();
+        
+        
         
         foreach (var guildMember in eventArgs.Guild.Members.Values)
         {
@@ -52,6 +56,8 @@ public static class LoungeTrustUserButton
     
     internal static async Task DropdownInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
+        await eventArgs.Interaction.DeferAsync();
+
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
 
         if (existsAsOwner == false)

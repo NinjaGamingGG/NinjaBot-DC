@@ -9,6 +9,8 @@ public static class LoungeKickButton
 {
     internal static async Task DropdownInteraction(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
+        await eventArgs.Interaction.DeferAsync();
+
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
         
         //Owner cant be kicked
@@ -32,6 +34,8 @@ public static class LoungeKickButton
 
     internal static async Task ButtonInteraction(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
+        await eventArgs.Interaction.DeferAsync();
+
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
         
         //Only non owners can kick

@@ -10,16 +10,19 @@ public static class LoungeResizeButton
 {
     internal static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
+        await eventArgs.Interaction.DeferAsync();
+
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
         
         if (existsAsOwner == false)
             return;
         
         const int maxChannelSize = 25;
+        const int minChannelSize = 2;
         
         var optionsList = new List<DiscordSelectComponentOption>();
         
-        for (var i = 1; i < maxChannelSize; i++)
+        for (var i = minChannelSize; i < maxChannelSize; i++)
         {
             if (i == 4)
             {
@@ -40,6 +43,8 @@ public static class LoungeResizeButton
 
     internal static async Task DropdownInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
     {
+        await eventArgs.Interaction.DeferAsync();
+
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
 
         if (existsAsOwner == false)

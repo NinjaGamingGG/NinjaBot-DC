@@ -3,6 +3,8 @@ using LoungeSystemPlugin.Events;
 using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
 using CommonPluginHelpers;
+using DSharpPlus;
+using DSharpPlus.EventArgs;
 using MySqlConnector;
 using PluginBase;
 using Serilog;
@@ -60,6 +62,7 @@ public class LoungeSystemPlugin : DefaultPlugin
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelEnter;
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelLeave;
 
+        client.ModalSubmitted += ModalSubmitted.OnModalSubmitted;
         client.ComponentInteractionCreated += ComponentInteractionCreated.InterfaceButtonPressed;
         
         
@@ -72,6 +75,7 @@ public class LoungeSystemPlugin : DefaultPlugin
 
         Log.Information("[{Name}] Plugin Loaded", Name);
     }
+
 
     public override void OnUnload()
     {

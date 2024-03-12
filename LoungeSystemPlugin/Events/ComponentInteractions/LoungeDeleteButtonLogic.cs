@@ -13,6 +13,8 @@ public static class LoungeDeleteButtonLogic
 {
     public static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
     {
+        await eventArgs.Interaction.DeferAsync();
+
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
         
         //Only non owners can delete

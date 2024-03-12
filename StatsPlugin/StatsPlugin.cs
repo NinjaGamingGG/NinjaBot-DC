@@ -8,18 +8,12 @@ using ConfigHelper = CommonPluginHelpers.ConfigHelper;
 
 namespace StatsPlugin;
 
-public class StatsPlugin : IPlugin
+public class StatsPlugin : DefaultPlugin
 {
-
-    public string Name => "Stats Plugin";
-    public string EnvironmentVariablePrefix => "stats-plugin";
-    public string Description => "Simple Discord Server Stats Plugin.";
-    public string? PluginDirectory { get; set; }
-    
     public static MySqlConnectionHelper MySqlConnectionHelper { get; private set; } = null!;
 
 
-    public void OnLoad()
+    public override void OnLoad()
     {
         if (ReferenceEquals(PluginDirectory, null))
         {
@@ -32,7 +26,7 @@ public class StatsPlugin : IPlugin
 
 
         //Nullable warning suppressed, check for null is not needed, because it is checked above.
-        Directory.CreateDirectory(PluginDirectory!); 
+        Directory.CreateDirectory(PluginDirectory); 
 
         var tableStrings = new[]
         {
@@ -66,7 +60,7 @@ public class StatsPlugin : IPlugin
         Log.Information("[Stats Plugin] Plugin Loaded!");
     }
 
-    public void OnUnload()
+    public override void OnUnload()
     {
         Log.Information("[Stats Plugin] Plugin Unloaded!");
     }

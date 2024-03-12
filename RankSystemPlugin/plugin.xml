@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PluginInfo>
+  <PluginName>RankSystem Plugin</PluginName>
+  <EnvironmentVariablePrefix>rank_system-plugin</EnvironmentVariablePrefix>
+  <Description>Simple Discord RankSystem</Description>
+  <PluginVersion>0.1</PluginVersion>
+</PluginInfo>

@@ -9,18 +9,14 @@ using Serilog;
 
 namespace GreeterPlugin;
 
-public class GreeterPlugin : IPlugin
+public class GreeterPlugin : DefaultPlugin
 {
-    public string Name => "GreeterPlugin";
-    public string EnvironmentVariablePrefix => "greeter-plugin";
-    public string Description => "Greets new users with an welcome image";
-    public string? PluginDirectory { get; set; }
     public static string StaticPluginDirectory = string.Empty;
 
     public static MySqlConnectionHelper MySqlConnectionHelper { get; private set; } = null!;
 
     
-    public void OnLoad()
+    public override void OnLoad()
     {
         var client = Worker.GetServiceDiscordClient();
         
@@ -68,7 +64,7 @@ public class GreeterPlugin : IPlugin
         Log.Debug("[Greeter Plugin] Init Finished");
     }
 
-    public void OnUnload()
+    public override void OnUnload()
     {
 
     }

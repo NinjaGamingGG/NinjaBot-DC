@@ -14,7 +14,6 @@ public static class CreatePlugin
             if (!typeof(IPlugin).IsAssignableFrom(type)) continue;
 
             if (Activator.CreateInstance(type) is not IPlugin result) continue;
-            
             count++;
             yield return result;
         }

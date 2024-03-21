@@ -2,6 +2,7 @@
 using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using DSharpPlus.Net.Models;
+using MySqlConnector;
 using Serilog;
 using StatsPlugin.Models;
 
@@ -10,108 +11,157 @@ namespace StatsPlugin.PluginHelper;
 public static class RefreshServerStats
 {
     private static readonly PeriodicTimer RefreshTimer = new(TimeSpan.FromMinutes(10));
-    
-    public static async Task Execute(DiscordClient discordClient)
-    {
-        var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
 
-        do
+   public static async Task Execute(DiscordClient discordClient)
+   {
+       
+   var connectionString = StatsPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+   do
+   {
+
+       Log.Debug("[Server Stats] Refreshing Server Stats");
+
+       List<StatsChannelIndexModel> serverStatsModelList;
+       try
+       {
+           await using var mysqlConnection = new MySqlConnection(connectionString);
+           await mysqlConnection.OpenAsync();
+           var serverStatsModels = await mysqlConnection.GetAllAsync<StatsChannelIndexModel>();
+           serverStatsModelList = serverStatsModels.ToList();
+           await mysqlConnection.CloseAsync();
+       }
+       catch (MySqlException ex)
+       {
+           Log.Error(ex,"Unable to load Guild Settings from Database for Stats Plugin");
+           continue;
+       }
+
+
+       foreach (var serverStatsModel in serverStatsModelList)
+       {
+           var guild = await discordClient.GetGuildAsync(serverStatsModel.GuildId);
+
+           var botCount = 0;
+           var teamCount = 0;
+
+           var teamHandle = DatabaseHandleHelper.GetRoleHandleFromEnum(SlashCommandModule.RoleHandleEnum.TeamRole);
+           var botHandle = DatabaseHandleHelper.GetRoleHandleFromEnum(SlashCommandModule.RoleHandleEnum.BotRole);
+
+           ulong[] teamRoleIdsAsList;
+           ulong[] botRoleIdsAsList;
+           try
+           {
+               await using var mysqlConnection = new MySqlConnection(connectionString);
+               await mysqlConnection.OpenAsync();
+
+               var teamRoles = await mysqlConnection.QueryAsync<StatsChannelLinkedRoleIndex>(
+                   "SELECT * FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleHandle = @RoleHandle",
+                   new { serverStatsModel.GuildId, RoleHandle = teamHandle });
+               var botRoles = await mysqlConnection.QueryAsync<StatsChannelLinkedRoleIndex>(
+                   "SELECT * FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleHandle = @RoleHandle",
+                   new { serverStatsModel.GuildId, RoleHandle = botHandle });
+
+               teamRoleIdsAsList = teamRoles.Select(role => role.RoleId).ToArray();
+               botRoleIdsAsList = botRoles.Select(role => role.RoleId).ToArray();
+
+               await mysqlConnection.CloseAsync();
+           }
+           catch (MySqlException ex)
+           {
+               Log.Error(ex,"Error while Reading Stat Channel Linked roles from Database for StatsPlugin");
+               continue;
+           }
+
+
+           var allGuildMembers = guild.GetAllMembersAsync();
+
+           await foreach (var member in allGuildMembers)
+           {
+               var roles = member.Roles;
+
+               foreach (var role in roles)
+               {
+                   if (teamRoleIdsAsList.Contains(role.Id))
+                       teamCount++;
+
+                   if (botRoleIdsAsList.Contains(role.Id))
+                       botCount++;
+
+               }
+           }
+
+           var memberCount = 0;
+           if (guild.ApproximateMemberCount.HasValue)
+               memberCount = guild.ApproximateMemberCount.Value;
+
+           var taskList = new List<Task>()
+           {
+               GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.CategoryChannel,
+                   serverStatsModel, memberCount, botCount, teamCount, guild.Id),
+               GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.MemberChannel,
+                   serverStatsModel, memberCount, botCount, teamCount, guild.Id),
+               GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.BotChannel,
+                   serverStatsModel, memberCount, botCount, teamCount, guild.Id),
+               GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.TeamChannel,
+                   serverStatsModel, memberCount, botCount, teamCount, guild.Id),
+           };
+
+           await Task.WhenAll(taskList);
+       }
+
+   } while (await RefreshTimer.WaitForNextTickAsync());
+
+   }
+
+   private static async Task GetChannelNameFromEnum(DiscordClient discordClient, SlashCommandModule.ChannelHandleEnum channelEnum, StatsChannelIndexModel serverStatsModel, int memberCount, int botCount, int teamCount, ulong guildId)
+   {
+
+        var channelHandleAsString = DatabaseHandleHelper.GetChannelHandleFromEnum(channelEnum);
+
+        List<StatsChannelCustomNamesIndex> customNameRecordList;
+        var connectionString = StatsPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        try
         {
-            Log.Debug("[Server Stats] Refreshing Server Stats");
+            await using var mysqlConnection = new MySqlConnection(connectionString);
+            await mysqlConnection.OpenAsync();
 
-            var serverStatsModels = await sqlite.GetAllAsync<StatsChannelIndexModel>();
-
-            foreach (var serverStatsModel in serverStatsModels)
-            {
-                var guild = await discordClient.GetGuildAsync(serverStatsModel.GuildId);
-                
-                var botCount = 0;
-                var teamCount = 0;
-
-                var teamHandle = DatabaseHandleHelper.GetRoleHandleFromEnum(SlashCommandModule.RoleHandleEnum.TeamRole);
-                var botHandle = DatabaseHandleHelper.GetRoleHandleFromEnum(SlashCommandModule.RoleHandleEnum.BotRole);
-
-                var teamRoles = await sqlite.QueryAsync<StatsChannelLinkedRoleIndex>(
-                    "SELECT * FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleHandle = @RoleHandle",
-                    new { serverStatsModel.GuildId, RoleHandle = teamHandle });
-                var botRoles = await sqlite.QueryAsync<StatsChannelLinkedRoleIndex>(
-                    "SELECT * FROM StatsChannelLinkedRolesIndex WHERE GuildId = @GuildId AND RoleHandle = @RoleHandle",
-                    new { serverStatsModel.GuildId, RoleHandle = botHandle });
-
-                var teamRoleIdsAsList = teamRoles.Select(role => role.RoleId).ToArray();
-                var botRoleIdsAsList = botRoles.Select(role => role.RoleId).ToArray();
-
-                var allGuildMembers = guild.GetAllMembersAsync();
-
-                await foreach (var member in allGuildMembers)
-                {
-                    var roles = member.Roles;
-
-                    foreach (var role in roles)
-                    {
-                        if (teamRoleIdsAsList.Contains(role.Id))
-                            teamCount++;
-
-                        if (botRoleIdsAsList.Contains(role.Id))
-                            botCount++;
-
-                    }
-                }
-                
-                var memberCount = 0;
-                if (guild.ApproximateMemberCount.HasValue)
-                    memberCount = guild.ApproximateMemberCount.Value;
-
-                var taskList = new List<Task>()
-                {
-                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.CategoryChannel,
-                        serverStatsModel, memberCount, botCount, teamCount, guild.Id),
-                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.MemberChannel,
-                        serverStatsModel, memberCount, botCount, teamCount, guild.Id),
-                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.BotChannel,
-                        serverStatsModel, memberCount, botCount, teamCount, guild.Id),
-                    GetChannelNameFromEnum(discordClient, SlashCommandModule.ChannelHandleEnum.TeamChannel,
-                        serverStatsModel, memberCount, botCount, teamCount, guild.Id),
-                };
-
-                await Task.WhenAll(taskList);
-            }
-
-        } while (await RefreshTimer.WaitForNextTickAsync());
-
-    }
-
-    private static async Task GetChannelNameFromEnum(DiscordClient discordClient, SlashCommandModule.ChannelHandleEnum channelEnum, StatsChannelIndexModel serverStatsModel, int memberCount, int botCount, int teamCount, ulong guildId)
-    {
-        var sqlite = SqLiteConnectionHelper.GetSqLiteConnection();
-        
-         var channelHandleAsString = DatabaseHandleHelper.GetChannelHandleFromEnum(channelEnum);
-            var customNameRecord = await sqlite.QueryAsync<StatsChannelCustomNamesIndex>(
+            var customNameRecord = await mysqlConnection.QueryAsync<StatsChannelCustomNamesIndex>(
                 "SELECT CustomName FROM StatsChannelCustomNamesIndex WHERE GuildId = @GuildId and ChannelHandle = @ChannelHandle",
                 new {serverStatsModel.GuildId, ChannelHandle = channelHandleAsString});
 
-            switch (channelEnum)
-            {
-                case SlashCommandModule.ChannelHandleEnum.MemberChannel:
-                    await HandleCustomNameRecord(discordClient, serverStatsModel, memberCount, customNameRecord, "Members {count}", serverStatsModel.MemberCountChannelId, guildId, SlashCommandModule.ChannelHandleEnum.MemberChannel);
-                    break;
+            customNameRecordList = customNameRecord.ToList();
+            await mysqlConnection.CloseAsync();
 
-                case SlashCommandModule.ChannelHandleEnum.BotChannel:
-                    await HandleCustomNameRecord(discordClient, serverStatsModel, botCount, customNameRecord, "Bots {count}", serverStatsModel.BotCountChannelId, guildId, SlashCommandModule.ChannelHandleEnum.BotChannel);
-                    break;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
 
-                case SlashCommandModule.ChannelHandleEnum.TeamChannel:
-                    await HandleCustomNameRecord(discordClient, serverStatsModel, teamCount, customNameRecord, "Team {count}", serverStatsModel.TeamCountChannelId, guildId, SlashCommandModule.ChannelHandleEnum.TeamChannel);
-                    break;
 
-                case SlashCommandModule.ChannelHandleEnum.CategoryChannel:
-                    await HandleCustomNameRecord(discordClient, serverStatsModel, 0, customNameRecord, "-Stats-", serverStatsModel.CategoryChannelId, guildId, SlashCommandModule.ChannelHandleEnum.CategoryChannel);
-                    break;
-                
-                case SlashCommandModule.ChannelHandleEnum.NoChannel:
-                default:
-                    return;
-            }
+        switch (channelEnum)
+        {
+            case SlashCommandModule.ChannelHandleEnum.MemberChannel:
+                await HandleCustomNameRecord(discordClient, serverStatsModel, memberCount, customNameRecordList, "Members {count}", serverStatsModel.MemberCountChannelId, guildId, SlashCommandModule.ChannelHandleEnum.MemberChannel);
+                break;
+
+            case SlashCommandModule.ChannelHandleEnum.BotChannel:
+                await HandleCustomNameRecord(discordClient, serverStatsModel, botCount, customNameRecordList, "Bots {count}", serverStatsModel.BotCountChannelId, guildId, SlashCommandModule.ChannelHandleEnum.BotChannel);
+                break;
+
+            case SlashCommandModule.ChannelHandleEnum.TeamChannel:
+                await HandleCustomNameRecord(discordClient, serverStatsModel, teamCount, customNameRecordList, "Team {count}", serverStatsModel.TeamCountChannelId, guildId, SlashCommandModule.ChannelHandleEnum.TeamChannel);
+                break;
+
+            case SlashCommandModule.ChannelHandleEnum.CategoryChannel:
+                await HandleCustomNameRecord(discordClient, serverStatsModel, 0, customNameRecordList, "-Stats-", serverStatsModel.CategoryChannelId, guildId, SlashCommandModule.ChannelHandleEnum.CategoryChannel);
+                break;
+
+            case SlashCommandModule.ChannelHandleEnum.NoChannel:
+            default:
+                return;
+        }
         
     }
 

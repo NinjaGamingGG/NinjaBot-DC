@@ -11,8 +11,7 @@ namespace GreeterPlugin.PluginHelpers;
 public static class GenerateWelcomeMessageWithImage
 {
     public static async Task Generate(DiscordClient client, DiscordMember member,
-        GuildSettingsRecord guildSettingsRecord, UserJoinedDataRecord userJoinedDataRecord, DiscordChannel welcomeChannel,
-        MySqlConnection connection, DiscordGuild guild)
+        GuildSettingsRecord guildSettingsRecord, UserJoinedDataRecord userJoinedDataRecord, DiscordChannel welcomeChannel, DiscordGuild guild)
     {
         var welcomeCard = Path.Combine(GreeterPlugin.GetStaticPluginDirectory(), "temp", $"welcomeCard{member.Id}.png");
 
@@ -41,11 +40,21 @@ public static class GenerateWelcomeMessageWithImage
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             await client.SendMessageAsync(welcomeChannel, messageBuilder);
-            
-            await connection.ExecuteAsync(
-                "UPDATE UserJoinedDataIndex SET WasGreeted = @WasGreeted WHERE GuildId = @GuildId AND UserId = @UserId",
-                new { WasGreeted = true, GuildId = guild.Id, UserId = member.Id });
-            
+
+            var connectionString = GreeterPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            try
+            {
+                var connection = new MySqlConnection(connectionString);
+                await connection.OpenAsync();
+                await connection.ExecuteAsync(
+                    "UPDATE UserJoinedDataIndex SET WasGreeted = @WasGreeted WHERE GuildId = @GuildId AND UserId = @UserId",
+                    new { WasGreeted = true, GuildId = guild.Id, UserId = member.Id });
+                await connection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex, "Database Error while Updating User Joined Data Index for {UserId} on {GuildId}", member.Id, guild.Id);
+            }
             return;
         }
         
@@ -66,8 +75,21 @@ public static class GenerateWelcomeMessageWithImage
                 welcomeCard);
         }
 
-        await connection.ExecuteAsync(
-            "UPDATE UserJoinedDataIndex SET WasGreeted = @WasGreeted WHERE GuildId = @GuildId AND UserId = @UserId",
-            new { WasGreeted = true, GuildId = guild.Id, UserId = member.Id });
+
+        
+        try
+        {
+            var connectionString = GreeterPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            var connection = new MySqlConnection(connectionString);
+            await connection.OpenAsync();
+            await connection.ExecuteAsync(
+                "UPDATE UserJoinedDataIndex SET WasGreeted = @WasGreeted WHERE GuildId = @GuildId AND UserId = @UserId",
+                new { WasGreeted = true, GuildId = guild.Id, UserId = member.Id });
+            await connection.CloseAsync();
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex, "Database Error while Updating User Joined Data Index for {UserId} on {GuildId}", member.Id, guild.Id);
+        }
     }
 }

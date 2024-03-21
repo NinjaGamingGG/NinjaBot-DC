@@ -37,9 +37,4 @@
       <ProjectReference Include="..\CommonPluginHelpers\CommonPluginHelpers.csproj" />
       <ProjectReference Include="..\PluginBase\PluginBase.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Extensions\" />
-      <Folder Include="Models\" />
-    </ItemGroup>
 </Project>

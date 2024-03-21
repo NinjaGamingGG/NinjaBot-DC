@@ -17,20 +17,20 @@ public abstract class DefaultPlugin : IPlugin
 
         if (assembly == null)
             return;
-        
+
         PluginDirectory = Path.Combine(Path.GetDirectoryName(assembly.Location)!, assembly.GetName().Name!);
-        
+
         if (!Directory.Exists(PluginDirectory))
             Directory.CreateDirectory(PluginDirectory);
 
         var serializer = new XmlSerializer(typeof(PluginInfo));
 
         PluginInfo? loadedPluginInfos;
-        
+
         try
         {
             using var reader = new StreamReader(Path.Combine(PluginDirectory, "plugin.xml"));
-        
+
             loadedPluginInfos = (PluginInfo)serializer.Deserialize(reader)!;
         }
         catch (Exception ex)
@@ -42,7 +42,7 @@ public abstract class DefaultPlugin : IPlugin
             return;
         }
 
-        
+
         Name = loadedPluginInfos.PluginName;
         EnvironmentVariablePrefix = loadedPluginInfos.EnvironmentVariablePrefix;
         Description = loadedPluginInfos.Description;

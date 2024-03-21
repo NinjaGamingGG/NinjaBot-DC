@@ -4,6 +4,8 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using GreeterPlugin.DatabaseRecords;
 using GreeterPlugin.PluginHelpers;
+using MySqlConnector;
+using Serilog;
 
 namespace GreeterPlugin.CommandsModules;
 
@@ -30,10 +32,24 @@ public class SlashCommandModule : ApplicationCommandModule
                 ProfilePictureOffsetX = offsetX,
                 ProfilePictureOffsetY = offsetY
             };
+
+            int inserted;
+            var connectionString = GreeterPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             
-            var connection = GreeterPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+            try
+            {
+                await using var connection = new MySqlConnection(connectionString);
+                await connection.OpenAsync();
             
-            var inserted = await connection.ExecuteAsync("INSERT INTO GuildSettingsIndex (GuildId, WelcomeChannelId, WelcomeMessage, WelcomeImageUrl, WelcomeImageText, ProfilePictureOffsetX, ProfilePictureOffsetY) VALUES (@GuildId, @WelcomeChannelId, @WelcomeMessage, @WelcomeImageUrl, @WelcomeImageText, @ProfilePictureOffsetX, @ProfilePictureOffsetY)", guildSettingsRecord);
+                inserted = await connection.ExecuteAsync("INSERT INTO GuildSettingsIndex (GuildId, WelcomeChannelId, WelcomeMessage, WelcomeImageUrl, WelcomeImageText, ProfilePictureOffsetX, ProfilePictureOffsetY) VALUES (@GuildId, @WelcomeChannelId, @WelcomeMessage, @WelcomeImageUrl, @WelcomeImageText, @ProfilePictureOffsetX, @ProfilePictureOffsetY)", guildSettingsRecord);
+                await connection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to Insert new Config into to Database on Guild {GuildId}", guildId);
+                throw;
+            }
+            
 
             if (inserted == 0)
             {
@@ -54,17 +70,30 @@ public class SlashCommandModule : ApplicationCommandModule
         public async Task GenerateCommand(InteractionContext context, [Option("User", "asd")] DiscordUser user)
         {
             await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent("Generating Image..."));
-            
-            var connection = GreeterPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-            
-            var guildSettingsRecord = await connection.QueryFirstOrDefaultAsync<GuildSettingsRecord>("SELECT * FROM GuildSettingsIndex WHERE GuildId = @GuildId", new {GuildId = context.Guild.Id});
-            
-            if (guildSettingsRecord == null)
+
+            GuildSettingsRecord? guildSettingsRecord;
+            UserJoinedDataRecord? userJoinedDataRecord;
+            try
             {
+                await using var connection = new MySqlConnection();
+            
+                guildSettingsRecord = await connection.QueryFirstOrDefaultAsync<GuildSettingsRecord>("SELECT * FROM GuildSettingsIndex WHERE GuildId = @GuildId", new {GuildId = context.Guild.Id});
+            
+                if (guildSettingsRecord == null)
+                {
+                    return;
+                }
+            
+                userJoinedDataRecord = await connection.QueryFirstOrDefaultAsync<UserJoinedDataRecord>("SELECT * FROM UserJoinedDataIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = context.Guild.Id, UserId = context.Member.Id});
+                await connection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex, "Error while querying guild setting or user data record from database on Greeter Plugin Debug command");
                 return;
             }
-            
-            var userJoinedDataRecord = await connection.QueryFirstOrDefaultAsync<UserJoinedDataRecord>("SELECT * FROM UserJoinedDataIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = context.Guild.Id, UserId = context.Member.Id});
+
+
         
             if (userJoinedDataRecord == null)
             {
@@ -73,7 +102,7 @@ public class SlashCommandModule : ApplicationCommandModule
             
             var welcomeChannel = context.Guild.GetChannel(guildSettingsRecord.WelcomeChannelId);
 
-            await GenerateWelcomeMessageWithImage.Generate(context.Client, context.Member, guildSettingsRecord, userJoinedDataRecord, welcomeChannel, connection, context.Guild);
+            await GenerateWelcomeMessageWithImage.Generate(context.Client, context.Member, guildSettingsRecord, userJoinedDataRecord, welcomeChannel, context.Guild);
             
             await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Operation Complete"));
         }

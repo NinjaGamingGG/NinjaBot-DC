@@ -6,9 +6,9 @@ namespace LoungeSystemPlugin.Records;
 public record LoungeSystemConfigurationRecord
 {
     [ExplicitKey]
-    public int Id { get; set; }
-    public ulong GuildId { get; set; }
-    public ulong TargetChannelId { get; set; }
-    public ulong InterfaceChannelId { get; set; }
-    public string? LoungeNamePattern { get; set; }
+    public int Id { get; init; }
+    public ulong GuildId { get; init; }
+    public ulong TargetChannelId { get; init; }
+    public ulong InterfaceChannelId { get; init; }
+    public string? LoungeNamePattern { get; init; }
 }

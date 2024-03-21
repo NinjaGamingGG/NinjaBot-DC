@@ -6,11 +6,11 @@ namespace LoungeSystemPlugin.Records;
 public record RequiredRoleRecord
 {
    [ExplicitKey]
-   int Id { get; set; }
+   public int Id { get; set; }
    
-   public ulong GuildId { get; set; }
+   public ulong GuildId { get; init; }
    
-   public ulong ChannelId { get; set; }
+   public ulong ChannelId { get; init; }
    
-   public ulong RoleId { get; set; }
+   public ulong RoleId { get; init; }
 }

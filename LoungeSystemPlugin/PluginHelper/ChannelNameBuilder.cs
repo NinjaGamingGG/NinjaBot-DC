@@ -1,62 +1,22 @@
 ﻿using Dapper;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
-using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.Net.Models;
-using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records;
 using MySqlConnector;
 
-namespace LoungeSystemPlugin.CommandModules;
+namespace LoungeSystemPlugin.PluginHelper;
 
-[Obsolete]
-public class CommandNextModule : BaseCommandModule
+public static class ChannelNameBuilder
 {
-    [Command("l")]
-    public async Task LoungeCommand(CommandContext context, string argument)
+    public static async Task<string> BuildAsync(ulong guildId, ulong channelId, string customNameContent)
     {
-        if (ReferenceEquals(context.Member, null))
-            return;
-        
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(context.Member, context.Channel, context.Guild);
-        
-        if (existsAsOwner == false)
-            return;
-        
-        switch (argument)
-        {
-            case "rename":
-                await RenameChannelCommand(context);
-                break;
-            case "resize":
-                break;
-        }
-    }
-
-    private static async Task RenameChannelCommand(CommandContext context)
-    {
-        var builder = new DiscordMessageBuilder().WithContent("Please respond with new Channel name");
-
-        var message = await context.RespondAsync(builder);
-
-        var response = await context.Message.GetNextMessageAsync();
-
-        if (response.TimedOut)
-        {
-            var errorBuilder = new DiscordMessageBuilder().WithContent("Error. Interaction Timed out");
-            await message.RespondAsync(errorBuilder);
-        }
-
         var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         var mySqlConnection = new MySqlConnection(connectionString);
         await mySqlConnection.OpenAsync();
         
-        var channelConfigurations = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId ", new { GuildId = context.Guild.Id});
+        var channelConfigurations = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId ", new { GuildId = guildId});
         
         var channelConfigurationList = channelConfigurations.ToList();
 
-        var channelRecords = await mySqlConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId", new {GuildId = context.Guild.Id, ChannelId = context.Channel.Id});
+        var channelRecords = await mySqlConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId", new {GuildId = guildId, ChannelId = channelId});
 
         var channelRecordsAsList = channelRecords.ToList();
 
@@ -64,13 +24,13 @@ public class CommandNextModule : BaseCommandModule
         
         var channelNamePattern = string.Empty;
 
-        var customNamePattern = response.Result.Content;
+        var customNamePattern = customNameContent;
         var separatorPattern = string.Empty;
         var decoratorPrefix = string.Empty;
         var decoratorEmoji = string.Empty;
         var decoratorDecal = string.Empty;
 
-        var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = context.Guild.Id, ChannelId = channelRecord.OriginChannel});
+        var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = guildId, ChannelId = channelRecord.OriginChannel});
 
         await mySqlConnection.CloseAsync();
         
@@ -122,22 +82,6 @@ public class CommandNextModule : BaseCommandModule
             break;
         }
 
-        var channel = context.Channel;
-
-        await channel.ModifyAsync(NewEditModel);
-        
-        await context.Message.DeleteAsync();
-
-        var referenceMessage = await context.Channel.GetMessageAsync(response.Result.Id);
-        await referenceMessage.DeleteAsync();
-
-        await message.DeleteAsync();
-        return;
-
-        void NewEditModel(ChannelEditModel editModel)
-        {
-            if (channelNamePattern != null) editModel.Name = channelNamePattern;
-            editModel.Topic = "Test";
-        }
+        return channelNamePattern;
     }
 }

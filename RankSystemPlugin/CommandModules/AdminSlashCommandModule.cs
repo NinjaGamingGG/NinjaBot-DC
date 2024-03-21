@@ -5,7 +5,9 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
+using MySqlConnector;
 using RankSystem.Models;
+using Serilog;
 
 
 namespace RankSystem.CommandModules;
@@ -23,9 +25,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
             [Option("channel", "Channel to Blacklist")] DiscordChannel channel, [Option("Blacklist-Parent", "Should the Parent (Category) be blacklisted too?")] bool blacklistParent = false)
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-        
+            
             var channelId = channel.Id;
 
             if (blacklistParent)
@@ -36,8 +36,26 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 GuildId = context.Guild.Id,
                 ChannelId = channelId
             };
-        
-            var insertSuccess = await sqlConnection.InsertAsync(blackListedChannel);
+            
+            
+            var sqlString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            
+            int insertSuccess;
+            try
+            {
+                await using var sqlConnection = new MySqlConnection(sqlString);
+                await sqlConnection.OpenAsync();
+
+                insertSuccess =
+                    await sqlConnection.ExecuteAsync("INSERT INTO RankSystemBlacklistedChannelsIndex (GuildId, ChannelId) VALUES (@GuildId, @ChannelId)", blackListedChannel);
+                await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on AddChannelToBlacklist Command");
+                return;
+            }
+
 
             if (insertSuccess == 0)
             {
@@ -53,16 +71,31 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
             
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+
         
             var blackListedRole = new BlacklistedRolesModel()
             {
                 GuildId = context.Guild.Id,
                 RoleId = role.Id
             };
-        
-            var insertSuccess = await sqlConnection.InsertAsync(blackListedRole);
-        
+
+            int insertSuccess;
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            
+            try
+            {
+                await using var sqlConnection = new MySqlConnection(connectionString);
+                await sqlConnection.OpenAsync();
+                
+                insertSuccess = await sqlConnection.ExecuteAsync("INSERT INTO RankSystemBlacklistedRolesIndex (GuildId, RoleId) VALUES (@GuildId, @RoleId)", blackListedRole);
+                await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on AddRoleToBlacklist Command");
+                return;
+            }
+            
             if (insertSuccess == 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to Blacklist Discord Role!"));
@@ -76,14 +109,27 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
         public async Task RemoveChannelFromBlacklist (InteractionContext context, [Option("channel", "Channel to remove from the blacklist")] DiscordChannel channel)
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-            
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
         
             var channelId = channel.Id;
-        
-            var deleteSuccess = await sqlConnection.ExecuteAsync(
-                $"DELETE FROM RankSystemBlacklistedChannelsIndex WHERE GuildId = {context.Guild.Id} AND ChannelId = {channelId}");
-        
+
+            int deleteSuccess;
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+
+            try
+            {
+                await using var sqlConnection = new MySqlConnection(connectionString);
+                await sqlConnection.OpenAsync();
+                
+                deleteSuccess = await sqlConnection.ExecuteAsync(
+                    $"DELETE FROM RankSystemBlacklistedChannelsIndex WHERE GuildId = {context.Guild.Id} AND ChannelId = {channelId}");
+                await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on RemoveChannelFromBlacklist Command");
+                return;
+            }
+            
             if (deleteSuccess == 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to remove channel from the blacklist!"));
@@ -97,11 +143,25 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
         public async Task RemoveRoleFromBlacklist (InteractionContext context, [Option("Role", "Role to remove from the blacklist")] DiscordRole role)
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-            
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+
+            int deleteSuccess;
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+
+            try
+            {
+                await using var sqlConnection = new MySqlConnection(connectionString);
+                await sqlConnection.OpenAsync();
         
-            var deleteSuccess = await sqlConnection.ExecuteAsync(
-                $"DELETE FROM RankSystemBlacklistedRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                deleteSuccess = await sqlConnection.ExecuteAsync(
+                    $"DELETE FROM RankSystemBlacklistedRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on RemoveRoleFromBlacklist Command");
+                return;
+            }
+
         
             if (deleteSuccess == 0)
             {
@@ -129,25 +189,38 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 return;
             }
 
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            int insertSuccess;
 
-            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
-
-            if (alreadyExists != 0)
+            try
             {
-                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Reward Role already Exists!"));
+                await using var sqlConnection = new MySqlConnection(connectionString);
+                await sqlConnection.OpenAsync();
+                
+                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                
+                if (alreadyExists != 0)
+                {
+                    await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Reward Role already Exists!"));
+                    return;
+                }
+            
+                var rewardRole = new RankSystemRewardRoleModel()
+                {
+                    GuildId = context.Guild.Id,
+                    RoleId = role.Id,
+                    RequiredPoints = (int)requiredPoints
+                };
+                
+                insertSuccess = await sqlConnection.InsertAsync(rewardRole);
+                await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on AddRewardRole Command");
                 return;
             }
             
-            var rewardRole = new RankSystemRewardRoleModel()
-            {
-                GuildId = context.Guild.Id,
-                RoleId = role.Id,
-                RequiredPoints = (int)requiredPoints
-            };
-        
-            var insertSuccess = await sqlConnection.InsertAsync(rewardRole);
-        
             if (insertSuccess == 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to add RewardRole!"));
@@ -168,18 +241,32 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 return;
             }
 
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-
-            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
-
-            if (alreadyExists == 0)
+            int deleteSuccess;
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            
+            try
             {
-                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Reward Role doesn't exist!"));
+                await using var sqlConnection = new MySqlConnection(connectionString);
+
+                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+
+                if (alreadyExists == 0)
+                {
+                    await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Reward Role doesn't exist!"));
+                    return;
+                }
+            
+                deleteSuccess = await sqlConnection.ExecuteAsync(
+                    $"DELETE FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+
+                await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on RemoveRewardRole Command");
                 return;
             }
             
-            var deleteSuccess = await sqlConnection.ExecuteAsync(
-                $"DELETE FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
         
             if (deleteSuccess == 0)
             {
@@ -195,12 +282,24 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-        
-            var rewardRoles = await sqlConnection.GetAllAsync<RankSystemRewardRoleModel>();
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            List<RankSystemRewardRoleModel> rewardRoleModels;
+            
+            try
+            {
+              await using var sqlConnection = new MySqlConnection(connectionString);
+              var rewardRoles = await sqlConnection.GetAllAsync<RankSystemRewardRoleModel>();
+              rewardRoleModels = rewardRoles.ToList();
 
-            var rewardRoleModels = rewardRoles.ToList();
+              await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on ListRewardRoles Command");
+                return;
+            }
 
+            
             if (rewardRoleModels.Count == 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. No Reward Roles Found!"));
@@ -231,19 +330,32 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 return;
             }
 
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+            int updateSuccess;
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
 
-            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
-
-            if (alreadyExists == 0)
+            try
             {
-                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Reward Role doesn't exist!"));
-                return;
-            }
+                await using var sqlConnection = new MySqlConnection(connectionString);
+
+                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+
+                if (alreadyExists == 0)
+                {
+                    await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Reward Role doesn't exist!"));
+                    return;
+                }
             
-            var updateSuccess = await sqlConnection.ExecuteAsync(
-                $"UPDATE RankSystemRewardRolesIndex SET RequiredPoints = {requiredPoints} WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
-        
+                updateSuccess = await sqlConnection.ExecuteAsync(
+                    $"UPDATE RankSystemRewardRolesIndex SET RequiredPoints = {requiredPoints} WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on EditRewardRole Command");
+                throw;
+            }
+
+            
             if (updateSuccess == 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to edit RewardRole!"));
@@ -274,31 +386,41 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
+            int insertSuccess;
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
             
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-        
-            var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
-
-            if (alreadyExists != 0)
+            try
             {
-                await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Reward config already exist!"));
+                await using var sqlConnection = new MySqlConnection(connectionString);
+        
+                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
+                
+                if (alreadyExists != 0)
+                {
+                    await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Reward config already exist!"));
+                    return;
+                }
+        
+                var rewardConfig = new RankSystemConfigurationModel()
+                {
+                    GuildId = context.Guild.Id,
+                    PointsPerMessage = (int)pointsPerMessage,
+                    PointsPerReaction = (int)pointsPerReaction,
+                    PointsPerVoiceActivity = (int)pointsPerVoiceMinute,
+                    LogChannelId = logChannel.Id,
+                    NotifyChannelId = notifyChannel.Id
+                };
+        
+                insertSuccess = await sqlConnection.InsertAsync(rewardConfig);
+            
+                await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on SetupRewardConfig Command");
                 return;
             }
-        
-            var rewardConfig = new RankSystemConfigurationModel()
-            {
-                GuildId = context.Guild.Id,
-                PointsPerMessage = (int)pointsPerMessage,
-                PointsPerReaction = (int)pointsPerReaction,
-                PointsPerVoiceActivity = (int)pointsPerVoiceMinute,
-                LogChannelId = logChannel.Id,
-                NotifyChannelId = notifyChannel.Id
-            };
-        
-            var insertSuccess = await sqlConnection.InsertAsync(rewardConfig);
             
-            await sqlConnection.CloseAsync();
-        
             if (insertSuccess != 0)
             {
                 await context.EditResponseAsync(new DiscordWebhookBuilder().WithContent("Error. Unable to add Reward Config!"));
@@ -323,12 +445,24 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            int updateSuccess;
+            
+            try
+            {
+                await using var sqlConnection = new MySqlConnection(connectionString);
         
-            var updateSuccess = await sqlConnection.ExecuteAsync(
-                $"UPDATE RankSystemConfigurationIndex SET PointsPerMessage = {pointsPerMessage}, PointsPerReaction = {pointsPerReaction}, PointsPerVoiceActivity = {pointsPerVoiceMinute}, LogChannelId = {logChannel.Id}, NotifyChannelId = {notifyChannel.Id} WHERE GuildId = {context.Guild.Id}");
+                updateSuccess = await sqlConnection.ExecuteAsync(
+                    $"UPDATE RankSystemConfigurationIndex SET PointsPerMessage = {pointsPerMessage}, PointsPerReaction = {pointsPerReaction}, PointsPerVoiceActivity = {pointsPerVoiceMinute}, LogChannelId = {logChannel.Id}, NotifyChannelId = {notifyChannel.Id} WHERE GuildId = {context.Guild.Id}");
 
-            await sqlConnection.CloseAsync();
+                await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on UpdateRewardConfig Command");
+                return;
+            }
+
             
             if (updateSuccess == 0)
             {
@@ -344,11 +478,25 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
-        
-            var rewardConfig = await sqlConnection.GetAllAsync<RankSystemConfigurationModel>();
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            List<RankSystemConfigurationModel> rewardConfigModels;
 
-            var rewardConfigModels = rewardConfig.ToList();
+            try
+            {
+                await using var sqlConnection = new MySqlConnection(connectionString);
+                await sqlConnection.OpenAsync();
+        
+                var rewardConfig = await sqlConnection.GetAllAsync<RankSystemConfigurationModel>();
+
+                rewardConfigModels = rewardConfig.ToList();
+                await sqlConnection.CloseAsync();
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on ListRewardConfig Command");
+                return;
+            }
+
 
             if (rewardConfigModels.Count == 0)
             {
@@ -365,7 +513,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 var logChannel = context.Guild.GetChannel(config.LogChannelId);
                 var notifyChannel = context.Guild.GetChannel(config.NotifyChannelId);
                 rewardConfigString.AppendLine($"Points Per Message: {config.PointsPerMessage}");
-                rewardConfigString.AppendLine($"Points Per Reaction: {config.PointsPerReaction}");
+                rewardConfigString.AppendLine($"Points Per Reaction: {config.PointsPerMessage}");
                 rewardConfigString.AppendLine($"Points Per Voice Activity: {config.PointsPerVoiceActivity}");
                 rewardConfigString.AppendLine($"Log Channel: {logChannel.Mention}");
                 rewardConfigString.AppendLine($"Notify Channel: {notifyChannel.Mention}");
@@ -381,11 +529,22 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
         {
             await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
+            var connectionString = RankSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+            int deleteSuccess;
             
-            var sqlConnection = RankSystemPlugin.GetMySqlConnectionHelper().GetMySqlConnection();
+            try
+            {
+                var sqlConnection = new MySqlConnection(connectionString);
         
-            var deleteSuccess = await sqlConnection.ExecuteAsync(
-                $"DELETE FROM RankSystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
+                deleteSuccess = await sqlConnection.ExecuteAsync(
+                    $"DELETE FROM RankSystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
+            }
+            catch (MySqlException ex)
+            {
+                Log.Error(ex,"Unable to connect to specified Mysql Database in RankSystemPlugin on DeleteRewardConfig Command");
+                return;
+            }
+            
         
             if (deleteSuccess == 0)
             {

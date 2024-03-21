@@ -3,6 +3,7 @@ using GreeterPlugin.Events;
 using GreeterPlugin.PluginHelpers;
 using NinjaBot_DC;
 using CommonPluginHelpers;
+using MySqlConnector;
 using PluginBase;
 using Serilog;
 
@@ -10,19 +11,10 @@ namespace GreeterPlugin;
 
 public class GreeterPlugin : DefaultPlugin
 {
-    private static string _staticPluginDirectory = string.Empty;
+    public static string StaticPluginDirectory = string.Empty;
 
-    private static MySqlConnectionHelper? _mySqlConnectionHelper;
-    
-    public static MySqlConnectionHelper? GetMySqlConnectionHelper()
-    {
-        return _mySqlConnectionHelper;
-    }
+    public static MySqlConnectionHelper MySqlConnectionHelper { get; private set; } = null!;
 
-    public static string GetStaticPluginDirectory()
-    {
-        return _staticPluginDirectory;
-    }
     
     public override void OnLoad()
     {
@@ -35,9 +27,8 @@ public class GreeterPlugin : DefaultPlugin
             OnUnload();
             return;
         }
-        _staticPluginDirectory = PluginDirectory;
-        
-        Directory.CreateDirectory(Path.Combine(_staticPluginDirectory, "temp"));
+        StaticPluginDirectory = PluginDirectory;
+        Directory.CreateDirectory(Path.Combine(PluginDirectory, "temp"));
 
         var config = ConfigHelper.Load(PluginDirectory, EnvironmentVariablePrefix);
 
@@ -47,12 +38,15 @@ public class GreeterPlugin : DefaultPlugin
             "CREATE TABLE IF NOT EXISTS UserJoinedDataIndex (EntryId int NOT NULL AUTO_INCREMENT, GuildId BIGINT, UserId BIGINT, UserIndex INT, WasGreeted BOOL, PRIMARY KEY (EntryId))"
         };
 
-        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
+        MySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
 
         try
         {
-            var connection = _mySqlConnectionHelper.GetMySqlConnection();
-            _mySqlConnectionHelper.InitializeTables(tableStrings, connection);
+            var connectionString = MySqlConnectionHelper.GetMySqlConnectionString();
+            var connection = new MySqlConnection(connectionString);
+            connection.Open();
+            
+            MySqlConnectionHelper.InitializeTables(tableStrings, connection);
             connection.Close();
         }
         catch (Exception)

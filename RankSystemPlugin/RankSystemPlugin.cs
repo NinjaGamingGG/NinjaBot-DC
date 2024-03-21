@@ -2,6 +2,7 @@
 
 using NinjaBot_DC;
 using CommonPluginHelpers;
+using MySqlConnector;
 using PluginBase;
 using RankSystem.CommandModules;
 using RankSystem.Events;
@@ -16,12 +17,7 @@ namespace RankSystem;
 // ReSharper disable once ClassNeverInstantiated.Global
 public class RankSystemPlugin : DefaultPlugin
 {
-    private static MySqlConnectionHelper? _mySqlConnectionHelper;
-    
-    public static MySqlConnectionHelper? GetMySqlConnectionHelper()
-    {
-        return _mySqlConnectionHelper;
-    }
+    public static MySqlConnectionHelper MySqlConnectionHelper { get; private set; } = null!;
     
 
     public override void OnLoad()
@@ -47,12 +43,15 @@ public class RankSystemPlugin : DefaultPlugin
             
         };
 
-        _mySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
+        MySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
         
         try
         {
-            var connection = _mySqlConnectionHelper.GetMySqlConnection();
-            _mySqlConnectionHelper.InitializeTables(tableStrings,connection);
+            var connectionString = MySqlConnectionHelper.GetMySqlConnectionString();
+            var connection = new MySqlConnection(connectionString);
+            connection.Open();
+            
+            MySqlConnectionHelper.InitializeTables(tableStrings,connection);
             connection.Close();
         }
         catch (Exception)

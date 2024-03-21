@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PluginInfo>
+  <PluginName>ExamplePluginXML</PluginName>
+  <EnvironmentVariablePrefix>example-plugin</EnvironmentVariablePrefix>
+  <Description>Please Change after Using</Description>
+  <PluginVersion>0.1</PluginVersion>
+</PluginInfo>

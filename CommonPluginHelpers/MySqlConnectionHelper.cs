@@ -13,6 +13,8 @@ public class MySqlConnectionHelper(string envVarPrefix, IConfiguration configura
     /// Get a MySqlConnection object for connecting to a MySQL database.
     /// </summary>
     /// <returns>A MySqlConnection object.</returns>
+    
+    [Obsolete]
     public MySqlConnection GetMySqlConnection()
     {
         
@@ -54,6 +56,37 @@ public class MySqlConnectionHelper(string envVarPrefix, IConfiguration configura
         }
         
         return connection;
+
+    }
+
+    /// <summary>
+    /// Retrieves the MySQL connection string based on the provided configuration.
+    /// </summary>
+    /// <returns>The MySQL connection string.</returns>
+    public string GetMySqlConnectionString()
+    {
+        var serverString = configuration.GetValue<string>(envVarPrefix +":mysql-server") ?? "127.0.0.1";
+        var portString = configuration.GetValue<uint>(envVarPrefix+":mysql-port");
+        
+        var userString = configuration.GetValue<string>(envVarPrefix+":mysql-user") ?? "root";
+        var userPassword = configuration.GetValue<string>(envVarPrefix+":mysql-password") ?? string.Empty;
+        var databaseString = configuration.GetValue<string>(envVarPrefix+":mysql-database") ?? string.Empty;
+        
+        if (userPassword == string.Empty)
+        {
+            Log.Error("[{PluginName}]Error while preparing mysql connection, no password specified", pluginName);
+        }
+
+        var builder = new MySqlConnectionStringBuilder
+        {
+            Server = serverString,
+            Port = portString,
+            UserID = userString,
+            Password = userPassword,
+            Database = databaseString
+        };
+
+        return builder.ConnectionString;
 
     }
 

@@ -13,7 +13,7 @@ public static class GenerateWelcomeMessageWithImage
     public static async Task Generate(DiscordClient client, DiscordMember member,
         GuildSettingsRecord guildSettingsRecord, UserJoinedDataRecord userJoinedDataRecord, DiscordChannel welcomeChannel, DiscordGuild guild)
     {
-        var welcomeCard = Path.Combine(GreeterPlugin.GetStaticPluginDirectory(), "temp", $"welcomeCard{member.Id}.png");
+        var welcomeCard = Path.Combine(GreeterPlugin.StaticPluginDirectory, "temp", $"welcomeCard{member.Id}.png");
 
         await GenerateWelcomeImage.Generator(member.Username,
             member.AvatarUrl,

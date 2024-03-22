@@ -9,7 +9,7 @@ public static class GenerateWelcomeImage
         string backgroundUrl, bool roundedAvatar, double offsetX, double offsetY, string welcomeCardPath,
         int cornerRadius ,bool whiteCorner = true)
     {
-        var baseImage = new MagickImage(Path.Combine(GreeterPlugin.GetStaticPluginDirectory(),backgroundUrl));
+        var baseImage = new MagickImage(Path.Combine(GreeterPlugin.StaticPluginDirectory,backgroundUrl));
         
         var avatarImage = new MagickImage(await GetUserAvatar(avatarUrl));
         

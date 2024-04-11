@@ -150,8 +150,7 @@ public static class VoiceStateUpdated
                     new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_kick_button",
                         "Kick", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":athletic_shoe:"))),
                     new DiscordButtonComponent(ButtonStyle.Secondary, "lounge_un-trust_button",
-                        // ReSharper disable once StringLiteralTypo
-                        "Untrust", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":bust_in_silhouette:")))
+                        "Un-Trust", false, new DiscordComponentEmoji(DiscordEmoji.FromName(client, ":bust_in_silhouette:")))
                 ])
                 .AddComponents([
                     new DiscordButtonComponent(ButtonStyle.Danger, "lounge_lock_button",

@@ -26,80 +26,39 @@ public static class VoiceStateUpdated
         var channelsList = channels.ToList();
         
         var channelExists = false;
-        var channelNamePattern = string.Empty;
 
         var customNamePattern = string.Empty;
-        var separatorPattern = string.Empty;
-        var decoratorPrefix = string.Empty;
-        var decoratorEmoji = string.Empty;
-        var decoratorDecal = string.Empty;
 
         var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
 
         var loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ?? nameReplacementRecord.ToArray();
-        if (loungeMessageReplacementsAsArray.Length != 0)
+        if (loungeMessageReplacementsAsArray.Length == 0)
+         return;
+        
+        foreach (var replacement in loungeMessageReplacementsAsArray)
         {
-            foreach (var replacement in loungeMessageReplacementsAsArray)
-            {
-                switch (replacement.ReplacementHandle)
-                {
-                    case"Separator":
-                        separatorPattern = replacement.ReplacementValue;
-                        break;
-                    
-                    case"Custom_Name":
-                        customNamePattern = replacement.ReplacementValue;
-                        break;
-                    
-                    case"Decorator_Decal":
-                        decoratorDecal = replacement.ReplacementValue;
-                        break;
-                    
-                    case"Decorator_Emoji":
-                        decoratorEmoji = replacement.ReplacementValue;
-                        break;
-                    
-                    case"Decorator_Prefix":
-                        decoratorPrefix = replacement.ReplacementValue;
-                        break;
-                }
-
-            }
+            if (replacement.ReplacementHandle == "Custom_Name")
+                customNamePattern = replacement.ReplacementValue;
         }
         
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Decal}"))
-            separatorPattern = separatorPattern.Replace("{Decorator_Decal}", decoratorDecal);
-        
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Emoji}"))
-            separatorPattern = separatorPattern.Replace("{Decorator_Emoji}", decoratorEmoji);
-        if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Prefix}"))
-            separatorPattern = separatorPattern.Replace("{Decorator_Prefix}", decoratorPrefix);
         
         if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{username}"))
             customNamePattern = customNamePattern.Replace("{username}", eventArgs.User.Username);
 
+        if (ReferenceEquals(customNamePattern, null))
+            return;
         
         ulong interfaceChannel = 0;
 
         foreach (var channelConfig in channelsList.Where(channelConfig => eventArgs.Channel.Id == channelConfig.TargetChannelId))
         {
             channelExists = true;
-            channelNamePattern = channelConfig.LoungeNamePattern;
             interfaceChannel = channelConfig.InterfaceChannelId;
-
-            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{Separator}"))
-                channelNamePattern = channelNamePattern.Replace("{Separator}", separatorPattern);
-        
-            if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{Custom_Name}"))
-                channelNamePattern = channelNamePattern.Replace("{Custom_Name}", customNamePattern);
             
             break;
         }
 
         if (channelExists == false)
-            return;
-        
-        if (ReferenceEquals(channelNamePattern, null))
             return;
         
         eventArgs.Channel.Guild.Members.TryGetValue(eventArgs.User.Id, out var discordMember);
@@ -140,6 +99,11 @@ public static class VoiceStateUpdated
                 .Allow(Permissions.SendMessages)
                 .Allow(Permissions.Stream)));
 
+        
+        var channelNamePattern =
+            await ChannelNameBuilder.BuildAsync(eventArgs.Guild.Id, eventArgs.Channel.Id,
+                customNamePattern);
+        
         var newChannel = await eventArgs.Channel.Guild.CreateVoiceChannelAsync(channelNamePattern, eventArgs.Channel.Parent, 96000,4, position: eventArgs.Channel.Position + 1, overwrites:overWriteBuildersList);
         
         if (ReferenceEquals(newChannel, null))

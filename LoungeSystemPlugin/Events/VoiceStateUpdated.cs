@@ -6,6 +6,7 @@ using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records;
 using MySqlConnector;
+using NinjaBot_DC;
 using Serilog;
 
 namespace LoungeSystemPlugin.Events;
@@ -18,20 +19,35 @@ public static class VoiceStateUpdated
             return;
 
         var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
-        var mySqlConnection = new MySqlConnection(connectionString);
-        await mySqlConnection.OpenAsync();
 
-        var channels = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId", new { GuildId = eventArgs.Guild.Id});
-        
-        var channelsList = channels.ToList();
-        
+
         var channelExists = false;
 
         var customNamePattern = string.Empty;
 
-        var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
+        List<LoungeSystemConfigurationRecord> channelsList;
+        LoungeMessageReplacement[]? loungeMessageReplacementsAsArray;
 
-        var loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ?? nameReplacementRecord.ToArray();
+        try
+        {
+            var mySqlConnection = new MySqlConnection(connectionString);
+            
+            var channels = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId", new { GuildId = eventArgs.Guild.Id});
+        
+            var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
+            await mySqlConnection.CloseAsync();
+            
+            channelsList = channels.ToList();
+            loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ?? nameReplacementRecord.ToArray();
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex,"Unable to Retrieve Lounge System Config & NameReplacement Records from Database");
+            return;
+        }
+        
+    
         if (loungeMessageReplacementsAsArray.Length == 0)
          return;
         
@@ -76,28 +92,8 @@ public static class VoiceStateUpdated
                 .Allow(Permissions.PrioritySpeaker)
         };
 
-        var requiredRoles = await mySqlConnection.QueryAsync<RequiredRoleRecord>("SELECT * FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId", new { GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
-        var requiredRolesList = requiredRoles.ToList();
-
-
-        if (requiredRolesList.Count == 0)
-            requiredRolesList.Add(new RequiredRoleRecord{RoleId = eventArgs.Guild.EveryoneRole.Id});
-        else
-            overWriteBuildersList.Add(new DiscordOverwriteBuilder(eventArgs.Guild.EveryoneRole)
-                .Deny(Permissions.AccessChannels)
-                .Deny(Permissions.SendMessages)
-                .Deny(Permissions.UseVoice)
-                .Deny(Permissions.Speak)
-                .Deny(Permissions.Stream));
-
-
-        overWriteBuildersList.AddRange(requiredRolesList.Select(requiredRole => eventArgs.Guild.GetRole(requiredRole.RoleId))
-            .Select(discordRole => new DiscordOverwriteBuilder(discordRole)
-                .Allow(Permissions.AccessChannels)
-                .Allow(Permissions.UseVoice)
-                .Allow(Permissions.Speak)
-                .Allow(Permissions.SendMessages)
-                .Allow(Permissions.Stream)));
+        var roleSpecificOverrides = await BuildOverwritesForRequiredRoles(eventArgs.Guild.Id, eventArgs.Channel.Id);
+        overWriteBuildersList.AddRange(roleSpecificOverrides);
 
         
         var channelNamePattern =
@@ -118,8 +114,20 @@ public static class VoiceStateUpdated
             OriginChannel = eventArgs.Channel.Id
         };
 
-        var inserted = await mySqlConnection.ExecuteAsync("INSERT INTO LoungeIndex (ChannelId, GuildId, OwnerId, IsPublic, OriginChannel) VALUES (@ChannelId,@GuildId,@OwnerId,@IsPublic,@OriginChannel)",newModel);
-        await mySqlConnection.CloseAsync();
+        int inserted;
+        
+        try
+        {
+            var mySqlConnection = new MySqlConnection(connectionString);
+            inserted = await mySqlConnection.ExecuteAsync("INSERT INTO LoungeIndex (ChannelId, GuildId, OwnerId, IsPublic, OriginChannel) VALUES (@ChannelId,@GuildId,@OwnerId,@IsPublic,@OriginChannel)",newModel);
+            await mySqlConnection.CloseAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex,"Unable to insert into Mysql LoungeIndex");
+            return;
+        }
+
         
         if (inserted == 0)
         {
@@ -137,10 +145,41 @@ public static class VoiceStateUpdated
             
         var builder = InterfaceMessageBuilder.GetBuilder(client,discordMember.Mention + " this is your lounge Interface");
         await newChannel.SendMessageAsync(builder);
+    }
+
+    private static async Task<List<DiscordOverwriteBuilder>> BuildOverwritesForRequiredRoles(ulong guildId, ulong channelId)
+    {
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        var mySqlConnection = new MySqlConnection(connectionString);
         
+        var requiredRoles = await mySqlConnection.QueryAsync<RequiredRoleRecord>("SELECT * FROM RequiredRoleIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId", new { GuildId = guildId, ChannelId = channelId});
+        var requiredRolesList = requiredRoles.ToList();
+        
+        var discordClient = Worker.GetServiceDiscordClient();
 
+        var guild = await discordClient.GetGuildAsync(guildId);
 
+        var overWriteBuildersList = new List<DiscordOverwriteBuilder>();
 
+        if (requiredRolesList.Count == 0)
+            requiredRolesList.Add(new RequiredRoleRecord{RoleId = guild.EveryoneRole.Id});
+        else
+            overWriteBuildersList.Add(new DiscordOverwriteBuilder(guild.EveryoneRole)
+                .Deny(Permissions.AccessChannels)
+                .Deny(Permissions.SendMessages)
+                .Deny(Permissions.UseVoice)
+                .Deny(Permissions.Speak)
+                .Deny(Permissions.Stream));
+
+        overWriteBuildersList.AddRange(requiredRolesList.Select(requiredRole => guild.GetRole(requiredRole.RoleId))
+            .Select(discordRole => new DiscordOverwriteBuilder(discordRole)
+                .Allow(Permissions.AccessChannels)
+                .Allow(Permissions.UseVoice)
+                .Allow(Permissions.Speak)
+                .Allow(Permissions.SendMessages)
+                .Allow(Permissions.Stream)));
+
+        return overWriteBuildersList;
     }
 
     public static async Task ChannelLeave(DiscordClient client, VoiceStateUpdateEventArgs eventArgs)

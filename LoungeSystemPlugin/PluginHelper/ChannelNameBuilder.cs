@@ -82,6 +82,6 @@ public static class ChannelNameBuilder
             break;
         }
 
-        return channelNamePattern;
+        return channelNamePattern ?? string.Empty;
     }
 }

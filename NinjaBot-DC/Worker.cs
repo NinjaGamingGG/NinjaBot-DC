@@ -184,7 +184,7 @@ public sealed class Worker : BackgroundService
         stringPrefix ??= "1";
         
         Log.Information("Registering Commands");
-        var commands = DiscordClient.UseCommandsNext(new CommandsNextConfiguration()
+        DiscordClient.UseCommandsNext(new CommandsNextConfiguration
         {
             StringPrefixes  = new []{stringPrefix},
         });

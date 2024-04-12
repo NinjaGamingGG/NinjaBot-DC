@@ -28,7 +28,7 @@ public class RankSystemPlugin : DefaultPlugin
             var botToken = Worker.BotCancellationToken;
 
             //If Bot Cancellation Token is not null link plugins cancellation token to it.
-            if (!ReferenceEquals(botToken, null))
+            if (botToken != null)
                 CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)botToken);
         }
         catch (Exception ex)

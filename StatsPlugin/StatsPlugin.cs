@@ -8,6 +8,7 @@ using ConfigHelper = CommonPluginHelpers.ConfigHelper;
 
 namespace StatsPlugin;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public class StatsPlugin : DefaultPlugin
 {
     public static MySqlConnectionHelper MySqlConnectionHelper { get; private set; } = null!;

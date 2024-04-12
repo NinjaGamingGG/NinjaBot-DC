@@ -39,8 +39,6 @@ public class RankSystemPlugin : DefaultPlugin
             "CREATE TABLE IF NOT EXISTS RankSystemRewardRolesIndex (GuildId MEDIUMTEXT, RoleId MEDIUMTEXT, RequiredPoints INTEGER)",
             "CREATE TABLE IF NOT EXISTS RankSystemConfigurationIndex (GuildId MEDIUMTEXT, PointsPerMessage INTEGER, PointsPerReaction INTEGER, PointsPerVoiceActivity INTEGER, LogChannelId MEDIUMTEXT, NotifyChannelId MEDIUMTEXT)",
             "CREATE TABLE IF NOT EXISTS RankSystemUserPointsIndex (Id INTEGER ,GuildId MEDIUMTEXT, UserId MEDIUMTEXT, Points MEDIUMTEXT)"
-            
-            
         };
 
         MySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
@@ -76,6 +74,10 @@ public class RankSystemPlugin : DefaultPlugin
 
     public override void OnUnload()
     {
+        var client = Worker.GetServiceDiscordClient();
+        client.MessageCreated -= MessageCreatedEvent.MessageCreated;
+        client.MessageReactionAdded -= MessageReactionAddedEvent.MessageReactionAdded;
+        
         Log.Information("[{Name}] Plugin Unloaded", Name);
     }
 }

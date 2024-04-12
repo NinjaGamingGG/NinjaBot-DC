@@ -10,6 +10,8 @@ public abstract class DefaultPlugin : IPlugin
     public required string EnvironmentVariablePrefix { get; init; }
     public required string Description { get; init; }
     public required string PluginDirectory { get; init; }
+    
+    public required CancellationTokenSource CancellationTokenSource;
 
     protected DefaultPlugin()
     {
@@ -26,6 +28,9 @@ public abstract class DefaultPlugin : IPlugin
         var serializer = new XmlSerializer(typeof(PluginInfo));
 
         PluginInfo? loadedPluginInfos;
+        CancellationTokenSource = new CancellationTokenSource();
+        
+        
 
         try
         {

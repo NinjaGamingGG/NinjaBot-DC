@@ -44,8 +44,6 @@ public sealed class Worker : BackgroundService
 
     static Worker()
     {
- 
-            
         Configuration = LoadServiceConfig();
         var token = Configuration.GetValue<string>("ninja-bot:token");
         token ??= "";
@@ -85,9 +83,12 @@ public sealed class Worker : BackgroundService
     {
         return SlashCommandsExtension;
     }
+    
+    public static CancellationToken? BotCancellationToken { get; internal set; } = null;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        BotCancellationToken = stoppingToken;
         
         var taskList = new List<Task>() {RegisterCommands(), RegisterEvents()};
         await Task.WhenAll(taskList);

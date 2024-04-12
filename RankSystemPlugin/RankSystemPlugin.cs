@@ -23,6 +23,19 @@ public class RankSystemPlugin : DefaultPlugin
     public override void OnLoad()
     {
         var client = Worker.GetServiceDiscordClient();
+        try
+        {
+            var botToken = Worker.BotCancellationToken;
+
+            //If Bot Cancellation Token is not null link plugins cancellation token to it.
+            if (!ReferenceEquals(botToken, null))
+                CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)botToken);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex,"Unable to link plugin cancellation token to bot's cancellation token");
+        }
+
 
         if (ReferenceEquals(PluginDirectory, null))
         {
@@ -66,7 +79,7 @@ public class RankSystemPlugin : DefaultPlugin
 
         Log.Information("[{Name}] Plugin Loaded", Name);
 
-        Task.Run(async () => await UpdateVoiceActivity.Update(client));
+        Task.Run(async () => await UpdateVoiceActivity.Update(client),CancellationTokenSource.Token);
 
     }
     
@@ -75,6 +88,8 @@ public class RankSystemPlugin : DefaultPlugin
     public override void OnUnload()
     {
         var client = Worker.GetServiceDiscordClient();
+        CancellationTokenSource.Cancel();
+        
         client.MessageCreated -= MessageCreatedEvent.MessageCreated;
         client.MessageReactionAdded -= MessageReactionAddedEvent.MessageReactionAdded;
         

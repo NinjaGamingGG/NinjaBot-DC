@@ -20,17 +20,18 @@ public static class ChannelNameBuilder
 
         var channelRecordsAsList = channelRecords.ToList();
 
-        var channelRecord = channelRecordsAsList.First();
+        //If the channel record list doesn't contain any elements this is called from VoiceStateUpdated Event and the Origin ChannelId is the Channel ID.
+        //If it contains elements method is invoked from the modal submitted logic, and we query the Origin Channel from the Db Record    
+        var originChannelId = channelRecordsAsList.Count == 0 ? channelId : channelRecordsAsList.First().OriginChannel;
         
         var channelNamePattern = string.Empty;
 
-        var customNamePattern = customNameContent;
         var separatorPattern = string.Empty;
         var decoratorPrefix = string.Empty;
         var decoratorEmoji = string.Empty;
         var decoratorDecal = string.Empty;
 
-        var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = guildId, ChannelId = channelRecord.OriginChannel});
+        var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = guildId, ChannelId = originChannelId});
 
         await mySqlConnection.CloseAsync();
         
@@ -69,7 +70,7 @@ public static class ChannelNameBuilder
         if (!ReferenceEquals(separatorPattern, null) && separatorPattern.Contains("{Decorator_Prefix}"))
             separatorPattern = separatorPattern.Replace("{Decorator_Prefix}", decoratorPrefix);
 
-        foreach (var channelConfig in channelConfigurationList.Where(channelConfig => channelRecord.OriginChannel == channelConfig.TargetChannelId))
+        foreach (var channelConfig in channelConfigurationList.Where(channelConfig => originChannelId == channelConfig.TargetChannelId))
         {
             channelNamePattern = channelConfig.LoungeNamePattern;
             
@@ -77,7 +78,7 @@ public static class ChannelNameBuilder
                 channelNamePattern = channelNamePattern.Replace("{Separator}", separatorPattern);
         
             if (!ReferenceEquals(channelNamePattern, null) && channelNamePattern.Contains("{Custom_Name}"))
-                channelNamePattern = channelNamePattern.Replace("{Custom_Name}", customNamePattern);
+                channelNamePattern = channelNamePattern.Replace("{Custom_Name}", customNameContent);
             
             break;
         }

@@ -54,6 +54,14 @@ public static class NewLoungeHelper
         if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{username}"))
             customNamePattern = customNamePattern.Replace("{username}", owningUser.Username);
 
+        if (!ReferenceEquals(owningUser.Presence.Activity.Name,null))
+        {
+            if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{activity}"))
+                customNamePattern = customNamePattern.Replace("{activity}", owningUser.Presence.Activity.Name);
+        }
+        
+
+
         if (ReferenceEquals(customNamePattern, null))
             return;
         
@@ -93,7 +101,7 @@ public static class NewLoungeHelper
             await ChannelNameBuilder.BuildAsync(guild.Id, originalChannel.Id,
                 customNamePattern);
         
-        var newChannel = await originalChannel.Guild.CreateVoiceChannelAsync(channelNamePattern, originalChannel.Parent, 96000,4, position: originalChannel.Position + 1, overwrites:overWriteBuildersList);
+        var newChannel = await originalChannel.Guild.CreateVoiceChannelAsync(channelNamePattern, originalChannel.Parent, originalChannel.Bitrate,4, position: originalChannel.Position + 1, overwrites:overWriteBuildersList);
         
         if (ReferenceEquals(newChannel, null))
             return;

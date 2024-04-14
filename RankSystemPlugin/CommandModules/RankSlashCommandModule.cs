@@ -3,14 +3,18 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MySqlConnector;
-using NinjaBot_DC;
 using Serilog;
 
 namespace RankSystem.CommandModules;
 
-// ReSharper disable once ClassNeverInstantiated.Global
 public class RankSlashCommandModule: ApplicationCommandModule
 {
+    /// <summary>
+    /// Adds a channel to the blacklist.
+    /// </summary>
+    /// <param name="context">The interaction context.</param>
+    /// <param name="targetUser">The user to check. If null, the executing user will be the target user.</param>
+    /// <returns></returns>
     [SlashCommand( "Rank","Check the RankSystem Points of a user")]
     // ReSharper disable once UnusedMember.Global
     public async Task AddChannelToBlacklist(InteractionContext context, [Option("user","User to check")] DiscordUser? targetUser = null)

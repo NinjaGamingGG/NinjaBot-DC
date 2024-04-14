@@ -35,7 +35,7 @@ public static class UpdateVoiceActivity
                 continue;
                 
             //Check if member is in any blacklisted groups
-            if(Blacklist.CheckUserGroups(member.Roles.ToArray(), guild.Value))
+            if(BlacklistHelper.CheckUserGroups(member.Roles.ToArray(), guild.Value))
                 continue;
 
             var userChannel = member.VoiceState.Channel;
@@ -43,11 +43,11 @@ public static class UpdateVoiceActivity
             if (ReferenceEquals(userChannel,null))
                 continue;
             
-            if (Blacklist.CheckUserChannel(userChannel))
+            if (BlacklistHelper.CheckUserChannel(userChannel))
                 continue;
                 
             //Check if parent channel is blacklisted (most likely a category)
-            if (Blacklist.CheckUserChannel(userChannel.Parent))
+            if (BlacklistHelper.CheckUserChannel(userChannel.Parent))
                 continue;
 
 

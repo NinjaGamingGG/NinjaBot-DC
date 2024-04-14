@@ -42,15 +42,15 @@ public static class MessageCreatedEvent
 
 
         //Check if member is in any blacklisted groups
-        if(Blacklist.CheckUserGroups(user.Roles.ToArray(), eventArgs.Guild))
+        if(BlacklistHelper.CheckUserGroups(user.Roles.ToArray(), eventArgs.Guild))
             return;
 
         //Check if message was send in blacklisted channel
-        if (Blacklist.CheckUserChannel(eventArgs.Channel))
+        if (BlacklistHelper.CheckUserChannel(eventArgs.Channel))
             return;
         
         //Check if parent channel is blacklisted (most likely a category)
-        if (Blacklist.CheckUserChannel(eventArgs.Channel.Parent))
+        if (BlacklistHelper.CheckUserChannel(eventArgs.Channel.Parent))
             return;
         
         //Apply exp rewards

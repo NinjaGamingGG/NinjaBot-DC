@@ -6,7 +6,7 @@ using Serilog;
 
 namespace RankSystem.PluginHelper;
 
-public static class Blacklist
+public static class BlacklistHelper
 {
     /// <summary>
     /// Checks if the user belongs to any blacklisted groups.

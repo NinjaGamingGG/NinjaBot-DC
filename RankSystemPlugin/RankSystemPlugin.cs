@@ -73,6 +73,7 @@ public class RankSystemPlugin : DefaultPlugin
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
         slashCommands.RegisterCommands<AdminCommandSubGroupContainer>();
+        slashCommands.RegisterCommands<RankSlashCommandModule>();
         
         client.MessageCreated += MessageCreatedEvent.MessageCreated;
         client.MessageReactionAdded += MessageReactionAddedEvent.MessageReactionAdded;

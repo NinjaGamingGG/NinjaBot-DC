@@ -106,13 +106,14 @@ public sealed class Worker : BackgroundService
         
         Log.Information("Bot is shutting down...");
         
-        //If Cancellation was requested dispose (disconnect) the discord-client
-        DiscordClient.Dispose();
-
+        
         var unloadTasks = new List<Task>()
         {
             UnloadPlugins()
         };
+        
+        //If Cancellation was requested dispose (disconnect) the discord-client
+        DiscordClient.Dispose();
         
         await Task.WhenAll(unloadTasks);
 

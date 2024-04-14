@@ -84,7 +84,7 @@ public sealed class Worker : BackgroundService
         return SlashCommandsExtension;
     }
     
-    public static CancellationToken? BotCancellationToken { get; internal set; } = null;
+    public static CancellationToken? BotCancellationToken { get; private set; }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

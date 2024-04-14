@@ -12,11 +12,11 @@ public static class ChannelNameBuilder
         var mySqlConnection = new MySqlConnection(connectionString);
         await mySqlConnection.OpenAsync();
         
-        var channelConfigurations = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId ", new { GuildId = guildId});
+        var channelConfigurations = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystem.LoungeSystemConfigurationIndex WHERE GuildId = @GuildId ", new { GuildId = guildId});
         
         var channelConfigurationList = channelConfigurations.ToList();
 
-        var channelRecords = await mySqlConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId", new {GuildId = guildId, ChannelId = channelId});
+        var channelRecords = await mySqlConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeSystem.LoungeIndex WHERE GuildId = @GuildId AND ChannelId = @ChannelId", new {GuildId = guildId, ChannelId = channelId});
 
         var channelRecordsAsList = channelRecords.ToList();
 
@@ -31,7 +31,7 @@ public static class ChannelNameBuilder
         var decoratorEmoji = string.Empty;
         var decoratorDecal = string.Empty;
 
-        var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = guildId, ChannelId = originChannelId});
+        var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeSystem.LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = guildId, ChannelId = originChannelId});
 
         await mySqlConnection.CloseAsync();
         

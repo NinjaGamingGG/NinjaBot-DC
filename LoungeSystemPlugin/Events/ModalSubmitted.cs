@@ -14,8 +14,6 @@ internal static class ModalSubmitted
                 case "lounge_rename_modal":
                     await LoungeRenameModal.WasSubmitted(sender, eventArgs);
                     break;
-                    
-            
         }
         
         await eventArgs.Interaction.DeleteOriginalResponseAsync();

@@ -120,6 +120,10 @@ public sealed class Worker : BackgroundService
 
     }
 
+    /// <summary>
+    /// Loads plugins from the specified plugin folder.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     private static Task LoadPlugins()
     {
         
@@ -164,6 +168,10 @@ public sealed class Worker : BackgroundService
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Unloads loaded plugins by calling their OnUnload method.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     private static Task UnloadPlugins()
     {
         if (_loadedPluginsArray == null) 
@@ -179,6 +187,10 @@ public sealed class Worker : BackgroundService
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Registers the commands for the Discord bot.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     private static Task RegisterCommands()
     {
         var stringPrefix = Configuration.GetValue<string>("ninja-bot:prefix");

@@ -8,8 +8,18 @@ using Serilog;
 
 namespace LoungeSystemPlugin.PluginHelper;
 
+/// <summary>
+/// Provides helper methods for creating new lounges in a Discord guild.
+/// </summary>
 public static class NewLoungeHelper
 {
+    /// <summary>
+    /// Creates a new lounge channel in the specified guild.
+    /// </summary>
+    /// <param name="guild">The DiscordGuild object of the guild where the lounge channel should be created.</param>
+    /// <param name="originalChannel">The DiscordChannel object of the original channel where the lounge channel should be created from.</param>
+    /// <param name="owningUser">The DiscordUser object of the user who owns the lounge channel.</param>
+    /// <returns>A Task representing the asynchronous operation.</returns>
     public static async Task CreateNewLounge(DiscordGuild guild, DiscordChannel originalChannel, DiscordUser owningUser)
     {
         var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
@@ -148,7 +158,13 @@ public static class NewLoungeHelper
         var builder = InterfaceMessageBuilder.GetBuilder(discordClient,discordMember.Mention + " this is your lounge Interface");
         await newChannel.SendMessageAsync(builder);
     }
-    
+
+    /// <summary>
+    /// Builds a list of DiscordOverwriteBuilder objects for the required roles of a lounge channel.
+    /// </summary>
+    /// <param name="guildId">The ID of the guild where the lounge channel is located.</param>
+    /// <param name="channelId">The ID of the lounge channel.</param>
+    /// <returns>A Task representing the asynchronous operation that returns a List of DiscordOverwriteBuilder objects built for the required roles.</returns>
     private static async Task<List<DiscordOverwriteBuilder>> BuildOverwritesForRequiredRoles(ulong guildId, ulong channelId)
     {
         var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();

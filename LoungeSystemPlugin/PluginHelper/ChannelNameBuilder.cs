@@ -4,8 +4,18 @@ using MySqlConnector;
 
 namespace LoungeSystemPlugin.PluginHelper;
 
+/// <summary>
+/// The <see cref="ChannelNameBuilder"/> class provides a static method for building channel names.
+/// </summary>
 public static class ChannelNameBuilder
 {
+    /// <summary>
+    /// Asynchronously builds a channel name based on the provided guild ID, channel ID, and custom name content.
+    /// </summary>
+    /// <param name="guildId">The ID of the guild.</param>
+    /// <param name="channelId">The ID of the channel.</param>
+    /// <param name="customNameContent">The custom name content to include in the channel name.</param>
+    /// <returns>The channel name pattern.</returns>
     public static async Task<string> BuildAsync(ulong guildId, ulong channelId, string customNameContent)
     {
         var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
@@ -36,7 +46,7 @@ public static class ChannelNameBuilder
         await mySqlConnection.CloseAsync();
         
         var loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ?? nameReplacementRecord.ToArray();
-        if (loungeMessageReplacementsAsArray.Any())
+        if (loungeMessageReplacementsAsArray.Length != 0)
         {
             foreach (var replacement in loungeMessageReplacementsAsArray)
             {

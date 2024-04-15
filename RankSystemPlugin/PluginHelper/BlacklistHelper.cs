@@ -23,7 +23,7 @@ public static class BlacklistHelper
         {
             using var sqlConnection = new MySqlConnection(connectionString);
 
-            var blacklistedRoles = sqlConnection.Query($"SELECT RoleId FROM RankSystemBlacklistedRolesIndex WHERE GuildId = {guild.Id} ").ToArray();
+            var blacklistedRoles = sqlConnection.Query($"SELECT RoleId FROM RankSystem.RankSystemBlacklistedRolesIndex WHERE GuildId = {guild.Id} ").ToArray();
         
             blacklistedRolesIds = blacklistedRoles.Select(t => (ulong) t.RoleId).ToArray();
             sqlConnection.Close();
@@ -54,7 +54,7 @@ public static class BlacklistHelper
         {
             using var sqlConnection = new MySqlConnection(connectionString);
 
-            var blacklistedChannels = sqlConnection.Query($"SELECT ChannelId FROM RankSystemBlacklistedChannelsIndex WHERE GuildId = {userChannel.GuildId} ").ToArray();
+            var blacklistedChannels = sqlConnection.Query($"SELECT ChannelId FROM RankSystem.RankSystemBlacklistedChannelsIndex WHERE GuildId = {userChannel.GuildId} ").ToArray();
         
             blacklistedChannelsIds = blacklistedChannels.Select(t => (ulong) t.ChannelId).ToArray();
         }

@@ -1,24 +1,17 @@
-﻿using Dapper;
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using MySqlConnector;
 using RankSystem.PluginHelper;
-using Serilog;
 
 namespace RankSystem.CommandModules;
 
-public class RankSlashCommandModule: ApplicationCommandModule
+[SlashCommandGroup("RankSystem", "RankSystem Plugin Commands",true)]
+public class RankSystemSlashCommandModule : ApplicationCommandModule
 {
-    /// <summary>
-    /// Adds a channel to the blacklist.
-    /// </summary>
-    /// <param name="context">The interaction context.</param>
-    /// <param name="targetUser">The user to check. If null, the executing user will be the target user.</param>
-    /// <returns></returns>
-    [SlashCommand( "Rank","Check the RankSystem Points of a user")]
+    [SlashCommand("Rank", "Check the RankSystem Points of a user")]
+
     // ReSharper disable once UnusedMember.Global
-    public async Task RankCommand(InteractionContext context, [Option("user","User to check")] DiscordUser? targetUser = null)
+    public async Task RankCommand(InteractionContext context, [Option("user", "User to check")] DiscordUser? targetUser = null)
     {
         await context.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
         
@@ -30,5 +23,4 @@ public class RankSlashCommandModule: ApplicationCommandModule
 
         await context.EditResponseAsync(await UserRankDisplayHelper.BuildDisplayAsync(context.Guild, targetUser, isUserTarget));
     }
-    
 }

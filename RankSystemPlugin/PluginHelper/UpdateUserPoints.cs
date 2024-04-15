@@ -18,7 +18,7 @@ public static class UpdateUserPoints
         {
             await using var sqlConnection = new MySqlConnection(connectionString);
             await sqlConnection.OpenAsync();
-            config = await sqlConnection.QueryFirstOrDefaultAsync<RankSystemConfigurationModel>("SELECT * FROM RankSystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+            config = await sqlConnection.QueryFirstOrDefaultAsync<RankSystemConfigurationModel>("SELECT * FROM RankSystem.RankSystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
             await sqlConnection.CloseAsync();
         }
         catch (MySqlException ex)
@@ -48,10 +48,10 @@ public static class UpdateUserPoints
         {
             var sqlConnection = new MySqlConnection(connectionString);
             await sqlConnection.OpenAsync();
-            var userPointsAdded = await sqlConnection.ExecuteAsync("UPDATE RankSystemUserPointsIndex SET Points = Points + @PointsToAdd WHERE GuildId = @GuildId AND UserId = @UserId", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
+            var userPointsAdded = await sqlConnection.ExecuteAsync("UPDATE RankSystem.RankSystemUserPointsIndex SET Points = Points + @PointsToAdd WHERE GuildId = @GuildId AND UserId = @UserId", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
 
             if (userPointsAdded == 0)
-                await sqlConnection.ExecuteAsync("INSERT INTO RankSystemUserPointsIndex (GuildId, UserId, Points) VALUES (@GuildId, @UserId, @PointsToAdd)", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
+                await sqlConnection.ExecuteAsync("INSERT INTO RankSystem.RankSystemUserPointsIndex (GuildId, UserId, Points) VALUES (@GuildId, @UserId, @PointsToAdd)", new {PointsToAdd = pointsToAdd, GuildId = guildId, UserId = user.Id});
 
             await sqlConnection.CloseAsync();
         }

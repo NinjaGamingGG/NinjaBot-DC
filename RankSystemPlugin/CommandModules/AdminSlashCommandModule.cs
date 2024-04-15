@@ -47,7 +47,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 await sqlConnection.OpenAsync();
 
                 insertSuccess =
-                    await sqlConnection.ExecuteAsync("INSERT INTO RankSystemBlacklistedChannelsIndex (GuildId, ChannelId) VALUES (@GuildId, @ChannelId)", blackListedChannel);
+                    await sqlConnection.ExecuteAsync("INSERT INTO RankSystem.RankSystemBlacklistedChannelsIndex (GuildId, ChannelId) VALUES (@GuildId, @ChannelId)", blackListedChannel);
                 await sqlConnection.CloseAsync();
             }
             catch (MySqlException ex)
@@ -87,7 +87,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 await using var sqlConnection = new MySqlConnection(connectionString);
                 await sqlConnection.OpenAsync();
                 
-                insertSuccess = await sqlConnection.ExecuteAsync("INSERT INTO RankSystemBlacklistedRolesIndex (GuildId, RoleId) VALUES (@GuildId, @RoleId)", blackListedRole);
+                insertSuccess = await sqlConnection.ExecuteAsync("INSERT INTO RankSystem.RankSystemBlacklistedRolesIndex (GuildId, RoleId) VALUES (@GuildId, @RoleId)", blackListedRole);
                 await sqlConnection.CloseAsync();
             }
             catch (MySqlException ex)
@@ -121,7 +121,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 await sqlConnection.OpenAsync();
                 
                 deleteSuccess = await sqlConnection.ExecuteAsync(
-                    $"DELETE FROM RankSystemBlacklistedChannelsIndex WHERE GuildId = {context.Guild.Id} AND ChannelId = {channelId}");
+                    $"DELETE FROM RankSystem.RankSystemBlacklistedChannelsIndex WHERE GuildId = {context.Guild.Id} AND ChannelId = {channelId}");
                 await sqlConnection.CloseAsync();
             }
             catch (MySqlException ex)
@@ -153,7 +153,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 await sqlConnection.OpenAsync();
         
                 deleteSuccess = await sqlConnection.ExecuteAsync(
-                    $"DELETE FROM RankSystemBlacklistedRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                    $"DELETE FROM RankSystem.RankSystemBlacklistedRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
                 await sqlConnection.CloseAsync();
             }
             catch (MySqlException ex)
@@ -197,7 +197,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 await using var sqlConnection = new MySqlConnection(connectionString);
                 await sqlConnection.OpenAsync();
                 
-                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystem.RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
                 
                 if (alreadyExists != 0)
                 {
@@ -248,7 +248,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
             {
                 await using var sqlConnection = new MySqlConnection(connectionString);
 
-                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystem.RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
                 if (alreadyExists == 0)
                 {
@@ -257,7 +257,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 }
             
                 deleteSuccess = await sqlConnection.ExecuteAsync(
-                    $"DELETE FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                    $"DELETE FROM RankSystem.RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
                 await sqlConnection.CloseAsync();
             }
@@ -337,7 +337,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
             {
                 await using var sqlConnection = new MySqlConnection(connectionString);
 
-                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystem.RankSystemRewardRolesIndex WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
 
                 if (alreadyExists == 0)
                 {
@@ -346,7 +346,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 }
             
                 updateSuccess = await sqlConnection.ExecuteAsync(
-                    $"UPDATE RankSystemRewardRolesIndex SET RequiredPoints = {requiredPoints} WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
+                    $"UPDATE RankSystem.RankSystemRewardRolesIndex SET RequiredPoints = {requiredPoints} WHERE GuildId = {context.Guild.Id} AND RoleId = {role.Id}");
                 await sqlConnection.CloseAsync();
             }
             catch (MySqlException ex)
@@ -393,7 +393,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
             {
                 await using var sqlConnection = new MySqlConnection(connectionString);
         
-                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
+                var alreadyExists = await sqlConnection.ExecuteScalarAsync<int>($"SELECT COUNT(*) FROM RankSystem.RankSystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
                 
                 if (alreadyExists != 0)
                 {
@@ -453,7 +453,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 await using var sqlConnection = new MySqlConnection(connectionString);
         
                 updateSuccess = await sqlConnection.ExecuteAsync(
-                    $"UPDATE RankSystemConfigurationIndex SET PointsPerMessage = {pointsPerMessage}, PointsPerReaction = {pointsPerReaction}, PointsPerVoiceActivity = {pointsPerVoiceMinute}, LogChannelId = {logChannel.Id}, NotifyChannelId = {notifyChannel.Id} WHERE GuildId = {context.Guild.Id}");
+                    $"UPDATE RankSystem.RankSystemConfigurationIndex SET PointsPerMessage = {pointsPerMessage}, PointsPerReaction = {pointsPerReaction}, PointsPerVoiceActivity = {pointsPerVoiceMinute}, LogChannelId = {logChannel.Id}, NotifyChannelId = {notifyChannel.Id} WHERE GuildId = {context.Guild.Id}");
 
                 await sqlConnection.CloseAsync();
             }
@@ -537,7 +537,7 @@ public class AdminCommandSubGroupContainer : ApplicationCommandModule
                 var sqlConnection = new MySqlConnection(connectionString);
         
                 deleteSuccess = await sqlConnection.ExecuteAsync(
-                    $"DELETE FROM RankSystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
+                    $"DELETE FROM RankSystem.RankSystemConfigurationIndex WHERE GuildId = {context.Guild.Id}");
             }
             catch (MySqlException ex)
             {

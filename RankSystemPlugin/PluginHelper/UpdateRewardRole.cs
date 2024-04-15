@@ -20,11 +20,11 @@ public static class UpdateRewardRole
             await using var sqlConnection = new MySqlConnection(connectionString);
             await sqlConnection.OpenAsync();
         
-            userPointsForGuild = await sqlConnection.QueryFirstOrDefaultAsync<int>("SELECT Points FROM RankSystemUserPointsIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = guildId, UserId = userId});
+            userPointsForGuild = await sqlConnection.QueryFirstOrDefaultAsync<int>("SELECT Points FROM RankSystem.RankSystemUserPointsIndex WHERE GuildId = @GuildId AND UserId = @UserId", new {GuildId = guildId, UserId = userId});
 
-            rankSystemConfiguration = await sqlConnection.QueryFirstOrDefaultAsync<RankSystemConfigurationModel>("SELECT * FROM RankSystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+            rankSystemConfiguration = await sqlConnection.QueryFirstOrDefaultAsync<RankSystemConfigurationModel>("SELECT * FROM RankSystem.RankSystemConfigurationIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
         
-            var rewardRoles = await sqlConnection.QueryAsync<RankSystemRewardRoleModel>("SELECT * FROM RankSystemRewardRolesIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
+            var rewardRoles = await sqlConnection.QueryAsync<RankSystemRewardRoleModel>("SELECT * FROM RankSystem.RankSystemRewardRolesIndex WHERE GuildId = @GuildId", new {GuildId = guildId});
             
             rewardRolesAsList = rewardRoles.ToList();
             await sqlConnection.CloseAsync();

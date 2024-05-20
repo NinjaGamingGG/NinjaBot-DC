@@ -57,8 +57,20 @@ public class LoungeSystemPlugin : DefaultPlugin
         {
 
             var debugGuildId = Worker.GetServiceConfig().GetValue<ulong>("ninja-bot:debug-guild");
-            Log.Debug("[{PluginName}] Registering Commands in debug mode for Guild {GuildId}", Name,debugGuildId);
-            slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>(debugGuildId);
+            if (debugGuildId == 0)
+            {
+                Log.Error("[{PluginName}] No debug guild id set despite running a debug build. " +
+                          "\nTo set a Debug Guild Id Add \"debug-guild\": \"123456\" to your config.json or Environment Variables." +
+                          "\n Continuing without a specific debug guild (registering commands on all guilds)", Name);
+                slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>();
+            }
+            else
+            {
+                Log.Debug("[{PluginName}] Registering Commands in debug mode for Guild {GuildId}", Name,debugGuildId);
+                slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>(debugGuildId);
+            }
+            
+
         }
         else
             slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>();

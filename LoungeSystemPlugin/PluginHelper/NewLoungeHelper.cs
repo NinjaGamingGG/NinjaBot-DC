@@ -103,7 +103,7 @@ public static class NewLoungeHelper
                 .Allow(Permissions.PrioritySpeaker)
         };
 
-        var roleSpecificOverrides = await NewLoungeHelper.BuildOverwritesForRequiredRoles(guild.Id, originalChannel.Id);
+        var roleSpecificOverrides = await BuildOverwritesForRequiredRoles(guild.Id, originalChannel.Id);
         overWriteBuildersList.AddRange(roleSpecificOverrides);
 
         

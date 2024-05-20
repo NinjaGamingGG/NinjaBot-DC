@@ -3,8 +3,6 @@ using LoungeSystemPlugin.Events;
 using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
 using CommonPluginHelpers;
-using DSharpPlus;
-using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Configuration;
 using MySqlConnector;
 using PluginBase;
@@ -53,7 +51,7 @@ public class LoungeSystemPlugin : DefaultPlugin
         }
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
-
+        
         if (Program.IsDebugEnabled)
         {
 
@@ -67,9 +65,6 @@ public class LoungeSystemPlugin : DefaultPlugin
 
 
         var client = Worker.GetServiceDiscordClient();
-
-        //var commandsNext = client.GetCommandsNext();
-        //commandsNext.RegisterCommands<CommandNextModule>();
         
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelEnter;
         client.VoiceStateUpdated += VoiceStateUpdated.ChannelLeave;

@@ -7,6 +7,18 @@ public static class Program
     private const string OutputTemplate = "[{Timestamp:dd-MM-yyyy HH:mm:ss} {Level}] {Message}{NewLine}{Exception}";
     
     public static string BasePath = Directory.GetCurrentDirectory();
+
+    public static readonly bool IsDebugEnabled = CheckDebug();
+
+    private static bool CheckDebug()
+    {
+#if DEBUG
+        return true;
+#else
+        return false;
+#endif
+
+    }
     
     public static void Main(string[] args)
     {

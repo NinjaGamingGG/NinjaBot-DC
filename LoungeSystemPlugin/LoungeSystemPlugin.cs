@@ -5,6 +5,7 @@ using NinjaBot_DC;
 using CommonPluginHelpers;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
+using Microsoft.Extensions.Configuration;
 using MySqlConnector;
 using PluginBase;
 using Serilog;
@@ -52,7 +53,18 @@ public class LoungeSystemPlugin : DefaultPlugin
         }
 
         var slashCommands = Worker.GetServiceSlashCommandsExtension();
-        slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>();
+
+        if (Program.IsDebugEnabled)
+        {
+
+            var debugGuildId = Worker.GetServiceConfig().GetValue<ulong>("ninja-bot:debug-guild");
+            Log.Debug("Registering {PluginName} Commands in debug mode for Guild {GuildId}", Name,debugGuildId);
+            slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>(debugGuildId);
+        }
+        else
+            slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>();
+  
+
 
         var client = Worker.GetServiceDiscordClient();
 

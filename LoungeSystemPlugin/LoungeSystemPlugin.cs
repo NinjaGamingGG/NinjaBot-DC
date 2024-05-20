@@ -22,7 +22,8 @@ public class LoungeSystemPlugin : DefaultPlugin
             OnUnload();
             return;
         }
-
+        
+        Directory.CreateDirectory(PluginDirectory);
 
         var config = ConfigHelper.Load(PluginDirectory, EnvironmentVariablePrefix);
         
@@ -39,14 +40,14 @@ public class LoungeSystemPlugin : DefaultPlugin
         try
         {
             var connectionString = MySqlConnectionHelper.GetMySqlConnectionString();
-            var connection = new MySqlConnection(connectionString);
+            using var connection = new MySqlConnection(connectionString);
             connection.Open();
             MySqlConnectionHelper.InitializeTables(tableStrings,connection);
             connection.Close();
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex,"Canceling the Startup of {PluginName} Plugin!", Name);
+            Log.Fatal(ex,"[{PluginName}] Canceling the Startup of Plugin!", Name);
             return;
         }
 
@@ -56,7 +57,7 @@ public class LoungeSystemPlugin : DefaultPlugin
         {
 
             var debugGuildId = Worker.GetServiceConfig().GetValue<ulong>("ninja-bot:debug-guild");
-            Log.Debug("Registering {PluginName} Commands in debug mode for Guild {GuildId}", Name,debugGuildId);
+            Log.Debug("[{PluginName}] Registering Commands in debug mode for Guild {GuildId}", Name,debugGuildId);
             slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>(debugGuildId);
         }
         else
@@ -71,16 +72,13 @@ public class LoungeSystemPlugin : DefaultPlugin
 
         client.ModalSubmitted += ModalSubmitted.OnModalSubmitted;
         client.ComponentInteractionCreated += ComponentInteractionCreated.InterfaceButtonPressed;
-        
-        
-        Directory.CreateDirectory(PluginDirectory);
 
         Task.Run(async () =>
         {
             await StartupCleanup.Execute();
         });
 
-        Log.Information("[{Name}] Plugin Loaded", Name);
+        Log.Information("[{PluginName}] Plugin Loaded", Name);
     }
 
 
@@ -91,6 +89,6 @@ public class LoungeSystemPlugin : DefaultPlugin
         client.VoiceStateUpdated -= VoiceStateUpdated.ChannelEnter;
         client.VoiceStateUpdated -= VoiceStateUpdated.ChannelLeave;
         
-        Log.Information("[{Name}] Plugin Unloaded", Name);
+        Log.Information("[{PluginName}] Plugin Unloaded", Name);
     }
 }

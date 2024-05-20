@@ -64,11 +64,20 @@ public static class NewLoungeHelper
         if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{username}"))
             customNamePattern = customNamePattern.Replace("{username}", owningUser.Username);
 
-        if (!ReferenceEquals(owningUser.Presence.Activity.Name,null))
+        if (!ReferenceEquals(owningUser.Presence.Activity.Name, null))
         {
             if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{activity}"))
-                customNamePattern = customNamePattern.Replace("{activity}", owningUser.Presence.Activity.Name);
+            {
+                //Don't display a status if the Activity's name is Hang Status
+                customNamePattern = owningUser.Presence.Activity.Name == "Hang Status" ? customNamePattern.Replace("{activity}", ""): 
+                    customNamePattern.Replace("{activity}", owningUser.Presence.Activity.Name);
+            }
+                
         }
+        else
+            customNamePattern = customNamePattern?.Replace("{activity}", "");
+        
+            
         
 
 

@@ -22,24 +22,21 @@ public sealed class Worker : BackgroundService
     
     private static IConfigurationRoot LoadServiceConfig()
     {
-        //Check if there are any env variables set by loading the most mandatory variable
-        var testLoad = Environment.GetEnvironmentVariable("ninja-bot:token");
-        
-        //If none are found try to read from config files
-        if (testLoad == null)
-        {
-            return new ConfigurationBuilder()
-                .SetBasePath(Program.BasePath)
-                .AddJsonFile("config.json", optional: false, reloadOnChange: true)
-                .Build();
-        }
+        var configurationBuilder = new ConfigurationBuilder();
 
-        var builder = new ConfigurationBuilder();
-        builder.AddEnvironmentVariables();
+        configurationBuilder.AddJsonFile("config.json", true);
         
-        //If env vars are set load them
-        return builder.Build();
-    }
+        configurationBuilder.AddEnvironmentVariables();
+
+        if (!Program.IsDebugEnabled) 
+            return configurationBuilder.Build();
+        
+        var assembly = AppDomain.CurrentDomain.GetAssemblies().
+            SingleOrDefault(assembly => assembly.GetName().Name == "NinjaBot-DC");
+
+        if (assembly != null) configurationBuilder.AddUserSecrets(assembly);
+        
+        return configurationBuilder.Build(); }
 
 
     static Worker()

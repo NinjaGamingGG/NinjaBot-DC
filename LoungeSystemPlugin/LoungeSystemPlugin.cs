@@ -25,7 +25,7 @@ public class LoungeSystemPlugin : DefaultPlugin
         
         Directory.CreateDirectory(PluginDirectory);
 
-        var config = ConfigHelper.Load(PluginDirectory, EnvironmentVariablePrefix);
+        var config = Worker.LoadAssemblyConfig(PluginDirectory, GetType().Assembly, EnvironmentVariablePrefix);
         
         var tableStrings = new[]
         {

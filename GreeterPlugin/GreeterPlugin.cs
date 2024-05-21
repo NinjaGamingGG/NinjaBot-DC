@@ -30,7 +30,7 @@ public class GreeterPlugin : DefaultPlugin
         StaticPluginDirectory = PluginDirectory;
         Directory.CreateDirectory(Path.Combine(PluginDirectory, "temp"));
 
-        var config = ConfigHelper.Load(PluginDirectory, EnvironmentVariablePrefix);
+        var config = Worker.LoadAssemblyConfig(PluginDirectory, GetType().Assembly, EnvironmentVariablePrefix);
 
         var tableStrings = new[]
         {

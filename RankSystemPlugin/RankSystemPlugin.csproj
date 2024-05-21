@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>Ranksystem</RootNamespace>
         <LangVersion>default</LangVersion>
+        <UserSecretsId>6fa61b95-f391-4e22-b26b-58d5fbd9b160</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>

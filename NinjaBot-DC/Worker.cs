@@ -26,7 +26,7 @@ public sealed class Worker : BackgroundService
 
         configurationBuilder.AddJsonFile("config.json", true);
         
-        configurationBuilder.AddEnvironmentVariables();
+        configurationBuilder.AddEnvironmentVariables("ninja-bot");
 
         if (!Program.IsDebugEnabled) 
             return configurationBuilder.Build();
@@ -36,7 +36,24 @@ public sealed class Worker : BackgroundService
 
         if (assembly != null) configurationBuilder.AddUserSecrets(assembly);
         
-        return configurationBuilder.Build(); }
+        return configurationBuilder.Build(); 
+    }
+    
+    public static IConfigurationRoot LoadAssemblyConfig(string path, Assembly assembly, string envVarPrefix)
+    {
+        var configurationBuilder = new ConfigurationBuilder();
+
+        configurationBuilder.AddJsonFile(path, true);
+        
+        configurationBuilder.AddEnvironmentVariables(envVarPrefix);
+
+        if (!Program.IsDebugEnabled) 
+            return configurationBuilder.Build();
+
+        configurationBuilder.AddUserSecrets(assembly);
+        
+        return configurationBuilder.Build(); 
+    }
 
 
     static Worker()

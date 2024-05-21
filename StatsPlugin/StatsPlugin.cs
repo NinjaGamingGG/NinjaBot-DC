@@ -4,7 +4,6 @@ using NinjaBot_DC;
 using PluginBase;
 using Serilog;
 using StatsPlugin.PluginHelper;
-using ConfigHelper = CommonPluginHelpers.ConfigHelper;
 
 namespace StatsPlugin;
 
@@ -22,7 +21,7 @@ public class StatsPlugin : DefaultPlugin
             return;
         }
 
-        var config = ConfigHelper.Load(PluginDirectory, EnvironmentVariablePrefix);
+        var config = Worker.LoadAssemblyConfig(PluginDirectory, GetType().Assembly, EnvironmentVariablePrefix);
         MySqlConnectionHelper = new MySqlConnectionHelper(EnvironmentVariablePrefix, config, Name);
 
 

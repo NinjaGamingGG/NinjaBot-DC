@@ -4,6 +4,13 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <PackageId>NinjaGaming.NinjaBot.CommonPluginHelpers</PackageId>
+        <Title>NinjaBot CommonPluginHelpers</Title>
+        <Authors>Luca Taschner</Authors>
+        <Version>1.0.0-Pre</Version>
+        <RepositoryUrl>https://github.com/NinjaGamingGG/NinjaBot-DC</RepositoryUrl>
+        <PackageLicenseUrl>https://www.gnu.org/licenses/gpl-3.0.html</PackageLicenseUrl>
+        <Description>Common Plugin Helpers for NinjaBot, a C# Discord Bot using DSharpPlus</Description>
     </PropertyGroup>
 
     <ItemGroup>

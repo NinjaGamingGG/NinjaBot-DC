@@ -34,69 +34,80 @@ public static class NewLoungeHelper
         try
         {
             var mySqlConnection = new MySqlConnection(connectionString);
-            
-            var channels = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystem.LoungeSystemConfigurationIndex WHERE GuildId = @GuildId", new { GuildId = guild.Id});
-        
-            var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>("SELECT * FROM LoungeSystem.LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId", new {GuildId = guild.Id, ChannelId = originalChannel.Id});
-            await mySqlConnection.CloseAsync();
-            
-            channelsList = channels.ToList();
-            loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ?? nameReplacementRecord.ToArray();
 
+            var channels = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>(
+                "SELECT * FROM LoungeSystem.LoungeSystemConfigurationIndex WHERE GuildId = @GuildId",
+                new { GuildId = guild.Id });
+
+            var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>(
+                "SELECT * FROM LoungeSystem.LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId",
+                new { GuildId = guild.Id, ChannelId = originalChannel.Id });
+            await mySqlConnection.CloseAsync();
+
+            channelsList = channels.ToList();
+            loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ??
+                                               nameReplacementRecord.ToArray();
         }
         catch (Exception ex)
         {
-            Log.Error(ex,"Unable to Retrieve Lounge System Config & NameReplacement Records from Database");
+            Log.Error(ex, "Unable to Retrieve Lounge System Config & NameReplacement Records from Database");
             return;
         }
-        
-    
+
+
         if (loungeMessageReplacementsAsArray.Length == 0)
-         return;
-        
+            return;
+
         foreach (var replacement in loungeMessageReplacementsAsArray)
         {
             if (replacement.ReplacementHandle == "Custom_Name")
                 customNamePattern = replacement.ReplacementValue;
         }
-        
-        
+
+
         if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{username}"))
             customNamePattern = customNamePattern.Replace("{username}", owningUser.Username);
 
-        if (!ReferenceEquals(owningUser.Presence.Activity.Name, null))
+        try
         {
-            if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{activity}"))
+            if (!ReferenceEquals(owningUser.Presence.Activity.Name, null))
             {
-                //Don't display a status if the Activity's name is Hang Status
-                customNamePattern = owningUser.Presence.Activity.Name == "Hang Status" ? customNamePattern.Replace("{activity}", ""): 
-                    customNamePattern.Replace("{activity}", owningUser.Presence.Activity.Name);
+                if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{activity}"))
+                {
+                    //Don't display a status if the Activity's name is Hang Status
+                    customNamePattern = owningUser.Presence.Activity.Name == "Hang Status"
+                        ? customNamePattern.Replace("{activity}", "")
+                        : customNamePattern.Replace("{activity}", owningUser.Presence.Activity.Name);
+                }
             }
-                
+            else
+                customNamePattern = customNamePattern?.Replace("{activity}", "");
         }
-        else
-            customNamePattern = customNamePattern?.Replace("{activity}", "");
-        
+        catch (Exception ex)
+        {
+            Log.Error(ex,"{PluginName} Unable to get Users Presence Activity Name during Lounge creation","LoungeSystem Plugin");
             
-        
+        }
+
 
 
         if (ReferenceEquals(customNamePattern, null))
             return;
-        
+
         ulong interfaceChannel = 0;
 
-        foreach (var channelConfig in channelsList.Where(channelConfig => originalChannel.Id == channelConfig.TargetChannelId))
+        foreach (var channelConfig in channelsList.Where(channelConfig =>
+                     originalChannel.Id == channelConfig.TargetChannelId))
         {
             channelExists = true;
             interfaceChannel = channelConfig.InterfaceChannelId;
-            
+
             break;
         }
 
         if (channelExists == false)
             return;
-        
+
         originalChannel.Guild.Members.TryGetValue(owningUser.Id, out var discordMember);
         if (ReferenceEquals(discordMember, null))
             return;
@@ -115,16 +126,18 @@ public static class NewLoungeHelper
         var roleSpecificOverrides = await BuildOverwritesForRequiredRoles(guild.Id, originalChannel.Id);
         overWriteBuildersList.AddRange(roleSpecificOverrides);
 
-        
+
         var channelNamePattern =
             await ChannelNameBuilder.BuildAsync(guild.Id, originalChannel.Id,
                 customNamePattern);
-        
-        var newChannel = await originalChannel.Guild.CreateVoiceChannelAsync(channelNamePattern, originalChannel.Parent, originalChannel.Bitrate,4, position: originalChannel.Position + 1, overwrites:overWriteBuildersList);
-        
+
+        var newChannel = await originalChannel.Guild.CreateVoiceChannelAsync(channelNamePattern,
+            originalChannel.Parent, originalChannel.Bitrate, 4, position: originalChannel.Position + 1,
+            overwrites: overWriteBuildersList);
+
         if (ReferenceEquals(newChannel, null))
             return;
-        
+
         var newModel = new LoungeDbRecord()
         {
             GuildId = guild.Id,
@@ -135,20 +148,22 @@ public static class NewLoungeHelper
         };
 
         int inserted;
-        
+
         try
         {
             var mySqlConnection = new MySqlConnection(connectionString);
-            inserted = await mySqlConnection.ExecuteAsync("INSERT INTO LoungeSystem.LoungeIndex (ChannelId, GuildId, OwnerId, IsPublic, OriginChannel) VALUES (@ChannelId,@GuildId,@OwnerId,@IsPublic,@OriginChannel)",newModel);
+            inserted = await mySqlConnection.ExecuteAsync(
+                "INSERT INTO LoungeSystem.LoungeIndex (ChannelId, GuildId, OwnerId, IsPublic, OriginChannel) VALUES (@ChannelId,@GuildId,@OwnerId,@IsPublic,@OriginChannel)",
+                newModel);
             await mySqlConnection.CloseAsync();
         }
         catch (Exception ex)
         {
-            Log.Error(ex,"Unable to insert into Mysql LoungeIndex");
+            Log.Error(ex, "Unable to insert into Mysql LoungeIndex");
             return;
         }
 
-        
+
         if (inserted == 0)
         {
             await newChannel.DeleteAsync();
@@ -156,16 +171,19 @@ public static class NewLoungeHelper
         }
 
         await discordMember.PlaceInAsync(newChannel);
-        
+
         await newChannel.SendMessageAsync("Welcome to your Lounge!");
 
         if (interfaceChannel != 0)
             return;
 
         var discordClient = Worker.GetServiceDiscordClient();
-            
-        var builder = InterfaceMessageBuilder.GetBuilder(discordClient,discordMember.Mention + " this is your lounge Interface");
+
+        var builder = InterfaceMessageBuilder.GetBuilder(discordClient,
+            discordMember.Mention + " this is your lounge Interface");
         await newChannel.SendMessageAsync(builder);
+
+
     }
 
     /// <summary>

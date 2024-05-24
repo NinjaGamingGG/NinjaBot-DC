@@ -70,7 +70,9 @@ public static class NewLoungeHelper
 
         try
         {
-            if (!ReferenceEquals(owningUser.Presence.Activity.Name, null))
+            if (!ReferenceEquals(owningUser.Presence, null) &&
+                !ReferenceEquals(owningUser.Presence.Activity, null) &&
+                !ReferenceEquals(owningUser.Presence.Activity.Name, null))
             {
                 if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{activity}"))
                 {
@@ -85,12 +87,10 @@ public static class NewLoungeHelper
         }
         catch (Exception ex)
         {
-            Log.Error(ex,"{PluginName} Unable to get Users Presence Activity Name during Lounge creation","LoungeSystem Plugin");
-            
+            Log.Error(ex, "{PluginName} Unable to get Users Presence Activity Name during Lounge creation",
+                "LoungeSystem Plugin");
         }
-
-
-
+        
         if (ReferenceEquals(customNamePattern, null))
             return;
 

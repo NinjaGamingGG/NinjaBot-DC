@@ -43,7 +43,7 @@ public class RankSystemPlugin : DefaultPlugin
             return;
         }
         
-        var config = Worker.LoadAssemblyConfig(PluginDirectory, GetType().Assembly, EnvironmentVariablePrefix);
+        var config = Worker.LoadAssemblyConfig(Path.Combine(PluginDirectory,"config.json"), GetType().Assembly, EnvironmentVariablePrefix);
         
         var tableStrings = new[]
         {

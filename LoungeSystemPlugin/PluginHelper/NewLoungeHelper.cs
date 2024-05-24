@@ -70,6 +70,7 @@ public static class NewLoungeHelper
 
         try
         {
+            //Check if Users Presence or Activity is null
             if (!ReferenceEquals(owningUser.Presence, null) &&
                 !ReferenceEquals(owningUser.Presence.Activity, null) &&
                 !ReferenceEquals(owningUser.Presence.Activity.Name, null))

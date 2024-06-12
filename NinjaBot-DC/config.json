@@ -4,6 +4,7 @@
     "token": "Your Token Here",
     "prefix": "!",
     "sqlite-source":  "database.sqlite",
-    "plugin-folder": "plugins"
+    "plugin-folder": "plugins",
+    "debug-guild": "0"
   }
 }

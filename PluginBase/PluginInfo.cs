@@ -1,4 +1,5 @@
-﻿namespace PluginBase;
+﻿// ReSharper disable UnassignedField.Global
+namespace PluginBase;
 
 public class PluginInfo
 {

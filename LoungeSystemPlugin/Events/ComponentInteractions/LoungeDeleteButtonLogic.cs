@@ -48,6 +48,13 @@ public static class LoungeDeleteButtonLogic
 
         var loungeChannel = eventArgs.Channel;
 
+        var afkChannel = eventArgs.Guild.AfkChannel;
+        
+        foreach (var loungeChannelUser in loungeChannel.Users)
+        {
+            await loungeChannelUser.PlaceInAsync(afkChannel);
+        }
+
         await loungeChannel.DeleteAsync();
         bool deleteSuccess;
         try

@@ -7,7 +7,7 @@ namespace LoungeSystemPlugin.Events.ComponentInteractions;
 
 public static class LoungeUnTrustUserButton
 {
-    internal static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
+    internal static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
         await eventArgs.Interaction.DeferAsync();
 
@@ -22,7 +22,7 @@ public static class LoungeUnTrustUserButton
 
         foreach (var overwriteEntry in channelOverwrites)
         {
-            if (overwriteEntry.Type == OverwriteType.Role)
+            if (overwriteEntry.Type == DiscordOverwriteType.Role)
                 continue;
             
             //Check if User is Owner / command sender
@@ -43,7 +43,7 @@ public static class LoungeUnTrustUserButton
         await ThrowAwayFollowupMessage.HandleAsync(followUpMessageBuilder, eventArgs.Interaction);
     }
     
-    internal static async Task DropdownInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
+    internal static async Task DropdownInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
         await eventArgs.Interaction.DeferAsync();
 
@@ -68,7 +68,7 @@ public static class LoungeUnTrustUserButton
                 continue;
 
 
-            if (existingOverwrite.Type == OverwriteType.Role)
+            if (existingOverwrite.Type == DiscordOverwriteType.Role)
             {
                 var role = eventArgs.Guild.GetRole(existingOverwrite.Id);
                 

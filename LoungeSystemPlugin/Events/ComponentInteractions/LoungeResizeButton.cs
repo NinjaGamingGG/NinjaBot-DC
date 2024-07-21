@@ -8,7 +8,7 @@ namespace LoungeSystemPlugin.Events.ComponentInteractions;
 
 public static class LoungeResizeButton
 {
-    internal static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
+    internal static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
         await eventArgs.Interaction.DeferAsync();
 
@@ -41,7 +41,7 @@ public static class LoungeResizeButton
 
     }
 
-    internal static async Task DropdownInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
+    internal static async Task DropdownInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
         await eventArgs.Interaction.DeferAsync();
 

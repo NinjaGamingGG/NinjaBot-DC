@@ -7,7 +7,7 @@ namespace LoungeSystemPlugin.Events.ModalsSubmitted;
 
 public static class LoungeRenameModal
 {
-    public static async Task WasSubmitted(DiscordClient sender, ModalSubmitEventArgs eventArgs)
+    public static async Task WasSubmitted(DiscordClient sender, ModalSubmittedEventArgs eventArgs)
     {
         await eventArgs.Interaction.DeferAsync();
         

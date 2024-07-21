@@ -1,9 +1,8 @@
-﻿using LoungeSystemPlugin.CommandModules;
-using LoungeSystemPlugin.Events;
+﻿using LoungeSystemPlugin.Events;
 using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
 using CommonPluginHelpers;
-using Microsoft.Extensions.Configuration;
+using DSharpPlus;
 using MySqlConnector;
 using PluginBase;
 using Serilog;
@@ -15,6 +14,17 @@ public class LoungeSystemPlugin : DefaultPlugin
 {
     public static MySqlConnectionHelper MySqlConnectionHelper { get; private set; } = null!;
 
+    private static string? _staticPluginName;
+    public static string GetStaticPluginName()
+    {
+        return _staticPluginName ?? "Not Initialized";
+    }
+
+    private static void SetStaticPluginName(string pluginName)
+    {
+        _staticPluginName = pluginName;
+    }
+    
     public override void OnLoad()
     {
         if (ReferenceEquals(PluginDirectory, null))
@@ -22,6 +32,8 @@ public class LoungeSystemPlugin : DefaultPlugin
             OnUnload();
             return;
         }
+        
+        SetStaticPluginName(Name);
         
         Directory.CreateDirectory(PluginDirectory);
 
@@ -50,40 +62,14 @@ public class LoungeSystemPlugin : DefaultPlugin
             Log.Fatal(ex,"[{PluginName}] Canceling the Startup of Plugin!", Name);
             return;
         }
-
-        var slashCommands = Worker.GetServiceSlashCommandsExtension();
         
-        if (Program.IsDebugEnabled)
-        {
+        var clientBuilder = Worker.GetDiscordClientBuilder();
 
-            var debugGuildId = Worker.GetServiceConfig().GetValue<ulong>("ninja-bot:debug-guild");
-            if (debugGuildId == 0)
-            {
-                Log.Error("[{PluginName}] No debug guild id set despite running a debug build. " +
-                          "\nTo set a Debug Guild Id Add \"debug-guild\": \"123456\" to your config.json or Environment Variables." +
-                          "\n Continuing without a specific debug guild (registering commands on all guilds)", Name);
-                slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>();
-            }
-            else
-            {
-                Log.Debug("[{PluginName}] Registering Commands in debug mode for Guild {GuildId}", Name,debugGuildId);
-                slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>(debugGuildId);
-            }
-            
-
-        }
-        else
-            slashCommands.RegisterCommands<LoungeSystemSubGroupContainer>();
-  
-
-
-        var client = Worker.GetServiceDiscordClient();
-        
-        client.VoiceStateUpdated += VoiceStateUpdated.ChannelEnter;
-        client.VoiceStateUpdated += VoiceStateUpdated.ChannelLeave;
-
-        client.ModalSubmitted += ModalSubmitted.OnModalSubmitted;
-        client.ComponentInteractionCreated += ComponentInteractionCreated.InterfaceButtonPressed;
+        clientBuilder.ConfigureEventHandlers(
+            builder => builder.HandleModalSubmitted(ModalSubmitted.ModalSubmittedHandler)
+                .HandleVoiceStateUpdated(VoiceStateUpdated.ChannelEnter)
+                .HandleVoiceStateUpdated(VoiceStateUpdated.ChannelLeave)
+                .HandleComponentInteractionCreated(ComponentInteractionCreated.InterfaceButtonPressed));
 
         Task.Run(async () =>
         {
@@ -96,11 +82,6 @@ public class LoungeSystemPlugin : DefaultPlugin
 
     public override void OnUnload()
     {
-        var client = Worker.GetServiceDiscordClient();
-        
-        client.VoiceStateUpdated -= VoiceStateUpdated.ChannelEnter;
-        client.VoiceStateUpdated -= VoiceStateUpdated.ChannelLeave;
-        
         Log.Information("[{PluginName}] Plugin Unloaded", Name);
     }
 }

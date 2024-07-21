@@ -1,9 +1,10 @@
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
 using System.Reflection;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.SlashCommands;
+using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.SlashCommands;
 using NinjaBot_DC.PluginLoader;
 using PluginBase;
 using Serilog;
@@ -16,7 +17,9 @@ public sealed class Worker : BackgroundService
     
     private static readonly DiscordClient DiscordClient;
 
-    private static readonly SlashCommandsExtension SlashCommandsExtension;
+    private static readonly DiscordClientBuilder ClientBuilder;
+    
+    private static readonly CommandsExtension CommandsExtension;
 
     private static IPlugin[]? _loadedPluginsArray;
     
@@ -61,25 +64,30 @@ public sealed class Worker : BackgroundService
         Configuration = LoadServiceConfig();
         var token = Configuration.GetValue<string>("ninja-bot:token");
         token ??= "";
+
+        ClientBuilder = DiscordClientBuilder.CreateDefault(token,
+            DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents |
+            DiscordIntents.GuildMembers | DiscordIntents.GuildPresences | DiscordIntents.GuildVoiceStates)
+            .ConfigureLogging(builder => builder.ClearProviders().AddSerilog() );
         
-        var logFactory = new LoggerFactory().AddSerilog();
+        LoadPlugins();
         
-        DiscordClient = new DiscordClient(new DiscordConfiguration()
+        DiscordClient = ClientBuilder.Build();
+        
+
+        CommandsExtension = DiscordClient.UseCommands(new CommandsConfiguration()
         {
-            Token = token,
-            TokenType = TokenType.Bot,
-            Intents = DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents |
-                      DiscordIntents.GuildMembers | DiscordIntents.GuildPresences | DiscordIntents.GuildVoiceStates,
-            LoggerFactory = logFactory
+            DebugGuildId = Configuration.GetValue<ulong>("ninja-bot:debug-guild"),
+            RegisterDefaultCommandProcessors = true
         });
         
-        SlashCommandsExtension = DiscordClient.UseSlashCommands();
         DiscordClient.UseInteractivity(new InteractivityConfiguration()
         {
         
             Timeout = TimeSpan.FromSeconds(60)
             
         });
+        
     }
 
     public static IConfigurationRoot GetServiceConfig()
@@ -92,10 +100,15 @@ public sealed class Worker : BackgroundService
     {
         return DiscordClient;
     }
-    
-    public static SlashCommandsExtension GetServiceSlashCommandsExtension()
+
+    public static DiscordClientBuilder GetDiscordClientBuilder()
     {
-        return SlashCommandsExtension;
+        return ClientBuilder;
+    }
+    
+    public static CommandsExtension GetServiceCommandsExtension()
+    {
+        return CommandsExtension;
     }
     
     public static CancellationToken? BotCancellationToken { get; private set; }
@@ -103,14 +116,17 @@ public sealed class Worker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         BotCancellationToken = stoppingToken;
+
+        var slashCommandProcessor = new SlashCommandProcessor();
+
+        await CommandsExtension.AddProcessorAsync(slashCommandProcessor);
         
-        var taskList = new List<Task>() {RegisterCommands(), RegisterEvents()};
-        await Task.WhenAll(taskList);
-        
-        await LoadPlugins();
+        DiscordActivity status = new("/help", DiscordActivityType.Watching);
+
+        await RegisterPluginCommands();
         
         Log.Information("Starting up the Bot");
-        await DiscordClient.ConnectAsync();
+        await DiscordClient.ConnectAsync(status, DiscordUserStatus.Online);
         
 
         while (!stoppingToken.IsCancellationRequested)
@@ -138,14 +154,14 @@ public sealed class Worker : BackgroundService
     /// Loads plugins from the specified plugin folder.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    private static Task LoadPlugins()
+    private static void LoadPlugins()
     {
         
         var pluginFolderConfig = Configuration.GetValue<string>("ninja-bot:plugin-folder");
         if (ReferenceEquals(pluginFolderConfig, null))
         {
             Log.Fatal("Unable to load Plugin Path from Config");
-            return Task.CompletedTask;
+            return;
         }
 
         var pluginFolder = Path.Combine(Program.BasePath ,pluginFolderConfig);
@@ -178,8 +194,6 @@ public sealed class Worker : BackgroundService
         }
 
         _loadedPluginsArray = pluginsArray;
-        
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -201,28 +215,23 @@ public sealed class Worker : BackgroundService
         return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Registers the commands for the Discord bot.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    private static Task RegisterCommands()
+    private static Task RegisterPluginCommands()
     {
-        var stringPrefix = Configuration.GetValue<string>("ninja-bot:prefix");
+        if (_loadedPluginsArray == null) 
+            return Task.CompletedTask;
 
-        stringPrefix ??= "1";
-        
-        Log.Information("Registering Commands");
-        DiscordClient.UseCommandsNext(new CommandsNextConfiguration
+        var pluginsArray = _loadedPluginsArray;
+        var commandsExtension = Worker.GetServiceCommandsExtension();
+
+        for (var i = 0; i < pluginsArray.Length; i++)
         {
-            StringPrefixes  = new []{stringPrefix},
-        });
+            var pluginType = pluginsArray[i].GetType();
+            commandsExtension.AddCommands(pluginType.Assembly);
 
+
+        }
+        
         return Task.CompletedTask;
     }
-
-    private static Task RegisterEvents()
-    {
-        Log.Information("Registering Events");
-        return Task.CompletedTask;
-    }
+    
 }

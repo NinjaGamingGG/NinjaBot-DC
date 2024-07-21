@@ -55,7 +55,6 @@ public abstract class DefaultPlugin : IPlugin
 
     public abstract void OnLoad();
 
-
     public abstract void OnUnload();
 
 }

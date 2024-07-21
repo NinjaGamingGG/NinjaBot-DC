@@ -10,7 +10,7 @@ namespace LoungeSystemPlugin.Events;
 
 public static class VoiceStateUpdated
 {
-    public static async Task ChannelEnter(DiscordClient client, VoiceStateUpdateEventArgs eventArgs)
+    public static async Task ChannelEnter(DiscordClient client, VoiceStateUpdatedEventArgs eventArgs)
     {
         if (ReferenceEquals(eventArgs.Channel, null))
             return;
@@ -18,7 +18,7 @@ public static class VoiceStateUpdated
         await NewLoungeHelper.CreateNewLounge(eventArgs.Guild, eventArgs.Channel, eventArgs.User);
     }
 
-    public static async Task ChannelLeave(DiscordClient client, VoiceStateUpdateEventArgs eventArgs)
+    public static async Task ChannelLeave(DiscordClient client, VoiceStateUpdatedEventArgs eventArgs)
     {
         if (ReferenceEquals(eventArgs.Before, null))
             return;

@@ -7,7 +7,7 @@ namespace LoungeSystemPlugin.Events.ComponentInteractions;
 
 public static class LoungeKickButton
 {
-    internal static async Task DropdownInteraction(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
+    internal static async Task DropdownInteraction(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
         await eventArgs.Interaction.DeferAsync();
 
@@ -24,15 +24,17 @@ public static class LoungeKickButton
         foreach (var userId in selectedUserIds)
         {
             var user = await eventArgs.Guild.GetMemberAsync(ulong.Parse(userId));
+            
+            var afkChannel = await eventArgs.Guild.GetAfkChannelAsync();
 
             await user.ModifyAsync(delegate (MemberEditModel kick)
             {
-                kick.VoiceChannel = eventArgs.Guild.AfkChannel;
+                kick.VoiceChannel = afkChannel;
             });
         }
     }
 
-    internal static async Task ButtonInteraction(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
+    internal static async Task ButtonInteraction(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
         await eventArgs.Interaction.DeferAsync();
 

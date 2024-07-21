@@ -1,4 +1,5 @@
 ﻿using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.Events.ComponentInteractions;
 
@@ -7,11 +8,11 @@ namespace LoungeSystemPlugin.Events;
 
 public static class ComponentInteractionCreated
 {
-    public static async Task InterfaceButtonPressed(DiscordClient sender, ComponentInteractionCreateEventArgs eventArgs)
+    public static async Task InterfaceButtonPressed(DiscordClient sender, ComponentInteractionCreatedEventArgs eventArgs)
     {
         if (ReferenceEquals(eventArgs.User, null))
         {
-            await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
             return;
         }
 
@@ -78,7 +79,7 @@ public static class ComponentInteractionCreated
                 break;
             
             default:
-                await eventArgs.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+                await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
                 return;
         }
     }

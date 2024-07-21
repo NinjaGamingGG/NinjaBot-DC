@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
@@ -10,7 +9,7 @@ namespace LoungeSystemPlugin.Events.ComponentInteractions;
 
 public static class LoungeLockButton
 {
-    internal static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
+    internal static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
         await eventArgs.Interaction.DeferAsync();
 
@@ -54,7 +53,7 @@ public static class LoungeLockButton
         await LockLoungeLogic(eventArgs);
     }
 
-    private static async Task LockLoungeLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task LockLoungeLogic(ComponentInteractionCreatedEventArgs eventArgs)
     {
         var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         List<ulong> requiresRolesList;
@@ -83,7 +82,7 @@ public static class LoungeLockButton
         
         foreach (var overwrite in existingOverwrites)
         {
-            if (overwrite.Type == OverwriteType.Role)
+            if (overwrite.Type == DiscordOverwriteType.Role)
                 continue;
             
             var overwriteMember = await overwrite.GetMemberAsync();
@@ -94,11 +93,11 @@ public static class LoungeLockButton
             requiresRolesList.Add(eventArgs.Guild.EveryoneRole.Id);
 
         overwriteBuilderList.AddRange(requiresRolesList.Select(requiredRole => eventArgs.Guild.GetRole(requiredRole))
-            .Select(role => new DiscordOverwriteBuilder(role).Allow(Permissions.AccessChannels)
-                .Deny(Permissions.SendMessages)
-                .Deny(Permissions.UseVoice)
-                .Deny(Permissions.Speak)
-                .Deny(Permissions.Stream)));
+            .Select(role => new DiscordOverwriteBuilder(role).Allow(DiscordPermissions.AccessChannels)
+                .Deny(DiscordPermissions.SendMessages)
+                .Deny(DiscordPermissions.UseVoice)
+                .Deny(DiscordPermissions.Speak)
+                .Deny(DiscordPermissions.Stream)));
         
         await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
 
@@ -121,7 +120,7 @@ public static class LoungeLockButton
     
     
     
-    private static async Task UnLockLoungeLogic(ComponentInteractionCreateEventArgs eventArgs)
+    private static async Task UnLockLoungeLogic(ComponentInteractionCreatedEventArgs eventArgs)
     {
         var lounge = eventArgs.Channel;
 
@@ -130,7 +129,7 @@ public static class LoungeLockButton
         
         foreach (var overwrite in existingOverwrites)
         {
-            if (overwrite.Type == OverwriteType.Role)
+            if (overwrite.Type == DiscordOverwriteType.Role)
                 continue;
             
             var overwriteMember = await overwrite.GetMemberAsync();
@@ -163,18 +162,18 @@ public static class LoungeLockButton
             requiresRolesList.Add(eventArgs.Guild.EveryoneRole.Id);
         else
             overwriteBuilderList.Add(new DiscordOverwriteBuilder(eventArgs.Guild.EveryoneRole)
-                .Deny(Permissions.AccessChannels)
-                .Deny(Permissions.SendMessages)
-                .Deny(Permissions.UseVoice)
-                .Deny(Permissions.Speak)
-                .Deny(Permissions.Stream));
+                .Deny(DiscordPermissions.AccessChannels)
+                .Deny(DiscordPermissions.SendMessages)
+                .Deny(DiscordPermissions.UseVoice)
+                .Deny(DiscordPermissions.Speak)
+                .Deny(DiscordPermissions.Stream));
 
         overwriteBuilderList.AddRange(requiresRolesList.Select(requiredRole => eventArgs.Guild.GetRole(requiredRole))
-            .Select(role => new DiscordOverwriteBuilder(role).Allow(Permissions.AccessChannels)
-                .Allow(Permissions.SendMessages)
-                .Allow(Permissions.UseVoice)
-                .Allow(Permissions.Speak)
-                .Allow(Permissions.Stream)));
+            .Select(role => new DiscordOverwriteBuilder(role).Allow(DiscordPermissions.AccessChannels)
+                .Allow(DiscordPermissions.SendMessages)
+                .Allow(DiscordPermissions.UseVoice)
+                .Allow(DiscordPermissions.Speak)
+                .Allow(DiscordPermissions.Stream)));
 
         await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
 

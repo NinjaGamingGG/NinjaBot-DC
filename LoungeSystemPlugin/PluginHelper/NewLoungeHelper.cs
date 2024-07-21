@@ -116,12 +116,12 @@ public static class NewLoungeHelper
         var overWriteBuildersList = new List<DiscordOverwriteBuilder>
         {
             new DiscordOverwriteBuilder(discordMember)
-                .Allow(Permissions.AccessChannels)
-                .Allow(Permissions.UseVoice)
-                .Allow(Permissions.Speak)
-                .Allow(Permissions.SendMessages)
-                .Allow(Permissions.Stream)
-                .Allow(Permissions.PrioritySpeaker)
+                .Allow(DiscordPermissions.AccessChannels)
+                .Allow(DiscordPermissions.UseVoice)
+                .Allow(DiscordPermissions.Speak)
+                .Allow(DiscordPermissions.SendMessages)
+                .Allow(DiscordPermissions.Stream)
+                .Allow(DiscordPermissions.PrioritySpeaker)
         };
 
         var roleSpecificOverrides = await BuildOverwritesForRequiredRoles(guild.Id, originalChannel.Id);
@@ -211,19 +211,19 @@ public static class NewLoungeHelper
             requiredRolesList.Add(new RequiredRoleRecord{RoleId = guild.EveryoneRole.Id});
         else
             overWriteBuildersList.Add(new DiscordOverwriteBuilder(guild.EveryoneRole)
-                .Deny(Permissions.AccessChannels)
-                .Deny(Permissions.SendMessages)
-                .Deny(Permissions.UseVoice)
-                .Deny(Permissions.Speak)
-                .Deny(Permissions.Stream));
+                .Deny(DiscordPermissions.AccessChannels)
+                .Deny(DiscordPermissions.SendMessages)
+                .Deny(DiscordPermissions.UseVoice)
+                .Deny(DiscordPermissions.Speak)
+                .Deny(DiscordPermissions.Stream));
 
         overWriteBuildersList.AddRange(requiredRolesList.Select(requiredRole => guild.GetRole(requiredRole.RoleId))
             .Select(discordRole => new DiscordOverwriteBuilder(discordRole)
-                .Allow(Permissions.AccessChannels)
-                .Allow(Permissions.UseVoice)
-                .Allow(Permissions.Speak)
-                .Allow(Permissions.SendMessages)
-                .Allow(Permissions.Stream)));
+                .Allow(DiscordPermissions.AccessChannels)
+                .Allow(DiscordPermissions.UseVoice)
+                .Allow(DiscordPermissions.Speak)
+                .Allow(DiscordPermissions.SendMessages)
+                .Allow(DiscordPermissions.Stream)));
 
         return overWriteBuildersList;
     }

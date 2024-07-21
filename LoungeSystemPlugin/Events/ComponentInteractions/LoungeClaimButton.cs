@@ -9,7 +9,7 @@ namespace LoungeSystemPlugin.Events.ComponentInteractions;
 
 public static class LoungeClaimButton
 {
-    internal static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
+    internal static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
         await eventArgs.Interaction.DeferAsync();
 

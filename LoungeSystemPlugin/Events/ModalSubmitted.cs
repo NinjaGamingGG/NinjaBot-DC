@@ -7,7 +7,7 @@ namespace LoungeSystemPlugin.Events;
 
 internal static class ModalSubmitted
 {
-    internal static async Task OnModalSubmitted(DiscordClient sender, ModalSubmitEventArgs eventArgs)
+    internal static async Task ModalSubmittedHandler(DiscordClient sender, ModalSubmittedEventArgs eventArgs)
     {
         switch (eventArgs.Interaction.Data.CustomId)
         {

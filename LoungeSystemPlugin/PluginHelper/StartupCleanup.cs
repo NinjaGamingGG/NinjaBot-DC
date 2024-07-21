@@ -40,8 +40,8 @@ public static class StartupCleanup
         }
         
         var client = Worker.GetServiceDiscordClient();
-
-        while (!client.IsConnected)
+        
+        while (!client.AllShardsConnected)
         {
             await Task.Delay(TimeSpan.FromSeconds(3));
         }
@@ -85,7 +85,7 @@ public static class StartupCleanup
 
             await foreach (var member in allGuildUsers)
             {
-                if (ReferenceEquals(member.VoiceState?.Channel, null))
+                if (ReferenceEquals(member.VoiceState.Channel, null))
                     continue;
 
                 if (member.VoiceState.Channel.Id != guildConfig.TargetChannelId)

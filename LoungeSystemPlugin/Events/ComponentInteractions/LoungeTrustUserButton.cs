@@ -7,7 +7,7 @@ namespace LoungeSystemPlugin.Events.ComponentInteractions;
 
 public static class LoungeTrustUserButton
 {
-    internal static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
+    internal static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
         await eventArgs.Interaction.DeferAsync();
 
@@ -21,7 +21,7 @@ public static class LoungeTrustUserButton
         await ThrowAwayFollowupMessage.HandleAsync(followUpMessageBuilder, eventArgs.Interaction);
     }
     
-    public static async Task UserSelected(ComponentInteractionCreateEventArgs eventArgs, DiscordMember member)
+    public static async Task UserSelected(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
         await eventArgs.Interaction.DeferAsync();
         var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
@@ -42,11 +42,11 @@ public static class LoungeTrustUserButton
             var overwriteBuilderList = new List<DiscordOverwriteBuilder>
             {
                 new DiscordOverwriteBuilder(selectedUser)
-                    .Allow(Permissions.AccessChannels)
-                    .Allow(Permissions.SendMessages)
-                    .Allow(Permissions.UseVoice)
-                    .Allow(Permissions.Speak)
-                    .Allow(Permissions.Stream)
+                    .Allow(DiscordPermissions.AccessChannels)
+                    .Allow(DiscordPermissions.SendMessages)
+                    .Allow(DiscordPermissions.UseVoice)
+                    .Allow(DiscordPermissions.Speak)
+                    .Allow(DiscordPermissions.Stream)
             };
 
             var existingOverwrites = eventArgs.Channel.PermissionOverwrites;

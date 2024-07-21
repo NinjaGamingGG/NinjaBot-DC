@@ -14,21 +14,18 @@
     <ItemGroup>
         <PackageReference Include="Dapper" Version="2.1.35" />
         <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
-        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02201" />
-        <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-02201" />
-        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-02201" />
-        <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-02201" />
-        <PackageReference Include="Magick.NET-Q16-x64" Version="13.6.0" />
-        <PackageReference Include="Magick.NET.SystemDrawing" Version="7.2.2" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0-preview.3.24172.9" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.0-preview.3.24172.9" />
-        <PackageReference Include="MySqlConnector" Version="2.3.6" />
-        <PackageReference Include="Serilog" Version="4.0.0-dev-02149" />
+        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02329" />
+        <PackageReference Include="DSharpPlus.Commands" Version="5.0.0-nightly-02329" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-02329" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0-preview.6.24327.7" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.0-preview.6.24327.7" />
+        <PackageReference Include="MySqlConnector" Version="2.3.7" />
+        <PackageReference Include="Serilog" Version="4.0.1-dev-02205" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
-        <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.1-dev-10389" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.1-dev-00582" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="5.1.0-dev-00943" />
-        <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00972" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.1-dev-10391" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.2" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
         <None Update="config.json" CopyToOutputDirectory="PreserveNewest" />
         <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
     </ItemGroup>

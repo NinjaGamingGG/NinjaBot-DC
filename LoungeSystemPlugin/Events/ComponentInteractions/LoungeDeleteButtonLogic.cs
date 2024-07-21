@@ -11,7 +11,7 @@ namespace LoungeSystemPlugin.Events.ComponentInteractions;
 
 public static class LoungeDeleteButtonLogic
 {
-    public static async Task ButtonInteracted(ComponentInteractionCreateEventArgs eventArgs, DiscordMember owningMember)
+    public static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
         await eventArgs.Interaction.DeferAsync();
 
@@ -48,7 +48,7 @@ public static class LoungeDeleteButtonLogic
 
         var loungeChannel = eventArgs.Channel;
 
-        var afkChannel = eventArgs.Guild.AfkChannel;
+        var afkChannel = await eventArgs.Guild.GetAfkChannelAsync();
         
         foreach (var loungeChannelUser in loungeChannel.Users)
         {

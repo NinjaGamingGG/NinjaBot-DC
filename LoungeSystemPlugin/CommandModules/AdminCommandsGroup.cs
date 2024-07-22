@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using DSharpPlus.Commands;
 using DSharpPlus.Entities;
+using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records;
 using MySqlConnector;
 using Serilog;
@@ -8,10 +9,11 @@ using Serilog;
 namespace LoungeSystemPlugin.CommandModules;
 
 [Command("lounge")]
-public class AdminCommandsGroup
+public static class AdminCommandsGroup
 {
-    [Command("setup")]
-    public static async Task LoungeSetupCommand(CommandContext context, DiscordChannel targetChannel, string namePattern, bool createInterfaceChannel = false, DiscordChannel? interfaceChannel = null)
+    
+    [Command("setup-noui")]
+    public static async Task LoungeSetup_NoUICommand(CommandContext context, DiscordChannel targetChannel, string namePattern, bool createInterfaceChannel = false, DiscordChannel? interfaceChannel = null)
     {
         await context.DeferResponseAsync();
         
@@ -81,4 +83,12 @@ public class AdminCommandsGroup
             new DiscordWebhookBuilder().WithContent("Successfully created new configuration record!"));
         
     }
+
+    [Command("setup")]
+    public static async Task LoungeSetupCommand(CommandContext context)
+    {
+        await context.RespondAsync(LoungeSetupUiHelper.InitialMessageBuilder);
+    }
+    
+    
 }

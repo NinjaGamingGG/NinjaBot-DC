@@ -3,7 +3,7 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.Net.Models;
 using LoungeSystemPlugin.PluginHelper;
 
-namespace LoungeSystemPlugin.Events.ComponentInteractions;
+namespace LoungeSystemPlugin.Events.ComponentInteractions.LoungeInterface;
 
 public static class LoungeKickButton
 {

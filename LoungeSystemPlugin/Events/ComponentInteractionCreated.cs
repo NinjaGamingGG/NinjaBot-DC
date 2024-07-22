@@ -1,7 +1,8 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using LoungeSystemPlugin.Events.ComponentInteractions;
+using LoungeSystemPlugin.Events.ComponentInteractions.LoungeInterface;
+using LoungeSystemPlugin.Events.ComponentInteractions.LoungeSetupUi;
 
 
 namespace LoungeSystemPlugin.Events;
@@ -75,7 +76,22 @@ public static class ComponentInteractionCreated
             
             case "lounge_trust_user-selection":
                 await LoungeTrustUserButton.UserSelected(eventArgs, member);
-
+                break;
+            
+            case "lounge_setup_channel_select":
+                await LoungeSetupChannelSelect.ChannelSelected(eventArgs, member);
+                break;
+            
+            case "lounge_setup_name-pattern_button":
+                await LoungeSetupNamePatternButton.ButtonPressed(eventArgs, member);
+                break;
+            
+            case "lounge_setup_interface_selector":
+                await LoungeSetupInterfaceSelector.SelectionMade(eventArgs, member);
+                break;
+            
+            case "lounge_setup_interface_channel_select":
+                await LoungeSetupInterfaceChannelSelection.SelectionMade(eventArgs, member);
                 break;
             
             default:

@@ -3,6 +3,7 @@ using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
 using CommonPluginHelpers;
 using DSharpPlus;
+using LoungeSystemPlugin.Events.ComponentInteractions.LoungeSetupUi;
 using MySqlConnector;
 using PluginBase;
 using Serilog;

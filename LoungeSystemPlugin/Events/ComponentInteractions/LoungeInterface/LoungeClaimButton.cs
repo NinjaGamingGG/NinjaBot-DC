@@ -5,7 +5,7 @@ using LoungeSystemPlugin.PluginHelper;
 using MySqlConnector;
 using Serilog;
 
-namespace LoungeSystemPlugin.Events.ComponentInteractions;
+namespace LoungeSystemPlugin.Events.ComponentInteractions.LoungeInterface;
 
 public static class LoungeClaimButton
 {

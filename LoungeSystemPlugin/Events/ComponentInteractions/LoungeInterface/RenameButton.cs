@@ -1,9 +1,8 @@
-﻿using DSharpPlus;
-using DSharpPlus.Entities;
+﻿using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
 
-namespace LoungeSystemPlugin.Events.ComponentInteractions;
+namespace LoungeSystemPlugin.Events.ComponentInteractions.LoungeInterface;
 
 public static class RenameButton
 {

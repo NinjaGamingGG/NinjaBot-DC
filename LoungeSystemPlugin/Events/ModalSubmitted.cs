@@ -1,5 +1,6 @@
 ﻿using DSharpPlus;
 using DSharpPlus.EventArgs;
+using LoungeSystemPlugin.Events.ComponentInteractions.LoungeSetupUi;
 using LoungeSystemPlugin.Events.ModalsSubmitted;
 
 
@@ -14,8 +15,12 @@ internal static class ModalSubmitted
                 case "lounge_rename_modal":
                     await LoungeRenameModal.WasSubmitted(sender, eventArgs);
                     break;
+                
+                case "lounge_setup_name-pattern_modal":
+                    await LoungeSetupUiModal.ModalSubmitted(sender, eventArgs);
+                    break;
         }
         
-        await eventArgs.Interaction.DeleteOriginalResponseAsync();
+
     }
 }

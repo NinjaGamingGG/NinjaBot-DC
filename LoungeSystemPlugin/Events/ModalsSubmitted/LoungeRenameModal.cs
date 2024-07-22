@@ -22,12 +22,16 @@ public static class LoungeRenameModal
         var channel = await sender.GetChannelAsync(eventArgs.Interaction.Channel.Id);
         await channel.ModifyAsync(NewEditModel);
         
+        
+        await eventArgs.Interaction.DeleteOriginalResponseAsync();
         return;
 
         void NewEditModel(ChannelEditModel editModel)
         {
             editModel.Name = newChannelName;
         }
+        
+
     }
     
 

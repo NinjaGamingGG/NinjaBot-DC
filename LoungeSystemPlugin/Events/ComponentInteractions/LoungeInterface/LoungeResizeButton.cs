@@ -4,7 +4,7 @@ using DSharpPlus.Net.Models;
 using LoungeSystemPlugin.PluginHelper;
 using Serilog;
 
-namespace LoungeSystemPlugin.Events.ComponentInteractions;
+namespace LoungeSystemPlugin.Events.ComponentInteractions.LoungeInterface;
 
 public static class LoungeResizeButton
 {

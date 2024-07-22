@@ -2,9 +2,8 @@
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
-using Serilog;
 
-namespace LoungeSystemPlugin.Events.ComponentInteractions.LoungeSetupUi;
+namespace LoungeSystemPlugin.Events.ModalsSubmitted;
 
 public static class LoungeSetupUiModal
 {

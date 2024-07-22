@@ -10,11 +10,24 @@ public static class LoungeSetupUiModal
 {
     internal static async Task ModalSubmitted(DiscordClient sender, ModalSubmittedEventArgs eventArgs)
     {
-        var message = eventArgs.Interaction.Message;
-        
-        if (message == null)
+        //Check if Guild is null
+        if (ReferenceEquals(eventArgs.Interaction.Guild, null))
+        {
+            await eventArgs.Interaction.DeferAsync();
             return;
-
+        }
+        
+        //Get the DiscordMember that Submitted the Modal
+        var member = await eventArgs.Interaction.Guild.GetMemberAsync(eventArgs.Interaction.User.Id);
+            
+        //Check if User has Admin Permissions
+        if (member.Permissions.HasPermission(DiscordPermissions.Administrator))
+        {
+            await eventArgs.Interaction.DeferAsync();
+            return;
+        }
+        
+        //Update the Message this Modal was attached to
         await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
             LoungeSetupUiHelper.ModalSubmittedResponseBuilder);
 

@@ -8,6 +8,13 @@ public static class LoungeSetupInterfaceChannelSelection
 {
     internal static async Task SelectionMade(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
+        //Check if User has Admin Permissions
+        if (member.Permissions.HasPermission(DiscordPermissions.Administrator))
+        {
+            await eventArgs.Interaction.DeferAsync();
+            return;
+        }
+        
         await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
             LoungeSetupUiHelper.LoungeSetupComplete);
     }

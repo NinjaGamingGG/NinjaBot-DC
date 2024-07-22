@@ -4,6 +4,7 @@ using DSharpPlus.Entities;
 using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records;
 using MySqlConnector;
+using NinjaBot_DC;
 using Serilog;
 
 namespace LoungeSystemPlugin.CommandModules;
@@ -87,6 +88,19 @@ public static class AdminCommandsGroup
     [Command("setup")]
     public static async Task LoungeSetupCommand(CommandContext context)
     {
+        if (ReferenceEquals(context.Member, null))
+        {
+            await context.DeferResponseAsync();
+            return;
+        }
+
+        if (!context.Member.Permissions.HasPermission(DiscordPermissions.Administrator))
+        {
+            await context.DeferResponseAsync();
+            Log.Debug("User {userName} doesnt hast Permission for '/lounge setup' command", context.Member.Username);
+            return;
+        }
+        
         await context.RespondAsync(LoungeSetupUiHelper.InitialMessageBuilder);
     }
     

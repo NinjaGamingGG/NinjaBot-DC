@@ -1,6 +1,7 @@
 ﻿using Dapper.Contrib.Extensions;
 using DSharpPlus;
 using LoungeSystemPlugin.Records;
+using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
 using NinjaBot_DC;
 using Serilog;

@@ -2,9 +2,8 @@
 using DSharpPlus.Commands;
 using DSharpPlus.Entities;
 using LoungeSystemPlugin.PluginHelper;
-using LoungeSystemPlugin.Records;
+using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
-using NinjaBot_DC;
 using Serilog;
 
 namespace LoungeSystemPlugin.CommandModules;

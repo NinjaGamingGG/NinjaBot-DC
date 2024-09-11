@@ -1,12 +1,12 @@
 ﻿using Dapper.Contrib.Extensions;
 
-namespace LoungeSystemPlugin.Records;
+namespace LoungeSystemPlugin.Records.MySQL;
 
 [Table("RequiredRoleIndex")]
 public record RequiredRoleRecord
 {
    [ExplicitKey]
-   public int Id { get; set; }
+   public int Id { get; init; }
    
    public ulong GuildId { get; init; }
    

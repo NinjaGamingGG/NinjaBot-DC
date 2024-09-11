@@ -1,6 +1,6 @@
 using Dapper.Contrib.Extensions;
 
-namespace LoungeSystemPlugin.Records;
+namespace LoungeSystemPlugin.Records.MySQL;
 
 [Table("LoungeMessageReplacementIndex")]
 public record LoungeMessageReplacement

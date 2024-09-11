@@ -3,7 +3,7 @@ using Dapper.Contrib.Extensions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
-using LoungeSystemPlugin.Records;
+using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
 using Serilog;
 
@@ -49,11 +49,16 @@ public static class LoungeDeleteButtonLogic
         var loungeChannel = eventArgs.Channel;
 
         var afkChannel = await eventArgs.Guild.GetAfkChannelAsync();
-        
-        foreach (var loungeChannelUser in loungeChannel.Users)
-        {
-            await loungeChannelUser.PlaceInAsync(afkChannel);
+
+        if (!ReferenceEquals(afkChannel,null))
+        {        foreach (var loungeChannelUser in loungeChannel.Users)
+            {
+                await loungeChannelUser.PlaceInAsync(afkChannel);
+            }
+            
         }
+        
+
 
         await loungeChannel.DeleteAsync();
         bool deleteSuccess;

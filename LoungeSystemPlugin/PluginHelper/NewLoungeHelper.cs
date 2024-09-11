@@ -2,6 +2,7 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using LoungeSystemPlugin.Records;
+using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
 using NinjaBot_DC;
 using Serilog;

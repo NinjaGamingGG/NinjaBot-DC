@@ -9,7 +9,7 @@ public static class LoungeSetupNamePatternButton
     internal static async Task ButtonPressed(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
         //Check if User has Admin Permissions
-        if (member.Permissions.HasPermission(DiscordPermissions.Administrator))
+        if (!member.Permissions.HasPermission(DiscordPermissions.Administrator))
         {
             await eventArgs.Interaction.DeferAsync();
             return;

@@ -54,7 +54,7 @@ public static class LoungeSetupUiHelper
     public static DiscordInteractionResponseBuilder InteractionFailedResponseBuilder(string errorMessage)
     {
         return new DiscordInteractionResponseBuilder()
-            .WithContent(":x: A error occured during the interaction:\n\n"+errorMessage);
+            .WithContent("<:Aheto:1286757430381903973> A error occured during the interaction:\n\n"+errorMessage);
     }
 
 

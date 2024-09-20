@@ -1,7 +1,11 @@
 ﻿using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
-using NinjaBot_DC;
+using LoungeSystemPlugin.Records.Cache;
+using Newtonsoft.Json;
+using NRedisStack.RedisStackCommands;
+using Serilog;
+using StackExchange.Redis;
 
 namespace LoungeSystemPlugin.Events.ComponentInteractions.LoungeSetupUi;
 
@@ -15,7 +19,42 @@ public static class LoungeSetupChannelSelect
             await eventArgs.Interaction.DeferAsync();
             return;
         }
+
+        var messageId = eventArgs.Message.Id.ToString();
+
+        try
+        {
+            var redisConnection = await ConnectionMultiplexer.ConnectAsync(LoungeSystemPlugin.RedisConnectionString);
+            var redisDatabase = redisConnection.GetDatabase(LoungeSystemPlugin.RedisDatabase);
+            var entryKey = new RedisKey(messageId);
+
+            var json = redisDatabase.JSON();
+            var redisResult = json.Get(entryKey, path:"$").ToString().TrimEnd(']').TrimStart('[');
+            var deserializedRecord = JsonConvert.DeserializeObject<LoungeSetupRecord>(redisResult);
+            if (deserializedRecord is null)
+                return;
+
+            var targetChannelId = eventArgs.Values[0];
         
+            var newLoungeSetupRecord = new LoungeSetupRecord(targetChannelId, deserializedRecord.UserId, "", "", true);
+        
+            var remainingTimeToLive = redisDatabase.KeyTimeToLive(entryKey);
+
+             
+            json.Set(messageId, "$", newLoungeSetupRecord);
+            
+            redisDatabase.KeyExpire(messageId, remainingTimeToLive);
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex,"[LoungeSystem Plugin] Unable to update LoungeSetupRecord for ui message {messageId}", messageId);
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, LoungeSetupUiHelper.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
+            return;
+        }
+
+
+
         await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,LoungeSetupUiHelper.ChannelSelectedMessageBuilder);
     }
 }

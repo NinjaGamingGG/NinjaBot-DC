@@ -123,8 +123,8 @@ public class LoungeSystemPlugin : DefaultPlugin
         try
         {
             var schema = new Schema()
-                .AddNumericField(new FieldName("$.channelId", "channelId"))
-                .AddNumericField(new FieldName("$.userId", "userId"))
+                .AddTextField(new FieldName("$.channelId", "channelId"))
+                .AddTextField(new FieldName("$.userId", "userId"))
                 .AddTextField(new FieldName("$.namePattern", "namePattern"))
                 .AddTextField(new FieldName("$.nameDecorator", "nameDecorator"))
                 .AddNumericField(new FieldName("$.internalInterface", "internalInterface"));

@@ -59,10 +59,10 @@ public static class LoungeSetupUiHelper
 
 
     
-    public static DiscordInteractionResponseBuilder NoPermissionsResponseBuilder = new DiscordInteractionResponseBuilder()
+    public static readonly DiscordInteractionResponseBuilder NoPermissionsResponseBuilder = new DiscordInteractionResponseBuilder()
         .WithContent(NoPermissionsMessage);
     
-    public static DiscordMessageBuilder NoPermissionMessageBuilder = new DiscordMessageBuilder().WithContent(NoPermissionsMessage);
+    public static readonly DiscordMessageBuilder NoPermissionMessageBuilder = new DiscordMessageBuilder().WithContent(NoPermissionsMessage);
 
 
 }

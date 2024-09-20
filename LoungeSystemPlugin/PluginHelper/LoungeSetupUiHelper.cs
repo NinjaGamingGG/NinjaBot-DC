@@ -7,6 +7,8 @@ public static class LoungeSetupUiHelper
     private const string UiBaseMessageContent =
         ":desktop: **Lounge Setup UI.**\n*This UI will guide you trough the Lounge Setup Process.*\n*This UI will get invalid after 15 Minutes!*\n\n";
     
+    private const string NoPermissionsMessage = ":x: You do not have permission to do this.";
+    
     public static readonly DiscordMessageBuilder InitialMessageBuilder = new DiscordMessageBuilder()
         .WithContent(UiBaseMessageContent +
                      "Please select a Channel Users will enter in order to create a Lounge / Temporary VC")
@@ -52,8 +54,15 @@ public static class LoungeSetupUiHelper
     public static DiscordInteractionResponseBuilder InteractionFailedResponseBuilder(string errorMessage)
     {
         return new DiscordInteractionResponseBuilder()
-            .WithContent("A error occured during the interaction:\n\n"+errorMessage);
+            .WithContent(":x: A error occured during the interaction:\n\n"+errorMessage);
     }
+
+
+    
+    public static DiscordInteractionResponseBuilder NoPermissionsResponseBuilder = new DiscordInteractionResponseBuilder()
+        .WithContent(NoPermissionsMessage);
+    
+    public static DiscordMessageBuilder NoPermissionMessageBuilder = new DiscordMessageBuilder().WithContent(NoPermissionsMessage);
 
 
 }

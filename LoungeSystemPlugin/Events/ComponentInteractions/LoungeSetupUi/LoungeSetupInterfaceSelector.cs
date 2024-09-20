@@ -11,7 +11,7 @@ public static class LoungeSetupInterfaceSelector
         //Check if User has Admin Permissions
         if (!member.Permissions.HasPermission(DiscordPermissions.Administrator))
         {
-            await eventArgs.Interaction.DeferAsync();
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,LoungeSetupUiHelper.NoPermissionsResponseBuilder);
             return;
         }
         

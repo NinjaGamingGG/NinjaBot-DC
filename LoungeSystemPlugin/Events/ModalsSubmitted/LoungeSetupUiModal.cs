@@ -22,9 +22,11 @@ public static class LoungeSetupUiModal
         //Check if User has Admin Permissions
         if (!member.Permissions.HasPermission(DiscordPermissions.Administrator))
         {
-            await eventArgs.Interaction.DeferAsync();
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,LoungeSetupUiHelper.NoPermissionsResponseBuilder);
             return;
         }
+        
+        
         
         //Update the Message this Modal was attached to
         await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,

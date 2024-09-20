@@ -118,9 +118,9 @@ public static class AdminCommandsGroup
             var redisDatabase = redisConnection.GetDatabase(LoungeSystemPlugin.RedisDatabase);
             var json = redisDatabase.JSON();
             
-            var newLoungeSetupRecord = new LoungeSetupRecord(0, context.User.Id, "", "", true);
+            var newLoungeSetupRecord = new LoungeSetupRecord("", context.User.Id.ToString(), "", "", true);
             json.Set(responseMessage!.Id.ToString(), "$", newLoungeSetupRecord);
-            redisDatabase.KeyExpire(responseMessage.Id.ToString(), TimeSpan.FromMinutes(10));
+            redisDatabase.KeyExpire(responseMessage.Id.ToString(), TimeSpan.FromMinutes(15));
         }
         catch (Exception ex)
         {

@@ -66,15 +66,10 @@ public class LoungeSystemPlugin : DefaultPlugin
             var searchCommands = database.FT();
             
             CreateJsonSchema(searchCommands);
-            
-            var testload = new LoungeSetupRecord(69,187,"Test", ">", false);
-            var json = database.JSON();
-            
-            json.Set("testload","$", testload);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
+            Log.Error(ex, "Failed to initialize the Redis Connection");
             throw;
         }
         

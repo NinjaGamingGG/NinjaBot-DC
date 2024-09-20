@@ -2,11 +2,16 @@
 using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
 using CommonPluginHelpers;
-using DSharpPlus;
-using LoungeSystemPlugin.Events.ComponentInteractions.LoungeSetupUi;
+using LoungeSystemPlugin.Records.Cache;
+using Microsoft.Extensions.Configuration;
 using MySqlConnector;
+using NRedisStack;
+using NRedisStack.RedisStackCommands;
+using NRedisStack.Search;
+using NRedisStack.Search.Literals.Enums;
 using PluginBase;
 using Serilog;
+using StackExchange.Redis;
 
 namespace LoungeSystemPlugin;
 
@@ -14,6 +19,9 @@ namespace LoungeSystemPlugin;
 public class LoungeSystemPlugin : DefaultPlugin
 {
     public static MySqlConnectionHelper MySqlConnectionHelper { get; private set; } = null!;
+    
+    public static string RedisConnectionString { get; private set; } = "127.0.0.1";
+    public static int RedisDatabase { get; private set; }
 
     private static string? _staticPluginName;
     public static string GetStaticPluginName()
@@ -39,6 +47,36 @@ public class LoungeSystemPlugin : DefaultPlugin
         Directory.CreateDirectory(PluginDirectory);
 
         var config = Worker.LoadAssemblyConfig(Path.Combine(PluginDirectory,"config.json"), GetType().Assembly, EnvironmentVariablePrefix);
+
+        try
+        {
+            RedisConnectionString = config.GetValue<string>(EnvironmentVariablePrefix+":redis-connection-string") ?? "127.0.0.1";
+            RedisDatabase = config.GetValue<int>(EnvironmentVariablePrefix + ":redis-database");
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "[{PluginName}] Failed to load redis connection string", Name);
+            return;
+        }
+
+        try
+        {
+            var redisConnection = ConnectionMultiplexer.Connect(RedisConnectionString);
+            var database = redisConnection.GetDatabase(RedisDatabase);
+            var searchCommands = database.FT();
+            
+            CreateJsonSchema(searchCommands);
+            
+            var testload = new LoungeSetupRecord(69,187,"Test", ">", false);
+            var json = database.JSON();
+            
+            json.Set("testload","$", testload);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
         
         var tableStrings = new[]
         {
@@ -84,5 +122,33 @@ public class LoungeSystemPlugin : DefaultPlugin
     public override void OnUnload()
     {
         Log.Information("[{PluginName}] Plugin Unloaded", Name);
+    }
+    
+    private static void CreateJsonSchema(SearchCommands searchCommands)
+    {
+        const string indexName = "idx:setupInterfaces";
+        try
+        {
+            var schema = new Schema()
+                .AddNumericField(new FieldName("$.channelId", "channelId"))
+                .AddNumericField(new FieldName("$.userId", "userId"))
+                .AddTextField(new FieldName("$.namePattern", "namePattern"))
+                .AddTextField(new FieldName("$.nameDecorator", "nameDecorator"))
+                .AddNumericField(new FieldName("$.internalInterface", "internalInterface"));
+
+            searchCommands.Create(
+                indexName,
+                new FTCreateParams().On(IndexDataType.JSON).Prefix("setupInterface:"), schema);
+        }
+        catch (RedisServerException ex)
+        {
+            if (ex.Message == "Index already exists")
+            {
+                Log.Information("[{PluginName}] Index {indexName} already exists!",_staticPluginName, indexName);
+                return;
+            }
+
+            Log.Error(ex, "[{PluginName}] Failed to create json schema", _staticPluginName);
+        }
     }
 }

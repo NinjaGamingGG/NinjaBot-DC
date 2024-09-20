@@ -5,7 +5,7 @@ namespace LoungeSystemPlugin.PluginHelper;
 public static class LoungeSetupUiHelper
 {
     private const string UiBaseMessageContent =
-        ":desktop: **Lounge Setup UI.**\n*This UI will guide you trough the Lounge Setup Process.*\n\n";
+        ":desktop: **Lounge Setup UI.**\n*This UI will guide you trough the Lounge Setup Process.*\n*This UI will get invalid after 15 Minutes!*\n\n";
     
     public static readonly DiscordMessageBuilder InitialMessageBuilder = new DiscordMessageBuilder()
         .WithContent(UiBaseMessageContent +

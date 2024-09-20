@@ -4,6 +4,8 @@
     "mysql-port": "3306",
     "mysql-user": "root",
     "mysql-password": "Your Password here",
-    "mysql-database": "LoungeSystem"
+    "mysql-database": "LoungeSystem",
+    "redis-connection-string": "127.0.0.1",
+    "redis-database": 0
   }
 }

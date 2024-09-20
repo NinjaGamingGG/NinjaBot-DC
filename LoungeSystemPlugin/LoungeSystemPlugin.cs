@@ -2,7 +2,6 @@
 using LoungeSystemPlugin.PluginHelper;
 using NinjaBot_DC;
 using CommonPluginHelpers;
-using LoungeSystemPlugin.Records.Cache;
 using Microsoft.Extensions.Configuration;
 using MySqlConnector;
 using NRedisStack;

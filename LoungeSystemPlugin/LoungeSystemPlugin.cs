@@ -70,7 +70,6 @@ public class LoungeSystemPlugin : DefaultPlugin
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to initialize the Redis Connection");
-            throw;
         }
         
         var tableStrings = new[]

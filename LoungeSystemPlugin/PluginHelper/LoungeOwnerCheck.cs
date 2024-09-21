@@ -33,7 +33,7 @@ public static class LoungeOwnerCheck
         }
         catch (MySqlException ex)
         {
-            Log.Error(ex,"Unable to retrieve database lounge ownership on Guild {GuildId} for {LoungeName}/{LoungeId} of user {MemberName}/{MemberId}",guild.Id,channel.Name,channel.Id,member.Username,member.Id);
+            Log.Error(ex,"[{PluginName}] Unable to retrieve database lounge ownership on Guild {GuildId} for {LoungeName}/{LoungeId} of user {MemberName}/{MemberId}",LoungeSystemPlugin.GetStaticPluginName(),guild.Id,channel.Name,channel.Id,member.Username,member.Id);
             return false;
         }
         
@@ -59,7 +59,7 @@ public static class LoungeOwnerCheck
         }
         catch (MySqlException ex)
         {
-            Log.Error(ex,"Error while Fetching owner Id on LoungeSystem. Channel: {ChannelName}/{ChannelId}", channel.Name,channel.Id);
+            Log.Error(ex,"[{PluginName}] Error while Fetching owner Id on LoungeSystem. Channel: {ChannelName}/{ChannelId}",LoungeSystemPlugin.GetStaticPluginName(), channel.Name,channel.Id);
             return 0;
         }
 

@@ -36,7 +36,7 @@ public static class StartupCleanup
         }
         catch (MySqlException ex)
         {
-            Log.Error(ex, "Error while reading lounge db records on StartupCleanup");
+            Log.Error(ex, "[{PluginName}] Error while reading lounge db records on StartupCleanup", LoungeSystemPlugin.GetStaticPluginName());
             return;
         }
         

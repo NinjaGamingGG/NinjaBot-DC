@@ -39,7 +39,7 @@ public static class VoiceStateUpdated
         }
         catch (MySqlException ex)
         {
-            Log.Error(ex,"Error while Operating on the MySql Database in ChannelLeave Task on VoiceStateUpdated Event in LoungeSystem");
+            Log.Error(ex,"[{PluginName}] Error while Operating on the MySql Database in ChannelLeave Task on VoiceStateUpdated Event in LoungeSystem",LoungeSystemPlugin.GetStaticPluginName());
             return;
         }
         

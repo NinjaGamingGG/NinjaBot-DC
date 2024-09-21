@@ -38,12 +38,12 @@ public static class CleanupLounge
         }
         catch (MySqlException ex)
         {
-            Log.Error(ex, "Unable to delete Lounge Record on Initial Cleanup of LoungeSystem");
+            Log.Error(ex, "[{PluginName}] Unable to delete Lounge Record on Initial Cleanup of LoungeSystem",LoungeSystemPlugin.GetStaticPluginName());
             return;
         }
         
         if (deleteSuccess == false)
-            Log.Error("Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",loungeChannel.Name, loungeDbRecord.ChannelId, loungeDbRecord.GuildId);
+            Log.Error("[{PluginName}] Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",LoungeSystemPlugin.GetStaticPluginName(),loungeChannel.Name, loungeDbRecord.ChannelId, loungeDbRecord.GuildId);
     }
     
     private static async Task<bool> IsChannelInGuildAsync(DiscordClient discordClient,ulong channelId, ulong guildId)

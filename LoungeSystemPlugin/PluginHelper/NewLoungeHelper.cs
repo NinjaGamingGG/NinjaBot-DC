@@ -51,7 +51,7 @@ public static class NewLoungeHelper
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Unable to Retrieve Lounge System Config & NameReplacement Records from Database");
+            Log.Error(ex, "[{PluginName}] Unable to Retrieve Lounge System Config & NameReplacement Records from Database", LoungeSystemPlugin.GetStaticPluginName());
             return;
         }
 
@@ -90,7 +90,7 @@ public static class NewLoungeHelper
         catch (Exception ex)
         {
             Log.Error(ex, "{PluginName} Unable to get Users Presence Activity Name during Lounge creation",
-                "LoungeSystem Plugin");
+                LoungeSystemPlugin.GetStaticPluginName());
         }
         
         if (ReferenceEquals(customNamePattern, null))
@@ -161,7 +161,7 @@ public static class NewLoungeHelper
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Unable to insert into Mysql LoungeIndex");
+            Log.Error(ex, "[{PluginName}] Unable to insert into Mysql LoungeIndex",LoungeSystemPlugin.GetStaticPluginName());
             return;
         }
 

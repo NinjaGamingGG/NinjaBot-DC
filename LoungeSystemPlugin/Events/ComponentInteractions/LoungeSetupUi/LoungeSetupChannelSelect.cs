@@ -48,7 +48,7 @@ public static class LoungeSetupChannelSelect
         }
         catch (Exception ex)
         {
-            Log.Error(ex,"[LoungeSystem Plugin] Unable to update LoungeSetupRecord for ui message {messageId}", messageId);
+            Log.Error(ex,"[{PluginName}] Unable to update LoungeSetupRecord for ui message {messageId}",LoungeSystemPlugin.GetStaticPluginName(), messageId);
             await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, LoungeSetupUiHelper.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
             return;
         }

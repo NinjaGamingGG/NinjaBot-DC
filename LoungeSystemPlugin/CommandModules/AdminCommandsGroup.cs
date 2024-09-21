@@ -37,7 +37,7 @@ public static class AdminCommandsGroup
         
             if (ReferenceEquals(mySqlConnection, null))
             {
-                Log.Error("[LoungeSystem] Unable to connect to database!");
+                Log.Error("[{PluginName}] Unable to connect to database!",LoungeSystemPlugin.GetStaticPluginName());
                 return;
             }
 
@@ -70,7 +70,7 @@ public static class AdminCommandsGroup
         }
         catch (Exception e)
         {
-            Log.Error(e, $"[{LoungeSystemPlugin.GetStaticPluginName()}] Error while Executing Mysql Operations on Lounge System Admin Command Module Setup Command");
+            Log.Error(e, "[{PluginName}] Error while Executing Mysql Operations on Lounge System Admin Command Module Setup Command", LoungeSystemPlugin.GetStaticPluginName());
             return;
         }
         
@@ -110,7 +110,7 @@ public static class AdminCommandsGroup
 
         if (ReferenceEquals(responseMessage, null))
         {
-            Log.Error("[LoungeSystem Plugin] Unable to get response from Discord!");
+            Log.Error("[{PluginName}] Unable to get response from Discord!", LoungeSystemPlugin.GetStaticPluginName());
         }
 
         try
@@ -125,7 +125,7 @@ public static class AdminCommandsGroup
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "[LoungeSystem Plugin]Unable to insert new configuration record!");
+            Log.Error(ex, "[{PluginName}] Unable to insert new configuration record!",LoungeSystemPlugin.GetStaticPluginName());
         }
 
 

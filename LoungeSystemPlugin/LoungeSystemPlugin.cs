@@ -68,7 +68,7 @@ public class LoungeSystemPlugin : DefaultPlugin
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to initialize the Redis Connection");
+            Log.Error(ex, "[{PluginName}] Failed to initialize the Redis Connection", _staticPluginName);
         }
         
         var tableStrings = new[]

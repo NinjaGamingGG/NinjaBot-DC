@@ -1,5 +1,9 @@
-﻿using DSharpPlus.Entities;
+﻿using Dapper;
+using DSharpPlus.Entities;
 using LoungeSystemPlugin.Records.Cache;
+using LoungeSystemPlugin.Records.MySQL;
+using MySqlConnector;
+using Serilog;
 
 namespace LoungeSystemPlugin.PluginHelper;
 
@@ -65,8 +69,55 @@ public static class LoungeSetupUiHelper
     
     public static readonly DiscordMessageBuilder NoPermissionMessageBuilder = new DiscordMessageBuilder().WithContent(NoPermissionsMessage);
 
-    public static void CompleteSetup(LoungeSetupRecord setupRecord, ulong interfaceChannelId = 0)
+    public static async void CompleteSetup(LoungeSetupRecord setupRecord,ulong guildId, ulong interfaceChannelId = 0)
     {
+        var parseSuccess = ulong.TryParse(setupRecord.ChannelId, out var targetChannelId);
+
+        if (!parseSuccess)
+        {
+            Log.Error("[{PluginName}] Unable to parse channelId for {targetChannelId}", LoungeSystemPlugin.GetStaticPluginName(), setupRecord.ChannelId);    
+        }
+        
+        var newConfigRecord = new LoungeSystemConfigurationRecord()
+        {
+            GuildId = guildId,
+            TargetChannelId = targetChannelId,
+            InterfaceChannelId = interfaceChannelId,
+            LoungeNamePattern = setupRecord.NameDecorator + " " +  setupRecord.NamePattern,
+        };
+        
+        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        try
+        {
+            var mySqlConnection = new MySqlConnection(connectionString);
+            await mySqlConnection.OpenAsync();
+        
+            if (ReferenceEquals(mySqlConnection, null))
+            {
+                Log.Error("[{PluginName}] Unable to connect to database!",LoungeSystemPlugin.GetStaticPluginName());
+                return;
+            }
+        
+            var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId AND TargetChannelId = @TargetChannelId",
+                new { GuildId = guildId, TargetChannelId = targetChannelId });
+        
+            if (alreadyExists != 0)
+            {
+                Log.Error("[{PluginName}] Error while Executing Setup Completion in LoungeSetupUiHelper. Configuration already exists!", LoungeSystemPlugin.GetStaticPluginName());
+                return;
+            }
+        
+            await mySqlConnection.ExecuteAsync(
+                "INSERT INTO LoungeSystemConfigurationIndex (GuildId, TargetChannelId, InterfaceChannelId, LoungeNamePattern) VALUES (@GuildId, @TargetChannelId, @InterfaceChannelId, @LoungeNamePattern)",
+                newConfigRecord);
+        
+            await mySqlConnection.CloseAsync();
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "[{PluginName}] Error while Executing Mysql Operations on LoungeSetupUiHelper Setup Completion", LoungeSystemPlugin.GetStaticPluginName());
+        }
         
     }
 

@@ -69,7 +69,7 @@ public static class NewLoungeHelper
             try
             {
                 //Check if Users Presence or Activity is null
-                if (owningUser.Presence is { Activity.Name: not null })
+                if (owningUser.Presence is { Activity: not null })
                 {
 
                     //Don't display a status if the Activity's name is Hang Status

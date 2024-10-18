@@ -93,7 +93,7 @@ public static class LoungeLockButton
             requiresRolesList.Add(eventArgs.Guild.EveryoneRole.Id);
 
         overwriteBuilderList.AddRange(requiresRolesList.Select(requiredRole => eventArgs.Guild.GetRole(requiredRole))
-            .Select(role => new DiscordOverwriteBuilder(role).Allow(DiscordPermissions.AccessChannels)
+            .Select(role => new DiscordOverwriteBuilder(role!).Allow(DiscordPermissions.AccessChannels)
                 .Deny(DiscordPermissions.SendMessages)
                 .Deny(DiscordPermissions.UseVoice)
                 .Deny(DiscordPermissions.Speak)
@@ -169,7 +169,7 @@ public static class LoungeLockButton
                 .Deny(DiscordPermissions.Stream));
 
         overwriteBuilderList.AddRange(requiresRolesList.Select(requiredRole => eventArgs.Guild.GetRole(requiredRole))
-            .Select(role => new DiscordOverwriteBuilder(role).Allow(DiscordPermissions.AccessChannels)
+            .Select(role => new DiscordOverwriteBuilder(role!).Allow(DiscordPermissions.AccessChannels)
                 .Allow(DiscordPermissions.SendMessages)
                 .Allow(DiscordPermissions.UseVoice)
                 .Allow(DiscordPermissions.Speak)

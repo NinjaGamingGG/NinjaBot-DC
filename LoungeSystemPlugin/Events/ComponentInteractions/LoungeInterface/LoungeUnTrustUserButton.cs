@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
+using Serilog;
 
 namespace LoungeSystemPlugin.Events.ComponentInteractions.LoungeInterface;
 
@@ -70,6 +71,13 @@ public static class LoungeUnTrustUserButton
             if (existingOverwrite.Type == DiscordOverwriteType.Role)
             {
                 var role = eventArgs.Guild.GetRole(existingOverwrite.Id);
+
+                if (ReferenceEquals(role, null))
+                {
+                    Log.Error("[{PluginName}] Unable to get role with id {RoleId} During Dropdown Interacted Login in LoungeUnTrustUserButton", LoungeSystemPlugin.GetStaticPluginName(), existingOverwrite.Id);
+                    continue;
+                }
+                    
                 
                 overwriteBuilderList.Add(await new DiscordOverwriteBuilder(role).FromAsync(existingOverwrite));
             }

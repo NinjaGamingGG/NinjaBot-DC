@@ -1,7 +1,5 @@
 ﻿using Dapper;
-using DSharpPlus;
 using DSharpPlus.Entities;
-using LoungeSystemPlugin.Records;
 using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
 using NinjaBot_DC;
@@ -219,7 +217,7 @@ public static class NewLoungeHelper
                 .Deny(DiscordPermissions.Stream));
 
         overWriteBuildersList.AddRange(requiredRolesList.Select(requiredRole => guild.GetRole(requiredRole.RoleId))
-            .Select(discordRole => new DiscordOverwriteBuilder(discordRole)
+            .Select(discordRole => new DiscordOverwriteBuilder(discordRole!)
                 .Allow(DiscordPermissions.AccessChannels)
                 .Allow(DiscordPermissions.UseVoice)
                 .Allow(DiscordPermissions.Speak)

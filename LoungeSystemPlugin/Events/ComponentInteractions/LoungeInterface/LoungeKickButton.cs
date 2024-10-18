@@ -29,7 +29,7 @@ public static class LoungeKickButton
 
             await user.ModifyAsync(delegate (MemberEditModel kick)
             {
-                kick.VoiceChannel = afkChannel;
+                kick.VoiceChannel = afkChannel!;
             });
         }
     }

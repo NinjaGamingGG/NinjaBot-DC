@@ -15,6 +15,9 @@ public static class LoungeRenameModal
 
         if (isValuePresent == false || string.IsNullOrEmpty(userValue) )
             return;
+        
+        if (ReferenceEquals(eventArgs.Interaction.Guild, null))
+            return;
 
         var newChannelName = await ChannelNameBuilder.BuildAsync(eventArgs.Interaction.Guild.Id, eventArgs.Interaction.Channel.Id,
             userValue);

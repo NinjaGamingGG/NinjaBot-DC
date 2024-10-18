@@ -1,6 +1,12 @@
 ﻿using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
+using LoungeSystemPlugin.Records.Cache;
+using Newtonsoft.Json;
+using NRedisStack;
+using NRedisStack.RedisStackCommands;
+using Serilog;
+using StackExchange.Redis;
 
 namespace LoungeSystemPlugin.Events.ComponentInteractions.LoungeSetupUi;
 
@@ -17,26 +23,67 @@ public static class LoungeSetupInterfaceSelector
         
         //The Selection that was made. The Component is set to allow only one option to be selected, so we just get the element at the first position
         var selection = eventArgs.Interaction.Data.Values[0];
+        
+        if (ReferenceEquals(eventArgs.Interaction.Message, null))
+            return;
+        
+        var messageId = eventArgs.Interaction.Message.Id.ToString();
 
-        //Handle the value of the Selection
-        switch (selection)
+        try
         {
-            case ("separate_interface"):
-                await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
-                    LoungeSetupUiHelper.InterfaceSelectedResponseBuilder);
-                break;
+            var redisConnection = await ConnectionMultiplexer.ConnectAsync(LoungeSystemPlugin.RedisConnectionString);
+            var redisDatabase = redisConnection.GetDatabase(LoungeSystemPlugin.RedisDatabase);
+            var entryKey = new RedisKey(messageId);
+
+            var json = redisDatabase.JSON();
+            var redisResult = json.Get(entryKey, path:"$").ToString().TrimEnd(']').TrimStart('[');
+            var deserializedRecord = JsonConvert.DeserializeObject<LoungeSetupRecord>(redisResult);
+            if (deserializedRecord is null)
+                return;
             
-            case ("internal_interface"):
-                await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
-                    LoungeSetupUiHelper.LoungeSetupComplete);
-                break;
+            //Handle the value of the Selection
+            switch (selection)
+            {
+                case ("separate_interface"):
+                    await HandleSeparateInterface(eventArgs, deserializedRecord, redisDatabase, entryKey, json, messageId);
+                    break;
             
-            default:
-                await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                    LoungeSetupUiHelper.InteractionFailedResponseBuilder("The selection made was Invalid, please try again"));
-                break;
+                case ("internal_interface"):
+                    await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
+                        LoungeSetupUiHelper.LoungeSetupComplete);
+                    LoungeSetupUiHelper.CompleteSetup(deserializedRecord);
+                    break;
             
+                default:
+                    await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                        LoungeSetupUiHelper.InteractionFailedResponseBuilder("The selection made was Invalid, please try again"));
+                    break;
+            
+            }
+        
+
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex,"[{PluginName}] Unable to update LoungeSetupRecord for ui message {messageId}",LoungeSystemPlugin.GetStaticPluginName(), messageId);
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, LoungeSetupUiHelper.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
         }
 
+    }
+
+    private static async Task HandleSeparateInterface(ComponentInteractionCreatedEventArgs eventArgs,
+        LoungeSetupRecord deserializedRecord, IDatabase redisDatabase, RedisKey entryKey, JsonCommands json, string messageId)
+    {
+        await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
+            LoungeSetupUiHelper.InterfaceSelectedResponseBuilder);
+                    
+        var newLoungeSetupRecord = deserializedRecord with { HasInternalInterface = false };
+        
+        var remainingTimeToLive = redisDatabase.KeyTimeToLive(entryKey);
+             
+        json.Set(messageId, "$", newLoungeSetupRecord);
+            
+        redisDatabase.KeyExpire(messageId, remainingTimeToLive);
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Dapper.Contrib.Extensions;
 using DSharpPlus;
-using LoungeSystemPlugin.Records;
 using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
 using NinjaBot_DC;
@@ -52,13 +51,7 @@ public static class CleanupLounge
 
         var guildChannels = await guild.GetChannelsAsync();
 
-        foreach (var guildChannel in guildChannels)
-        {
-            if (guildChannel.Id == channelId)
-                return true;
-        }
-        
-        return false;
+        return guildChannels.Any(guildChannel => guildChannel.Id == channelId);
     }
     
 }

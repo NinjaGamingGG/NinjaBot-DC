@@ -1,4 +1,5 @@
 ﻿using DSharpPlus.Entities;
+using LoungeSystemPlugin.Records.Cache;
 
 namespace LoungeSystemPlugin.PluginHelper;
 
@@ -63,6 +64,11 @@ public static class LoungeSetupUiHelper
         .WithContent(NoPermissionsMessage);
     
     public static readonly DiscordMessageBuilder NoPermissionMessageBuilder = new DiscordMessageBuilder().WithContent(NoPermissionsMessage);
+
+    public static void CompleteSetup(LoungeSetupRecord setupRecord, ulong interfaceChannelId = 0)
+    {
+        
+    }
 
 
 }

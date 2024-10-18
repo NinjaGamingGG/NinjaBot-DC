@@ -2,6 +2,11 @@
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
+using LoungeSystemPlugin.Records.Cache;
+using Newtonsoft.Json;
+using NRedisStack.RedisStackCommands;
+using Serilog;
+using StackExchange.Redis;
 
 namespace LoungeSystemPlugin.Events.ModalsSubmitted;
 
@@ -26,7 +31,45 @@ public static class LoungeSetupUiModal
             return;
         }
         
+        if (ReferenceEquals(eventArgs.Interaction.Message, null))
+            return;
         
+        var messageId = eventArgs.Interaction.Message.Id.ToString();
+
+        try
+        {
+            var redisConnection = await ConnectionMultiplexer.ConnectAsync(LoungeSystemPlugin.RedisConnectionString);
+            var redisDatabase = redisConnection.GetDatabase(LoungeSystemPlugin.RedisDatabase);
+            var entryKey = new RedisKey(messageId);
+
+            var json = redisDatabase.JSON();
+            var redisResult = json.Get(entryKey, path:"$").ToString().TrimEnd(']').TrimStart('[');
+            var deserializedRecord = JsonConvert.DeserializeObject<LoungeSetupRecord>(redisResult);
+            if (deserializedRecord is null)
+                return;
+
+            eventArgs.Values.TryGetValue("lounge_setup_name-pattern_modal_name", out var namePatternString);
+            eventArgs.Values.TryGetValue("lounge_setup_name-pattern_modal_decorator", out var nameDecoratorString);
+            
+            if (namePatternString is null || nameDecoratorString is null)
+                return;
+        
+            var newLoungeSetupRecord = new LoungeSetupRecord(deserializedRecord.ChannelId, deserializedRecord.UserId, namePatternString, nameDecoratorString, true);
+        
+            var remainingTimeToLive = redisDatabase.KeyTimeToLive(entryKey);
+
+             
+            json.Set(messageId, "$", newLoungeSetupRecord);
+            
+            redisDatabase.KeyExpire(messageId, remainingTimeToLive);
+
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex,"[{PluginName}] Unable to update LoungeSetupRecord for ui message {messageId}",LoungeSystemPlugin.GetStaticPluginName(), messageId);
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, LoungeSetupUiHelper.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
+            return;
+        }
         
         //Update the Message this Modal was attached to
         await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,

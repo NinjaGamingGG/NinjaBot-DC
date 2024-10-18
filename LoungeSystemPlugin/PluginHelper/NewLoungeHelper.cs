@@ -28,82 +28,66 @@ public static class NewLoungeHelper
         var customNamePattern = string.Empty;
 
         List<LoungeSystemConfigurationRecord> channelsList;
-        LoungeMessageReplacement[]? loungeMessageReplacementsAsArray;
-
+        
         try
         {
             var mySqlConnection = new MySqlConnection(connectionString);
 
-            var channels = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>(
+            var channelsConfigurations = await mySqlConnection.QueryAsync<LoungeSystemConfigurationRecord>(
                 "SELECT * FROM LoungeSystem.LoungeSystemConfigurationIndex WHERE GuildId = @GuildId",
                 new { GuildId = guild.Id });
-
-            var nameReplacementRecord = await mySqlConnection.QueryAsync<LoungeMessageReplacement>(
-                "SELECT * FROM LoungeSystem.LoungeMessageReplacementIndex WHERE GuildId= @GuildId AND ChannelId = @ChannelId",
-                new { GuildId = guild.Id, ChannelId = originalChannel.Id });
             await mySqlConnection.CloseAsync();
 
-            channelsList = channels.ToList();
-            loungeMessageReplacementsAsArray = nameReplacementRecord as LoungeMessageReplacement[] ??
-                                               nameReplacementRecord.ToArray();
+            channelsList = channelsConfigurations.ToList();
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[{PluginName}] Unable to Retrieve Lounge System Config & NameReplacement Records from Database", LoungeSystemPlugin.GetStaticPluginName());
             return;
         }
+        
 
+        ulong interfaceChannel = 0;
 
-        if (loungeMessageReplacementsAsArray.Length == 0)
-            return;
-
-        foreach (var replacement in loungeMessageReplacementsAsArray)
+        foreach (var channelConfig in channelsList.Where(channelConfig => originalChannel.Id == channelConfig.TargetChannelId))
         {
-            if (replacement.ReplacementHandle == "Custom_Name")
-                customNamePattern = replacement.ReplacementValue;
+            channelExists = true;
+            customNamePattern = channelConfig.LoungeNamePattern;
+            interfaceChannel = channelConfig.InterfaceChannelId;
+
+            break;
         }
-
-
-        if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{username}"))
+        
+        if (ReferenceEquals(customNamePattern, null))
+            return;
+        
+        if (customNamePattern.Contains("{username}"))
             customNamePattern = customNamePattern.Replace("{username}", owningUser.Username);
 
-        try
+        if (customNamePattern.Contains("{activity}"))
         {
-            //Check if Users Presence or Activity is null
-            if (!ReferenceEquals(owningUser.Presence, null) &&
-                !ReferenceEquals(owningUser.Presence.Activity, null) &&
-                !ReferenceEquals(owningUser.Presence.Activity.Name, null))
+            try
             {
-                if (!ReferenceEquals(customNamePattern, null) && customNamePattern.Contains("{activity}"))
+                //Check if Users Presence or Activity is null
+                if (owningUser.Presence is { Activity.Name: not null })
                 {
+
                     //Don't display a status if the Activity's name is Hang Status
                     customNamePattern = owningUser.Presence.Activity.Name == "Hang Status"
                         ? customNamePattern.Replace("{activity}", "")
                         : customNamePattern.Replace("{activity}", owningUser.Presence.Activity.Name);
                 }
+
+                else
+                    customNamePattern = customNamePattern.Replace("{activity}", "");
             }
-            else
-                customNamePattern = customNamePattern?.Replace("{activity}", "");
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{PluginName} Unable to get Users Presence Activity Name during Lounge creation",
+                    LoungeSystemPlugin.GetStaticPluginName());
+            }
         }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "{PluginName} Unable to get Users Presence Activity Name during Lounge creation",
-                LoungeSystemPlugin.GetStaticPluginName());
-        }
-        
-        if (ReferenceEquals(customNamePattern, null))
-            return;
 
-        ulong interfaceChannel = 0;
-
-        foreach (var channelConfig in channelsList.Where(channelConfig =>
-                     originalChannel.Id == channelConfig.TargetChannelId))
-        {
-            channelExists = true;
-            interfaceChannel = channelConfig.InterfaceChannelId;
-
-            break;
-        }
 
         if (channelExists == false)
             return;
@@ -127,9 +111,11 @@ public static class NewLoungeHelper
         overWriteBuildersList.AddRange(roleSpecificOverrides);
 
 
-        var channelNamePattern =
+        /*var channelNamePattern =
             await ChannelNameBuilder.BuildAsync(guild.Id, originalChannel.Id,
-                customNamePattern);
+                customNamePattern);*/
+        
+        var channelNamePattern = customNamePattern;
 
         var newChannel = await originalChannel.Guild.CreateVoiceChannelAsync(channelNamePattern,
             originalChannel.Parent, originalChannel.Bitrate, 4, position: originalChannel.Position + 1,

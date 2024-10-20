@@ -2,7 +2,6 @@
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
-using LoungeSystemPlugin.Records;
 using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
 using Serilog;

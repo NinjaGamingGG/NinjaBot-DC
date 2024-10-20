@@ -11,4 +11,6 @@ public record LoungeSystemConfigurationRecord
     public ulong TargetChannelId { get; init; }
     public ulong InterfaceChannelId { get; init; }
     public string? LoungeNamePattern { get; init; }
+    
+    public string? DecoratorPattern { get; init; }
 }

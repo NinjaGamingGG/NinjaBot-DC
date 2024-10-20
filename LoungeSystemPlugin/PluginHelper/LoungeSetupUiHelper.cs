@@ -109,7 +109,7 @@ public static class LoungeSetupUiHelper
             }
         
             await mySqlConnection.ExecuteAsync(
-                "INSERT INTO LoungeSystemConfigurationIndex (GuildId, TargetChannelId, InterfaceChannelId, LoungeNamePattern) VALUES (@GuildId, @TargetChannelId, @InterfaceChannelId, @LoungeNamePattern)",
+                "INSERT INTO LoungeSystemConfigurationIndex (GuildId, TargetChannelId, InterfaceChannelId, LoungeNamePattern, DecoratorPattern) VALUES (@GuildId, @TargetChannelId, @InterfaceChannelId, @LoungeNamePattern, @DecoratorPattern)",
                 newConfigRecord);
         
             await mySqlConnection.CloseAsync();

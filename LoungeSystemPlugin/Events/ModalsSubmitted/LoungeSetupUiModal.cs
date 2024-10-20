@@ -54,7 +54,7 @@ public static class LoungeSetupUiModal
             if (namePatternString is null || nameDecoratorString is null)
                 return;
         
-            var newLoungeSetupRecord = new LoungeSetupRecord(deserializedRecord.ChannelId, deserializedRecord.UserId, namePatternString, nameDecoratorString, true);
+            var newLoungeSetupRecord = deserializedRecord with { NamePattern = namePatternString, NameDecorator = nameDecoratorString };
         
             var remainingTimeToLive = redisDatabase.KeyTimeToLive(entryKey);
 

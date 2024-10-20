@@ -3,7 +3,6 @@ using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records.Cache;
 using Newtonsoft.Json;
-using NRedisStack;
 using NRedisStack.RedisStackCommands;
 using Serilog;
 using StackExchange.Redis;
@@ -45,7 +44,8 @@ public static class LoungeSetupInterfaceSelector
             switch (selection)
             {
                 case ("separate_interface"):
-                    await HandleSeparateInterface(eventArgs, deserializedRecord, redisDatabase, entryKey, json, messageId);
+                    await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
+                        LoungeSetupUiHelper.InterfaceSelectedResponseBuilder);
                     break;
             
                 case ("internal_interface"):
@@ -67,21 +67,6 @@ public static class LoungeSetupInterfaceSelector
             Log.Error(ex,"[{PluginName}] Unable to update LoungeSetupRecord for ui message {messageId}",LoungeSystemPlugin.GetStaticPluginName(), messageId);
             await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, LoungeSetupUiHelper.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
         }
-
     }
-
-    private static async Task HandleSeparateInterface(ComponentInteractionCreatedEventArgs eventArgs,
-        LoungeSetupRecord deserializedRecord, IDatabase redisDatabase, RedisKey entryKey, JsonCommands json, string messageId)
-    {
-        await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
-            LoungeSetupUiHelper.InterfaceSelectedResponseBuilder);
-                    
-        var newLoungeSetupRecord = deserializedRecord with { HasInternalInterface = false };
-        
-        var remainingTimeToLive = redisDatabase.KeyTimeToLive(entryKey);
-             
-        json.Set(messageId, "$", newLoungeSetupRecord);
-            
-        redisDatabase.KeyExpire(messageId, remainingTimeToLive);
-    }
+    
 }

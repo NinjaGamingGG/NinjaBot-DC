@@ -36,7 +36,7 @@ public static class LoungeSetupChannelSelect
 
             var targetChannelId = eventArgs.Values[0];
         
-            var newLoungeSetupRecord = new LoungeSetupRecord(targetChannelId, deserializedRecord.UserId, "", "", true);
+            var newLoungeSetupRecord = new LoungeSetupRecord(targetChannelId, deserializedRecord.UserId, "", "");
         
             var remainingTimeToLive = redisDatabase.KeyTimeToLive(entryKey);
 

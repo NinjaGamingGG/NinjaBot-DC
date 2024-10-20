@@ -126,8 +126,7 @@ public class LoungeSystemPlugin : DefaultPlugin
                 .AddTextField(new FieldName("$.channelId", "channelId"))
                 .AddTextField(new FieldName("$.userId", "userId"))
                 .AddTextField(new FieldName("$.namePattern", "namePattern"))
-                .AddTextField(new FieldName("$.nameDecorator", "nameDecorator"))
-                .AddNumericField(new FieldName("$.internalInterface", "internalInterface"));
+                .AddTextField(new FieldName("$.nameDecorator", "nameDecorator"));
 
             searchCommands.Create(
                 indexName,

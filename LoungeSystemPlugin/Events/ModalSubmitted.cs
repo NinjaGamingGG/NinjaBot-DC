@@ -1,6 +1,5 @@
 ﻿using DSharpPlus;
 using DSharpPlus.EventArgs;
-using LoungeSystemPlugin.Events.ComponentInteractions.LoungeSetupUi;
 using LoungeSystemPlugin.Events.ModalsSubmitted;
 
 

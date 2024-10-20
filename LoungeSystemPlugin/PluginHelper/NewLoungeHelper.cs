@@ -25,7 +25,7 @@ public static class NewLoungeHelper
         
         var channelExists = false;
 
-        var customNamePattern = string.Empty;
+        string? loungeNamePattern = null;
 
         List<LoungeSystemConfigurationRecord> channelsList;
         
@@ -52,19 +52,22 @@ public static class NewLoungeHelper
         foreach (var channelConfig in channelsList.Where(channelConfig => originalChannel.Id == channelConfig.TargetChannelId))
         {
             channelExists = true;
-            customNamePattern = channelConfig.LoungeNamePattern;
+            loungeNamePattern = channelConfig.DecoratorPattern + channelConfig.LoungeNamePattern;
             interfaceChannel = channelConfig.InterfaceChannelId;
 
             break;
         }
-        
-        if (ReferenceEquals(customNamePattern, null))
-            return;
-        
-        if (customNamePattern.Contains("{username}"))
-            customNamePattern = customNamePattern.Replace("{username}", owningUser.Username);
 
-        if (customNamePattern.Contains("{activity}"))
+        if (ReferenceEquals(loungeNamePattern, null))
+        {
+            Log.Error("[{PluginName}] Unable to populate name pattern for User {UserName}/{UserId} on Channel {ChannelId}", LoungeSystemPlugin.GetStaticPluginName(), owningUser.Username, owningUser.Id, originalChannel.Id);
+            return;
+        }
+        
+        if (loungeNamePattern.Contains("{username}"))
+            loungeNamePattern = loungeNamePattern.Replace("{username}", owningUser.Username);
+
+        if (loungeNamePattern.Contains("{activity}"))
         {
             try
             {
@@ -73,13 +76,13 @@ public static class NewLoungeHelper
                 {
 
                     //Don't display a status if the Activity's name is Hang Status
-                    customNamePattern = owningUser.Presence.Activity.Name == "Hang Status"
-                        ? customNamePattern.Replace("{activity}", "")
-                        : customNamePattern.Replace("{activity}", owningUser.Presence.Activity.Name);
+                    loungeNamePattern = owningUser.Presence.Activity.Name == "Hang Status"
+                        ? loungeNamePattern.Replace("{activity}", "")
+                        : loungeNamePattern.Replace("{activity}", owningUser.Presence.Activity.Name);
                 }
 
                 else
-                    customNamePattern = customNamePattern.Replace("{activity}", "");
+                    loungeNamePattern = loungeNamePattern.Replace("{activity}", "");
             }
             catch (Exception ex)
             {
@@ -115,7 +118,7 @@ public static class NewLoungeHelper
             await ChannelNameBuilder.BuildAsync(guild.Id, originalChannel.Id,
                 customNamePattern);*/
         
-        var channelNamePattern = customNamePattern;
+        var channelNamePattern = loungeNamePattern;
 
         var newChannel = await originalChannel.Guild.CreateVoiceChannelAsync(channelNamePattern,
             originalChannel.Parent, originalChannel.Bitrate, 4, position: originalChannel.Position + 1,

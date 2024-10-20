@@ -9,16 +9,25 @@ public static class LoungeUnTrustUserButton
 {
     internal static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
+        var targetChannel = await InterfaceTargetHelper.GetTargetDiscordChannelAsync(eventArgs.Channel, owningMember);
+
+        if (ReferenceEquals(targetChannel, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+            return;
+        }
+        
         await eventArgs.Interaction.DeferAsync();
 
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, targetChannel, eventArgs.Guild);
 
         if (existsAsOwner == false)
             return;
         
         var optionsList = new List<DiscordSelectComponentOption>();
 
-        var channelOverwrites = eventArgs.Channel.PermissionOverwrites;
+        var channelOverwrites = targetChannel.PermissionOverwrites;
 
         foreach (var overwriteEntry in channelOverwrites)
         {
@@ -45,20 +54,29 @@ public static class LoungeUnTrustUserButton
     
     internal static async Task DropdownInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
+        var targetChannel = await InterfaceTargetHelper.GetTargetDiscordChannelAsync(eventArgs.Channel, member);
+
+        if (ReferenceEquals(targetChannel, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+            return;
+        }
+        
         await eventArgs.Interaction.DeferAsync();
 
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, targetChannel, eventArgs.Guild);
 
         if (existsAsOwner == false)
             return;
         
         var interactionId = eventArgs.Message.Id;
-        var message = await eventArgs.Channel.GetMessageAsync(interactionId);
+        var message = await targetChannel.GetMessageAsync(interactionId);
         await message.DeleteAsync();
         
         var selectedUserIds = eventArgs.Interaction.Data.Values.ToList();
         
-        var existingOverwrites = eventArgs.Channel.PermissionOverwrites;
+        var existingOverwrites = targetChannel.PermissionOverwrites;
 
         var overwriteBuilderList = new List<DiscordOverwriteBuilder>();
         
@@ -89,7 +107,7 @@ public static class LoungeUnTrustUserButton
             }
         }
         
-        await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
+        await targetChannel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
         await eventArgs.Interaction.DeleteOriginalResponseAsync();
     }
 }

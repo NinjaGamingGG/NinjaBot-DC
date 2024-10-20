@@ -8,15 +8,24 @@ public static class LoungeBanButton
 {
     internal static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
+        var targetChannel = await InterfaceTargetHelper.GetTargetDiscordChannelAsync(eventArgs.Channel, owningMember);
+
+        if (ReferenceEquals(targetChannel, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+            return;
+        }
+        
         await eventArgs.Interaction.DeferAsync();
 
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, targetChannel, eventArgs.Guild);
         
         //Only non owners can ban
         if (!existsAsOwner)
             return;
 
-        var membersInChannel = eventArgs.Channel.Users;
+        var membersInChannel = targetChannel.Users;
 
         var optionsList = membersInChannel.Select(channelMember => new DiscordSelectComponentOption("@" + channelMember.DisplayName, channelMember.Id.ToString())).ToList();
 
@@ -31,9 +40,18 @@ public static class LoungeBanButton
     
     internal static async Task DropdownInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
+        var targetChannel = await InterfaceTargetHelper.GetTargetDiscordChannelAsync(eventArgs.Channel, owningMember);
+
+        if (ReferenceEquals(targetChannel, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+            return;
+        }
+        
         await eventArgs.Interaction.DeferAsync();
 
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, targetChannel, eventArgs.Guild);
         
         //Only owner can ban
         if (!existsAsOwner)
@@ -50,7 +68,7 @@ public static class LoungeBanButton
             selectedUsersAsDiscordMember.Add(await eventArgs.Guild.GetMemberAsync(userIdAsUlong));
         }
 
-        var existingOverwrites = eventArgs.Channel.PermissionOverwrites.ToList();
+        var existingOverwrites = targetChannel.PermissionOverwrites.ToList();
 
         var overwriteBuilderList = new List<DiscordOverwriteBuilder>();
         
@@ -72,7 +90,10 @@ public static class LoungeBanButton
             .Deny(DiscordPermissions.Speak)
             .Deny(DiscordPermissions.Stream)));
         
-        await eventArgs.Channel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
+        await targetChannel.ModifyAsync(x => x.PermissionOverwrites = overwriteBuilderList);
+        
+        await eventArgs.Interaction.DeleteOriginalResponseAsync();
+
     }
     
 }

@@ -10,9 +10,18 @@ public static class LoungeResizeButton
 {
     internal static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
+        var targetChannel = await InterfaceTargetHelper.GetTargetDiscordChannelAsync(eventArgs.Channel, member);
+
+        if (ReferenceEquals(targetChannel, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+            return;
+        }
+        
         await eventArgs.Interaction.DeferAsync();
 
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, targetChannel, eventArgs.Guild);
         
         if (existsAsOwner == false)
             return;
@@ -39,19 +48,29 @@ public static class LoungeResizeButton
 
         await ThrowAwayFollowupMessage.HandleAsync(followUpMessageBuilder, eventArgs.Interaction);
 
+        await eventArgs.Interaction.DeleteOriginalResponseAsync();
     }
 
     internal static async Task DropdownInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
+        var targetChannel = await InterfaceTargetHelper.GetTargetDiscordChannelAsync(eventArgs.Channel, member);
+
+        if (ReferenceEquals(targetChannel, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+            return;
+        }
+        
         await eventArgs.Interaction.DeferAsync();
 
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, targetChannel, eventArgs.Guild);
 
         if (existsAsOwner == false)
             return;
         
         var interactionId = eventArgs.Message.Id;
-        var message = await eventArgs.Channel.GetMessageAsync(interactionId);
+        var message = await targetChannel.GetMessageAsync(interactionId);
         await message.DeleteAsync();
 
         var newSizeString = eventArgs.Interaction.Data.Values[0].Replace("lounge_resize_label_", "");
@@ -64,7 +83,7 @@ public static class LoungeResizeButton
             return;
         }
         
-        var channel = eventArgs.Channel;
+        var channel = targetChannel;
         
         if (ReferenceEquals(channel, null))
             return;
@@ -76,5 +95,6 @@ public static class LoungeResizeButton
 
         await channel.ModifyAsync(NewEditModel);
 
+        await eventArgs.Interaction.DeleteOriginalResponseAsync();
     }
 }

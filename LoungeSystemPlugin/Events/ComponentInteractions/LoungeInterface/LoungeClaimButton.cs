@@ -11,17 +11,26 @@ public static class LoungeClaimButton
 {
     internal static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember member)
     {
+        var targetChannel = await InterfaceTargetHelper.GetTargetDiscordChannelAsync(eventArgs.Channel, member);
+
+        if (ReferenceEquals(targetChannel, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+            return;
+        }
+        
         await eventArgs.Interaction.DeferAsync();
 
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, eventArgs.Channel, eventArgs.Guild);
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(member, targetChannel, eventArgs.Guild);
         
         //Only non owners can claim
         if (existsAsOwner)
             return;
 
-        var ownerId = await LoungeOwnerCheck.GetOwnerIdAsync(eventArgs.Channel);
+        var ownerId = await LoungeOwnerCheck.GetOwnerIdAsync(targetChannel);
         
-        var membersInChannel = eventArgs.Channel.Users;
+        var membersInChannel = targetChannel.Users;
 
         var isOwnerPresent = false;
         
@@ -47,14 +56,14 @@ public static class LoungeClaimButton
         
             updateCount = await mySqlConnection.ExecuteAsync(
                 "UPDATE LoungeIndex SET OwnerId = @OwnerId WHERE ChannelId = @ChannelId",
-                new {OwnerId = eventArgs.User.Id, ChannelId = eventArgs.Channel.Id});
+                new {OwnerId = eventArgs.User.Id, ChannelId = targetChannel.Id});
 
             await mySqlConnection.CloseAsync();
         }
         catch (MySqlException ex)
         {
             Log.Error(ex, "Unable to Change owner of Lounge in LoungeSystem Plugin. Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
-                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id); 
+                eventArgs.Guild.Name, eventArgs.Guild.Id, targetChannel.Name, targetChannel.Id); 
             return;
         }
 
@@ -68,6 +77,9 @@ public static class LoungeClaimButton
         await followupMessage.ModifyAsync("Lounge claimed successfully, you are now the owner");
 
         ThrowAwayFollowupMessage.Handle(followupMessage);
+        
+        await eventArgs.Interaction.DeleteOriginalResponseAsync();
+
 
     }
 }

@@ -13,9 +13,18 @@ public static class LoungeDeleteButtonLogic
 {
     public static async Task ButtonInteracted(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
+        var targetChannel = await InterfaceTargetHelper.GetTargetDiscordChannelAsync(eventArgs.Channel, owningMember);
+
+        if (ReferenceEquals(targetChannel, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+            return;
+        }
+        
         await eventArgs.Interaction.DeferAsync();
 
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, targetChannel, eventArgs.Guild);
         
         //Only non owners can delete
         if (!existsAsOwner)
@@ -28,25 +37,25 @@ public static class LoungeDeleteButtonLogic
             await using var mySqlConnection = new MySqlConnection(connectionString);
             await mySqlConnection.OpenAsync();
 
-            var loungeDbRecordEnumerable = await mySqlConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId= @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = eventArgs.Channel.Id});
+            var loungeDbRecordEnumerable = await mySqlConnection.QueryAsync<LoungeDbRecord>("SELECT * FROM LoungeIndex WHERE GuildId = @GuildId AND ChannelId= @ChannelId", new {GuildId = eventArgs.Guild.Id, ChannelId = targetChannel.Id});
             await mySqlConnection.CloseAsync();
             loungeDbRecordList = loungeDbRecordEnumerable.ToList();
         }
         catch (MySqlException ex)
         {
             Log.Error(ex, "Error while querying lounge-db-records in the LoungeSystem Delete Button Logic. Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
-                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id);
+                eventArgs.Guild.Name, eventArgs.Guild.Id, targetChannel.Name, targetChannel.Id);
             return;
         }
 
 
         if (loungeDbRecordList.Count == 0)
         {
-            Log.Error("No LoungeDbRecord from Lounge Index on Guild {GuildId} at Channel {ChannelId}", eventArgs.Guild.Id, eventArgs.Channel.Id);
+            Log.Error("No LoungeDbRecord from Lounge Index on Guild {GuildId} at Channel {ChannelId}", eventArgs.Guild.Id, targetChannel.Id);
             return;
         }
 
-        var loungeChannel = eventArgs.Channel;
+        var loungeChannel = targetChannel;
 
         var afkChannel = await eventArgs.Guild.GetAfkChannelAsync();
 
@@ -73,12 +82,14 @@ public static class LoungeDeleteButtonLogic
         catch (MySqlException ex)
         {
             Log.Error(ex, "Unable to delete lounge database record in LoungeSystem. Guild: {GuildName}/{GuildId}, Channel: {ChannelName}/{ChannelId}",
-                eventArgs.Guild.Name, eventArgs.Guild.Id, eventArgs.Channel.Name,eventArgs.Channel.Id);
+                eventArgs.Guild.Name, eventArgs.Guild.Id, targetChannel.Name,targetChannel.Id);
             return;
         }
         
         if (deleteSuccess == false)
-            Log.Error("Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",loungeChannel.Name, eventArgs.Channel.Id, eventArgs.Guild.Id);
+            Log.Error("Unable to delete the Sql Record for Lounge {LoungeName} with the Id {LoungeId} in Guild {GuildId}",loungeChannel.Name, targetChannel.Id, eventArgs.Guild.Id);
+        
+        await eventArgs.Interaction.DeleteOriginalResponseAsync();
 
     }
     

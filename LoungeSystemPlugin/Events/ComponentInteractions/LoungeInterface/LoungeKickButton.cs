@@ -9,9 +9,18 @@ public static class LoungeKickButton
 {
     internal static async Task DropdownInteraction(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
+        var targetChannel = await InterfaceTargetHelper.GetTargetDiscordChannelAsync(eventArgs.Channel, owningMember);
+
+        if (ReferenceEquals(targetChannel, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+            return;
+        }
+        
         await eventArgs.Interaction.DeferAsync();
 
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, targetChannel, eventArgs.Guild);
         
         //Owner cant be kicked
         if (!existsAsOwner)
@@ -36,15 +45,24 @@ public static class LoungeKickButton
 
     internal static async Task ButtonInteraction(ComponentInteractionCreatedEventArgs eventArgs, DiscordMember owningMember)
     {
+        var targetChannel = await InterfaceTargetHelper.GetTargetDiscordChannelAsync(eventArgs.Channel, owningMember);
+
+        if (ReferenceEquals(targetChannel, null))
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+            return;
+        }
+        
         await eventArgs.Interaction.DeferAsync();
 
-        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, eventArgs.Channel, eventArgs.Guild);
+        var existsAsOwner = await LoungeOwnerCheck.IsLoungeOwnerAsync(owningMember, targetChannel, eventArgs.Guild);
         
         //Only non owners can kick
         if (!existsAsOwner)
             return;
 
-        var membersInChannel = eventArgs.Channel.Users;
+        var membersInChannel = targetChannel.Users;
 
         var optionsList = new List<DiscordSelectComponentOption>();
 

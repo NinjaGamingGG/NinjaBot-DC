@@ -88,7 +88,8 @@ public static class LoungeSetupUiHelper
             GuildId = guildId,
             TargetChannelId = targetChannelId,
             InterfaceChannelId = interfaceChannelId,
-            LoungeNamePattern = setupRecord.NameDecorator + " " +  setupRecord.NamePattern,
+            LoungeNamePattern = setupRecord.NamePattern,
+            DecoratorPattern = setupRecord.NameDecorator
         };
         
         var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();

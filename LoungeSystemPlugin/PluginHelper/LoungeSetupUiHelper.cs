@@ -124,20 +124,21 @@ public static class LoungeSetupUiHelper
             Log.Error(e, "[{PluginName}] Error while Executing Mysql Operations on LoungeSetupUiHelper Setup Completion", LoungeSystemPlugin.GetStaticPluginName());
         }
         
-        if (interfaceChannelId == 0)
-            PrintExternalLoungeInterface(interfaceChannelId);
+        if (interfaceChannelId != 0)
+            PrintExternalLoungeInterface(interfaceChannelId, targetChannelId);
         
     }
 
-    private static void PrintExternalLoungeInterface(ulong interfaceChannelId)
+    private static async void PrintExternalLoungeInterface(ulong interfaceChannelId, ulong targetChannelId)
     {
         var discordClient = Worker.GetServiceDiscordClient();
-        var interfaceChannel = discordClient.GetChannelAsync(interfaceChannelId).Result;
+        var interfaceChannel = await discordClient.GetChannelAsync(interfaceChannelId);
+        var targetChannel = await discordClient.GetChannelAsync(targetChannelId);
 
         var builder = InterfaceMessageBuilder.GetBuilder(discordClient,
-            "This ist the Interface for all Lounges of "+ interfaceChannel.Mention+" channels");
+            "This ist the Interface for all Lounges of "+ targetChannel.Mention+" channels");
         
-        interfaceChannel.SendMessageAsync(builder).Wait();
+        await interfaceChannel.SendMessageAsync(builder);
     }
 
 

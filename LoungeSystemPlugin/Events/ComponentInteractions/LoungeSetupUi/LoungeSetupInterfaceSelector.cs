@@ -16,7 +16,7 @@ public static class LoungeSetupInterfaceSelector
         //Check if User has Admin Permissions
         if (!member.Permissions.HasPermission(DiscordPermissions.Administrator))
         {
-            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,LoungeSetupUiHelper.NoPermissionsResponseBuilder);
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,LoungeSetupUiHelper.Messages.NoPermissionsResponseBuilder);
             return;
         }
         
@@ -45,18 +45,18 @@ public static class LoungeSetupInterfaceSelector
             {
                 case ("separate_interface"):
                     await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
-                        LoungeSetupUiHelper.InterfaceSelectedResponseBuilder);
+                        LoungeSetupUiHelper.Messages.InterfaceSelectedResponseBuilder);
                     break;
             
                 case ("internal_interface"):
                     await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
-                        LoungeSetupUiHelper.LoungeSetupComplete);
+                        LoungeSetupUiHelper.Messages.LoungeSetupComplete);
                     LoungeSetupUiHelper.CompleteSetup(deserializedRecord, eventArgs.Guild.Id);
                     break;
             
                 default:
                     await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                        LoungeSetupUiHelper.InteractionFailedResponseBuilder("The selection made was Invalid, please try again"));
+                        LoungeSetupUiHelper.Messages.InteractionFailedResponseBuilder("The selection made was Invalid, please try again"));
                     break;
             
             }
@@ -65,7 +65,7 @@ public static class LoungeSetupInterfaceSelector
         catch (Exception ex)
         {
             Log.Error(ex,"[{PluginName}] Unable to update LoungeSetupRecord for ui message {messageId}",LoungeSystemPlugin.GetStaticPluginName(), messageId);
-            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, LoungeSetupUiHelper.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, LoungeSetupUiHelper.Messages.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
         }
     }
     

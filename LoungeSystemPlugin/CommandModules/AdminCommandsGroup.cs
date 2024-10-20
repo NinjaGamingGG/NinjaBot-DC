@@ -100,11 +100,11 @@ public static class AdminCommandsGroup
         {
             await context.DeferResponseAsync();
             Log.Debug("User {userName} doesnt hast Permission for '/lounge setup' command", context.Member.Username);
-            await context.RespondAsync(LoungeSetupUiHelper.NoPermissionMessageBuilder);
+            await context.RespondAsync(LoungeSetupUiHelper.Messages.NoPermissionMessageBuilder);
             return;
         }
         
-        await context.RespondAsync(LoungeSetupUiHelper.InitialMessageBuilder);
+        await context.RespondAsync(LoungeSetupUiHelper.Messages.InitialMessageBuilder);
         
         var responseMessage = await context.GetResponseAsync();
 

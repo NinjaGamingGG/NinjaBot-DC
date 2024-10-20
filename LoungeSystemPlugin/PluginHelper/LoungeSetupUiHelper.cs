@@ -3,13 +3,16 @@ using DSharpPlus.Entities;
 using LoungeSystemPlugin.Records.Cache;
 using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
+using NinjaBot_DC;
 using Serilog;
 
 namespace LoungeSystemPlugin.PluginHelper;
 
 public static class LoungeSetupUiHelper
 {
-    private const string UiBaseMessageContent =
+    public static class Messages
+    {
+        private const string UiBaseMessageContent =
         ":desktop: **Lounge Setup UI.**\n*This UI will guide you trough the Lounge Setup Process.*\n*This UI will get invalid after 15 Minutes!*\n\n";
     
     private const string NoPermissionsMessage = ":x: You do not have permission to do this.";
@@ -68,6 +71,8 @@ public static class LoungeSetupUiHelper
         .WithContent(NoPermissionsMessage);
     
     public static readonly DiscordMessageBuilder NoPermissionMessageBuilder = new DiscordMessageBuilder().WithContent(NoPermissionsMessage);
+    }
+    
 
     public static async void CompleteSetup(LoungeSetupRecord setupRecord,ulong guildId, ulong interfaceChannelId = 0)
     {
@@ -119,6 +124,20 @@ public static class LoungeSetupUiHelper
             Log.Error(e, "[{PluginName}] Error while Executing Mysql Operations on LoungeSetupUiHelper Setup Completion", LoungeSystemPlugin.GetStaticPluginName());
         }
         
+        if (interfaceChannelId == 0)
+            PrintExternalLoungeInterface(interfaceChannelId);
+        
+    }
+
+    private static void PrintExternalLoungeInterface(ulong interfaceChannelId)
+    {
+        var discordClient = Worker.GetServiceDiscordClient();
+        var interfaceChannel = discordClient.GetChannelAsync(interfaceChannelId).Result;
+
+        var builder = InterfaceMessageBuilder.GetBuilder(discordClient,
+            "This ist the Interface for all Lounges of "+ interfaceChannel.Mention+" channels");
+        
+        interfaceChannel.SendMessageAsync(builder).Wait();
     }
 
 

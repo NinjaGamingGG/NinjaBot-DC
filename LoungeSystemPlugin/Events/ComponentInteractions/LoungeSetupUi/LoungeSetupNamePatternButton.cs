@@ -11,12 +11,12 @@ public static class LoungeSetupNamePatternButton
         //Check if User has Admin Permissions
         if (!member.Permissions.HasPermission(DiscordPermissions.Administrator))
         {
-            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,LoungeSetupUiHelper.NoPermissionsResponseBuilder);
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,LoungeSetupUiHelper.Messages.NoPermissionsResponseBuilder);
             return;
         }
         
         //Update the message this Button was Attached to
         await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.Modal,
-            LoungeSetupUiHelper.ChannelNamePatternModalBuilder);
+            LoungeSetupUiHelper.Messages.ChannelNamePatternModalBuilder);
     }
 }

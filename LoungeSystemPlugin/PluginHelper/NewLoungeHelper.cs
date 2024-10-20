@@ -52,7 +52,7 @@ public static class NewLoungeHelper
         foreach (var channelConfig in channelsList.Where(channelConfig => originalChannel.Id == channelConfig.TargetChannelId))
         {
             channelExists = true;
-            loungeNamePattern = channelConfig.DecoratorPattern + channelConfig.LoungeNamePattern;
+            loungeNamePattern = channelConfig.DecoratorPattern + " "+ channelConfig.LoungeNamePattern;
             interfaceChannel = channelConfig.InterfaceChannelId;
 
             break;

@@ -121,7 +121,7 @@ public static class AdminCommandsGroup
             else
             {
                 var interfaceChannel = await context.Guild.GetChannelAsync(record.InterfaceChannelId);
-                interfaceContentString = "The set interface channel for this configuration is: " + interfaceChannel.Mention;
+                interfaceContentString = "The set interface channel for this configuration is:\n" + interfaceChannel.Mention;
             }
             
             if (record.LoungeNamePattern == null || record.DecoratorPattern == null)

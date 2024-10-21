@@ -73,8 +73,9 @@ public static class LoungeSetupUiHelper
         
         public static readonly DiscordInteractionResponseBuilder NotInChannelResponseBuilder = new DiscordInteractionResponseBuilder()
             .WithContent(":x: You have to be in a lounge channel to use this");
-    
-    
+
+        public static readonly DiscordMessageBuilder
+            NoConfigurationsFound = new DiscordMessageBuilder().WithContent("No configurations found for this guild!\nTry setting up a new one using '/lounge setup'");
     }
     
 

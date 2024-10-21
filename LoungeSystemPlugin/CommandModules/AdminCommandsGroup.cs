@@ -1,7 +1,10 @@
-﻿using DSharpPlus.Commands;
+﻿using Dapper;
+using DSharpPlus.Commands;
 using DSharpPlus.Entities;
 using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.Records.Cache;
+using LoungeSystemPlugin.Records.MySQL;
+using MySqlConnector;
 using NRedisStack.RedisStackCommands;
 using Serilog;
 using StackExchange.Redis;
@@ -19,7 +22,7 @@ public static class AdminCommandsGroup
             await context.DeferResponseAsync();
             return;
         }
-
+        await context.DeferResponseAsync();
         if (!context.Member.Permissions.HasPermission(DiscordPermissions.Administrator))
         {
             await context.DeferResponseAsync();
@@ -51,5 +54,96 @@ public static class AdminCommandsGroup
         {
             Log.Error(ex, "[{PluginName}] Unable to insert new configuration record!",LoungeSystemPlugin.GetStaticPluginName());
         }
+    }
+
+    [Command("config")]
+    public static async Task ConfigCommand(CommandContext context)
+    {
+        //validation and permissions check
+        if (ReferenceEquals(context.Member, null))
+        {
+            await context.DeferResponseAsync();
+            return;
+        }
+
+        if (!context.Member.Permissions.HasPermission(DiscordPermissions.Administrator))
+        {
+            Log.Debug("User {userName} doesnt hast Permission for '/lounge config' command", context.Member.Username);
+            await context.RespondAsync(LoungeSetupUiHelper.Messages.NoPermissionMessageBuilder);
+            return;
+        }
+        
+        await context.DeferResponseAsync();
+        
+        //get a list with all lounge configurations for this guild
+        var mysqlConnectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
+        var mysqlConnection = new MySqlConnection(mysqlConnectionString);
+
+        if (ReferenceEquals(context.Guild, null))
+            return;
+
+        List<LoungeSystemConfigurationRecord> foundRecordsList = [];
+
+        try
+        {
+            await mysqlConnection.OpenAsync();
+
+            var configurations = await mysqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystem.LoungeSystemConfigurationIndex WHERE GuildId = @GuildId",new {GuildId = context.Guild.Id});
+            var configurationsAsList = configurations.ToList();
+
+            if (configurationsAsList.Count == 0)
+            {
+                await context.RespondAsync(LoungeSetupUiHelper.Messages.NoConfigurationsFound);
+                return;
+            }
+
+            foundRecordsList = configurationsAsList;
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex, "[{PluginName}] Unable to query configuration records!",context.Member.Username);
+        }
+
+        List<DiscordEmbed> embedList = [];
+        List<DiscordSelectComponentOption> selectComponentOptions = [];
+        
+        //print list as message back to user
+        foreach (var record in foundRecordsList)
+        {
+            var targetChannel = await context.Guild.GetChannelAsync(record.TargetChannelId);
+
+            
+            string interfaceContentString;
+            if (record.InterfaceChannelId == 0)
+            {
+                interfaceContentString = "This channel configuration has an internal interface.";
+            }
+            else
+            {
+                var interfaceChannel = await context.Guild.GetChannelAsync(record.InterfaceChannelId);
+                interfaceContentString = "The set interface channel for this configuration is: " + interfaceChannel.Mention;
+            }
+            
+            if (record.LoungeNamePattern == null || record.DecoratorPattern == null)
+                return;
+            
+            var embedBuilder = new DiscordEmbedBuilder()
+                .WithTitle(targetChannel.Mention)
+                .AddField("Target Channel Id:", record.TargetChannelId.ToString())
+                .AddField("Interface Channel Details:", interfaceContentString)
+                .AddField("The set Name Pattern is: ", record.LoungeNamePattern)
+                .AddField("The set Name Decorator is:", record.DecoratorPattern)
+                .Build();
+            
+            embedList.Add(embedBuilder);
+            
+            selectComponentOptions.Add(new DiscordSelectComponentOption(targetChannel.Name, targetChannel.Id.ToString() ));
+        }
+
+        await context.RespondAsync(new DiscordMessageBuilder()
+            .WithContent("I found the following configurations for this Guild:")
+            .AddEmbeds(embedList)
+            .AddComponents(new DiscordSelectComponent("lounge_config_selector", "Select a channel here for more options", selectComponentOptions)));
+
     }
 }

@@ -3,6 +3,7 @@ using Dapper.Contrib.Extensions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
+using LoungeSystemPlugin.PluginHelper.UserInterface;
 using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
 using Serilog;
@@ -18,7 +19,7 @@ public static class LoungeDeleteButtonLogic
         if (ReferenceEquals(targetChannel, null))
         {
             await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+                UIMessageBuilders.NotInChannelResponseBuilder);
             return;
         }
         

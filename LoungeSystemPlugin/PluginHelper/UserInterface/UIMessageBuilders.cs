@@ -1,16 +1,9 @@
-﻿using Dapper;
-using DSharpPlus.Entities;
-using LoungeSystemPlugin.Records.Cache;
-using LoungeSystemPlugin.Records.MySQL;
-using MySqlConnector;
-using NinjaBot_DC;
-using Serilog;
+﻿using DSharpPlus.Entities;
 
-namespace LoungeSystemPlugin.PluginHelper;
+namespace LoungeSystemPlugin.PluginHelper.UserInterface;
 
-public static class LoungeSetupUiHelper
-{
-    public static class Messages
+// ReSharper disable once InconsistentNaming
+public static class UIMessageBuilders
     {
         private const string UiBaseMessageContent =
             ":desktop: **Lounge Setup UI.**\n*This UI will guide you trough the Lounge Setup Process.*\n*This UI will get invalid after 15 Minutes!*\n\n";
@@ -30,10 +23,18 @@ public static class LoungeSetupUiHelper
                 new DiscordButtonComponent(DiscordButtonStyle.Primary,"lounge_setup_name-pattern_button","Set Name Pattern")]);
 
         public static readonly DiscordInteractionResponseBuilder ChannelNamePatternModalBuilder =
-            new DiscordInteractionResponseBuilder().WithTitle("Set your Channel Name Pattern")
+            new DiscordInteractionResponseBuilder()
+                .WithTitle("Set your Channel Name Pattern")
                 .WithCustomId("lounge_setup_name-pattern_modal")
                 .AddComponents(new DiscordTextInputComponent("Name Pattern","lounge_setup_name-pattern_modal_name","For example use {username}'s Lounge"))
                 .AddComponents(new DiscordTextInputComponent("Decorator","lounge_setup_name-pattern_modal_decorator","Displayed before the Name. For Example use: ~🗿»"));
+        
+        public static readonly DiscordInteractionResponseBuilder ChannelNamePatternRenameModalBuilder =
+            new DiscordInteractionResponseBuilder()
+                .WithTitle("Set your Channel Name Pattern")
+                .WithCustomId("lounge_config_reset-pattern_modal")
+                .AddComponents(new DiscordTextInputComponent("Name Pattern","lounge_config_reset-pattern_modal_name","For example use {username}'s Lounge"))
+                .AddComponents(new DiscordTextInputComponent("Decorator","lounge_config_reset-pattern_modal_decorator","Displayed before the Name. For Example use: ~🗿»"));
     
     
         public static readonly DiscordInteractionResponseBuilder ModalSubmittedResponseBuilder = 
@@ -76,76 +77,21 @@ public static class LoungeSetupUiHelper
 
         public static readonly DiscordMessageBuilder
             NoConfigurationsFound = new DiscordMessageBuilder().WithContent("No configurations found for this guild!\nTry setting up a new one using '/lounge setup'");
-    }
-    
 
-    public static async void CompleteSetup(LoungeSetupRecord setupRecord,ulong guildId, ulong interfaceChannelId = 0)
-    {
-        var parseSuccess = ulong.TryParse(setupRecord.ChannelId, out var targetChannelId);
-
-        if (!parseSuccess)
+        public static DiscordInteractionResponseBuilder LoungeConfigSelectedResponseBuilder(string channelMention, bool canResetInterface = false)
         {
-            Log.Error("[{PluginName}] Unable to parse channelId for {targetChannelId}", LoungeSystemPlugin.GetStaticPluginName(), setupRecord.ChannelId);    
+            List<DiscordComponent> components = [];
+            
+            if (canResetInterface)
+                components.Add(new DiscordButtonComponent(DiscordButtonStyle.Secondary, $"lounge_config_reset", "Reset Interface", emoji: new DiscordComponentEmoji("\ud83d\udd03")));
+                   
+            components.Add(new DiscordButtonComponent(DiscordButtonStyle.Secondary, $"lounge_config_update_name_pattern", "Update Name Pattern"));
+                    
+            components.Add(new DiscordButtonComponent(DiscordButtonStyle.Danger, $"lounge_config_delete", "Delete Configuration", emoji: new DiscordComponentEmoji("\u2716")));
+            
+            //Reset Interface
+            return new DiscordInteractionResponseBuilder()
+                .WithContent($"You selected the configuration for:\n{channelMention}")
+                .AddComponents(components);
         }
-        
-        var newConfigRecord = new LoungeSystemConfigurationRecord()
-        {
-            GuildId = guildId,
-            TargetChannelId = targetChannelId,
-            InterfaceChannelId = interfaceChannelId,
-            LoungeNamePattern = setupRecord.NamePattern,
-            DecoratorPattern = setupRecord.NameDecorator
-        };
-        
-        var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
-        try
-        {
-            var mySqlConnection = new MySqlConnection(connectionString);
-            await mySqlConnection.OpenAsync();
-        
-            if (ReferenceEquals(mySqlConnection, null))
-            {
-                Log.Error("[{PluginName}] Unable to connect to database!",LoungeSystemPlugin.GetStaticPluginName());
-                return;
-            }
-        
-            var alreadyExists = await mySqlConnection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM LoungeSystemConfigurationIndex WHERE GuildId = @GuildId AND TargetChannelId = @TargetChannelId",
-                new { GuildId = guildId, TargetChannelId = targetChannelId });
-        
-            if (alreadyExists != 0)
-            {
-                Log.Error("[{PluginName}] Error while Executing Setup Completion in LoungeSetupUiHelper. Configuration already exists!", LoungeSystemPlugin.GetStaticPluginName());
-                return;
-            }
-        
-            await mySqlConnection.ExecuteAsync(
-                "INSERT INTO LoungeSystemConfigurationIndex (GuildId, TargetChannelId, InterfaceChannelId, LoungeNamePattern, DecoratorPattern) VALUES (@GuildId, @TargetChannelId, @InterfaceChannelId, @LoungeNamePattern, @DecoratorPattern)",
-                newConfigRecord);
-        
-            await mySqlConnection.CloseAsync();
-        }
-        catch (Exception e)
-        {
-            Log.Error(e, "[{PluginName}] Error while Executing Mysql Operations on LoungeSetupUiHelper Setup Completion", LoungeSystemPlugin.GetStaticPluginName());
-        }
-        
-        if (interfaceChannelId != 0)
-            PrintExternalLoungeInterface(interfaceChannelId, targetChannelId);
-        
     }
-
-    private static async void PrintExternalLoungeInterface(ulong interfaceChannelId, ulong targetChannelId)
-    {
-        var discordClient = Worker.GetServiceDiscordClient();
-        var interfaceChannel = await discordClient.GetChannelAsync(interfaceChannelId);
-        var targetChannel = await discordClient.GetChannelAsync(targetChannelId);
-
-        var builder = InterfaceMessageBuilder.GetBuilder(discordClient,
-            "This ist the Interface for all Lounges of "+ targetChannel.Mention+" channels");
-        
-        await interfaceChannel.SendMessageAsync(builder);
-    }
-
-
-}

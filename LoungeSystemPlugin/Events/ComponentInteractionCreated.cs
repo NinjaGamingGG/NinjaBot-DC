@@ -1,6 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using LoungeSystemPlugin.Events.ComponentInteractions.LoungeConfigEditor;
 using LoungeSystemPlugin.Events.ComponentInteractions.LoungeInterface;
 using LoungeSystemPlugin.Events.ComponentInteractions.LoungeSetupUi;
 
@@ -92,6 +93,22 @@ public static class ComponentInteractionCreated
             
             case "lounge_setup_interface_channel_select":
                 await LoungeSetupInterfaceChannelSelection.SelectionMade(eventArgs, member);
+                break;
+            
+            case "lounge_config_selector":
+                await LoungeConfigurationSelected.ChannelSelectionMade(eventArgs, member);
+                break;
+            
+            case "lounge_config_reset":
+                await LoungeConfigurationSelected.ResetInterfaceButton(eventArgs, member);
+                break;
+            
+            case "lounge_config_update_name_pattern":
+                await LoungeConfigurationSelected.ResetNamePatternButton(eventArgs, member);
+                break;
+            
+            case "lounge_config_delete":
+                await LoungeConfigurationSelected.DeleteButton(eventArgs, member);
                 break;
             
             default:

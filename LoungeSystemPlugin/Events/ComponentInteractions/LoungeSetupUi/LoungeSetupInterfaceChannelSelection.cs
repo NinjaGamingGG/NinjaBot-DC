@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
+using LoungeSystemPlugin.PluginHelper.UserInterface;
 using LoungeSystemPlugin.Records.Cache;
 using Newtonsoft.Json;
 using NRedisStack.RedisStackCommands;
@@ -16,12 +17,12 @@ public static class LoungeSetupInterfaceChannelSelection
         //Check if User has Admin Permissions
         if (!member.Permissions.HasPermission(DiscordPermissions.Administrator))
         {
-            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,LoungeSetupUiHelper.Messages.NoPermissionsResponseBuilder);
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,UIMessageBuilders.NoPermissionsResponseBuilder);
             return;
         }
         
         await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
-            LoungeSetupUiHelper.Messages.LoungeSetupComplete);
+            UIMessageBuilders.LoungeSetupComplete);
         
         if (ReferenceEquals(eventArgs.Interaction.Message, null))
             return;
@@ -50,7 +51,7 @@ public static class LoungeSetupInterfaceChannelSelection
         catch (Exception ex)
         {
             Log.Error(ex,"[{PluginName}] Unable to update LoungeSetupRecord for ui message {messageId}",LoungeSystemPlugin.GetStaticPluginName(), messageId);
-            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, LoungeSetupUiHelper.Messages.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, UIMessageBuilders.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
         }
     }
 }

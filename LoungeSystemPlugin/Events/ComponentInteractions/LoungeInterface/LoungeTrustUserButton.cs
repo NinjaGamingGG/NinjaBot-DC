@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
+using LoungeSystemPlugin.PluginHelper.UserInterface;
 
 namespace LoungeSystemPlugin.Events.ComponentInteractions.LoungeInterface;
 
@@ -13,7 +14,7 @@ public static class LoungeTrustUserButton
         if (ReferenceEquals(targetChannel, null))
         {
             await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+                UIMessageBuilders.NotInChannelResponseBuilder);
             return;
         }
         
@@ -36,7 +37,7 @@ public static class LoungeTrustUserButton
         if (ReferenceEquals(targetChannel, null))
         {
             await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                LoungeSetupUiHelper.Messages.NotInChannelResponseBuilder);
+                UIMessageBuilders.NotInChannelResponseBuilder);
             return;
         }
         

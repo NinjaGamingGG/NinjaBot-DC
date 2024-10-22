@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
+using LoungeSystemPlugin.PluginHelper.UserInterface;
 using LoungeSystemPlugin.Records.Cache;
 using Newtonsoft.Json;
 using NRedisStack.RedisStackCommands;
@@ -16,7 +17,7 @@ public static class LoungeSetupInterfaceSelector
         //Check if User has Admin Permissions
         if (!member.Permissions.HasPermission(DiscordPermissions.Administrator))
         {
-            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,LoungeSetupUiHelper.Messages.NoPermissionsResponseBuilder);
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,UIMessageBuilders.NoPermissionsResponseBuilder);
             return;
         }
         
@@ -45,18 +46,18 @@ public static class LoungeSetupInterfaceSelector
             {
                 case ("separate_interface"):
                     await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
-                        LoungeSetupUiHelper.Messages.InterfaceSelectedResponseBuilder);
+                        UIMessageBuilders.InterfaceSelectedResponseBuilder);
                     break;
             
                 case ("internal_interface"):
                     await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
-                        LoungeSetupUiHelper.Messages.LoungeSetupComplete);
+                        UIMessageBuilders.LoungeSetupComplete);
                     LoungeSetupUiHelper.CompleteSetup(deserializedRecord, eventArgs.Guild.Id);
                     break;
             
                 default:
                     await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                        LoungeSetupUiHelper.Messages.InteractionFailedResponseBuilder("The selection made was Invalid, please try again"));
+                        UIMessageBuilders.InteractionFailedResponseBuilder("The selection made was Invalid, please try again"));
                     break;
             
             }
@@ -65,7 +66,7 @@ public static class LoungeSetupInterfaceSelector
         catch (Exception ex)
         {
             Log.Error(ex,"[{PluginName}] Unable to update LoungeSetupRecord for ui message {messageId}",LoungeSystemPlugin.GetStaticPluginName(), messageId);
-            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, LoungeSetupUiHelper.Messages.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage, UIMessageBuilders.InteractionFailedResponseBuilder($"Unable to update LoungeSetupRecord for ui message {messageId}"));
         }
     }
     

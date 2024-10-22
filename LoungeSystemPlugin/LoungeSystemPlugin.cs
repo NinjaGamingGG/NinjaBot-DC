@@ -64,7 +64,7 @@ public class LoungeSystemPlugin : DefaultPlugin
             var database = redisConnection.GetDatabase(RedisDatabase);
             var searchCommands = database.FT();
             
-            CreateJsonSchema(searchCommands);
+            CreateConfigurationsIndexJsonSchema(searchCommands);
         }
         catch (Exception ex)
         {
@@ -115,7 +115,7 @@ public class LoungeSystemPlugin : DefaultPlugin
         Log.Information("[{PluginName}] Plugin Unloaded", Name);
     }
     
-    private static void CreateJsonSchema(SearchCommands searchCommands)
+    private static void CreateConfigurationsIndexJsonSchema(SearchCommands searchCommands)
     {
         const string indexName = "idx:setupInterfaces";
         try

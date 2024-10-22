@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using DSharpPlus.Commands;
 using DSharpPlus.Entities;
-using LoungeSystemPlugin.PluginHelper;
+using LoungeSystemPlugin.PluginHelper.UserInterface;
 using LoungeSystemPlugin.Records.Cache;
 using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
@@ -27,11 +27,11 @@ public static class AdminCommandsGroup
         {
             await context.DeferResponseAsync();
             Log.Debug("User {userName} doesnt hast Permission for '/lounge setup' command", context.Member.Username);
-            await context.RespondAsync(LoungeSetupUiHelper.Messages.NoPermissionMessageBuilder);
+            await context.RespondAsync(UIMessageBuilders.NoPermissionMessageBuilder);
             return;
         }
         
-        await context.RespondAsync(LoungeSetupUiHelper.Messages.InitialMessageBuilder);
+        await context.RespondAsync(UIMessageBuilders.InitialMessageBuilder);
         
         var responseMessage = await context.GetResponseAsync();
 
@@ -69,7 +69,7 @@ public static class AdminCommandsGroup
         if (!context.Member.Permissions.HasPermission(DiscordPermissions.Administrator))
         {
             Log.Debug("User {userName} doesnt hast Permission for '/lounge config' command", context.Member.Username);
-            await context.RespondAsync(LoungeSetupUiHelper.Messages.NoPermissionMessageBuilder);
+            await context.RespondAsync(UIMessageBuilders.NoPermissionMessageBuilder);
             return;
         }
         
@@ -89,11 +89,14 @@ public static class AdminCommandsGroup
             await mysqlConnection.OpenAsync();
 
             var configurations = await mysqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystem.LoungeSystemConfigurationIndex WHERE GuildId = @GuildId",new {GuildId = context.Guild.Id});
+
+            await mysqlConnection.CloseAsync();
+            
             var configurationsAsList = configurations.ToList();
 
             if (configurationsAsList.Count == 0)
             {
-                await context.RespondAsync(LoungeSetupUiHelper.Messages.NoConfigurationsFound);
+                await context.RespondAsync(UIMessageBuilders.NoConfigurationsFound);
                 return;
             }
 
@@ -143,7 +146,7 @@ public static class AdminCommandsGroup
         await context.RespondAsync(new DiscordMessageBuilder()
             .WithContent("I found the following configurations for this Guild:")
             .AddEmbeds(embedList)
-            .AddComponents(new DiscordSelectComponent("lounge_config_selector", "Select a channel here for more options", selectComponentOptions)));
+            .AddComponents(new DiscordSelectComponent("lounge_config_selector", "Select a channel here for more options", selectComponentOptions, maxOptions: 1)));
 
     }
 }

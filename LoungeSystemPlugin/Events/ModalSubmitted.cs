@@ -18,6 +18,10 @@ internal static class ModalSubmitted
                 case "lounge_setup_name-pattern_modal":
                     await LoungeSetupUiModal.ModalSubmitted(sender, eventArgs);
                     break;
+                
+                case "lounge_config_reset-pattern_modal":
+                    await LoungeConfigResetNameModal.ModalSubmitted(sender, eventArgs);
+                    break;
         }
         
 

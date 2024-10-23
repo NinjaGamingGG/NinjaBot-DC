@@ -98,7 +98,7 @@ public static class LoungeConfigResetNameModal
         
         await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
             new DiscordInteractionResponseBuilder()
-                .WithContent("Error to update Name Pattern"));
+                .WithContent("Unable to update Name Pattern"));
 
     }
     

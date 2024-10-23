@@ -66,13 +66,15 @@ public static class LoungeConfigResetNameModal
                     .WithContent("Interaction Failed, please try again later."));
             return;
         }
-            
+
+        var updateSuccess = 0;
+        
         try
         {
             var mysqlConnection = new MySqlConnection(LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString());
             await mysqlConnection.OpenAsync();
 
-            var updateSuccess = await mysqlConnection.ExecuteAsync("UPDATE LoungeSystemConfigurationIndex SET LoungeNamePattern=@NameReplacement, DecoratorPattern=@DecoratorReplacement WHERE TargetChannelId=@TargetChannelId", 
+            updateSuccess = await mysqlConnection.ExecuteAsync("UPDATE LoungeSystemConfigurationIndex SET LoungeNamePattern=@NameReplacement, DecoratorPattern=@DecoratorReplacement WHERE TargetChannelId=@TargetChannelId", 
                 new { NameReplacement = namePatternString, DecoratorReplacement = nameDecoratorString , TargetChannelId = targetChannelId });
                 
             await mysqlConnection.CloseAsync();
@@ -80,15 +82,24 @@ public static class LoungeConfigResetNameModal
         }
         catch (MySqlException ex)
         {
-            Log.Error(ex,"");
+            Log.Error(ex,"[{PluginName}] Error while querying Interaction Message from Cache", LoungeSystemPlugin.GetStaticPluginName());
             await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder()
                     .WithContent("Interaction Failed, please try again later."));
         }
+
+        if (updateSuccess == 1)
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .WithContent("Name Pattern updated successfully"));
+            return;
+        }
         
         await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
             new DiscordInteractionResponseBuilder()
-                .WithContent("Name Pattern updated successfully"));
+                .WithContent("Error to update Name Pattern"));
+
     }
     
 }

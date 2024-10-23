@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.PluginHelper.UserInterface;
 using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
@@ -214,5 +215,97 @@ public static class LoungeConfigurationSelected
             await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,new DiscordInteractionResponseBuilder().WithContent("You do not have permission to do this."));
             return;
         }
+        
+        if (ReferenceEquals(eventArgs.Interaction.Message, null))
+        {
+            return;
+        }
+
+        await eventArgs.Interaction.DeferAsync();
+        
+        var hashFieldValue = RedisValue.Null;
+        try
+        {
+            var redisConnection = await ConnectionMultiplexer.ConnectAsync(LoungeSystemPlugin.RedisConnectionString);
+            var db = redisConnection.GetDatabase();
+            
+            var redisKey = $"InteractionMessageId:{eventArgs.Interaction.Message.Id}";
+            
+            var hashFields = db.HashGetAll(redisKey);
+            
+            await redisConnection.CloseAsync();
+            
+            if (hashFields.Length == 0)
+            {
+                await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder()
+                        .WithContent("Interaction Failed, please try again later."));
+                return;
+            }
+            hashFieldValue = hashFields[0].Value;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[{PluginName}] Error while querying Interaction Message from Cache", LoungeSystemPlugin.RedisConnectionString);
+        }
+        
+        var parseIdSuccess = ulong.TryParse(hashFieldValue, out var targetChannelId);
+        
+        if (!parseIdSuccess)
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .WithContent("Interaction Failed, please try again later."));
+            return;
+        }
+
+        List<LoungeSystemConfigurationRecord> configRecordsAsList = [];
+        
+        try
+        {
+            var mysqlConnection = new MySqlConnection(LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString());
+            await mysqlConnection.OpenAsync();
+
+            var configRecords = await mysqlConnection.QueryAsync<LoungeSystemConfigurationRecord>("SELECT * FROM LoungeSystemConfigurationIndex WHERE TargetChannelId=@TargetChannelId", 
+                new { TargetChannelId = targetChannelId });
+                
+            await mysqlConnection.CloseAsync();
+            
+            configRecordsAsList = configRecords.ToList();
+
+        }
+        catch (MySqlException ex)
+        {
+            Log.Error(ex,"[{PluginName}] Error while querying LoungeRecords from Database Index", LoungeSystemPlugin.GetStaticPluginName());
+        }
+
+
+        if (configRecordsAsList.Count == 0)
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .WithContent("Interaction Failed, please try again later."));
+            return;
+        }
+
+        var configRecord = configRecordsAsList[0];
+        
+        if (configRecord.TargetChannelId == 0)
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .WithContent("Error: Configuration has Interfaces set to Internal"));
+            return;
+        }
+
+        var discordClient = Worker.GetServiceDiscordClient();
+        var targetChannel = await discordClient.GetChannelAsync(targetChannelId);
+        var interfaceChannel = await discordClient.GetChannelAsync(configRecord.InterfaceChannelId);
+        
+        var builder = InterfaceMessageBuilder.GetBuilder(discordClient,
+            "This ist the Interface for all Lounges of "+ targetChannel.Mention+" channels");
+
+        await interfaceChannel.SendMessageAsync(builder);
+
     }
 }

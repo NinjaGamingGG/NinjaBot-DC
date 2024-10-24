@@ -2,6 +2,7 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using LoungeSystemPlugin.PluginHelper;
 using MySqlConnector;
 using Serilog;
 using StackExchange.Redis;
@@ -67,6 +68,30 @@ public static class LoungeConfigResetNameModal
             return;
         }
 
+        bool containsProfanity;
+        
+        //Check for profanity
+        try
+        {
+            containsProfanity  = await ProfanityCheck.CheckString(nameDecoratorString + " " + namePatternString);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex,"[{PluginName}] Error while checking for Profanity", LoungeSystemPlugin.GetStaticPluginName());
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .WithContent("Interaction Failed, please try again later."));
+            return;
+        }
+
+        if (containsProfanity)
+        {
+            await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder()
+                    .WithContent("Unable to set that as new Name Pattern"));
+            return;
+        }
+        
         var updateSuccess = 0;
         
         try

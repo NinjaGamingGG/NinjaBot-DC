@@ -91,6 +91,21 @@ public static class NewLoungeHelper
                     LoungeSystemPlugin.GetStaticPluginName());
             }
         }
+        
+        bool containsProfanity;
+        
+        try
+        {
+            containsProfanity  = await ProfanityCheck.CheckString(loungeNamePattern);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex,"[{PluginName}] Error while checking for Profanity", LoungeSystemPlugin.GetStaticPluginName());
+            containsProfanity = true;
+        }
+        
+        if (containsProfanity)
+            loungeNamePattern = "~» New Lounge";
 
         originalChannel.Guild.Members.TryGetValue(owningUser.Id, out var discordMember);
         if (ReferenceEquals(discordMember, null))

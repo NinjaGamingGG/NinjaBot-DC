@@ -23,8 +23,6 @@ public static class NewLoungeHelper
     {
         var connectionString = LoungeSystemPlugin.MySqlConnectionHelper.GetMySqlConnectionString();
         
-        var channelExists = false;
-
         string? loungeNamePattern = null;
 
         List<LoungeSystemConfigurationRecord> channelsList;
@@ -46,7 +44,7 @@ public static class NewLoungeHelper
             return;
         }
         
-
+        var channelExists = false;
         ulong interfaceChannel = 0;
 
         foreach (var channelConfig in channelsList.Where(channelConfig => originalChannel.Id == channelConfig.TargetChannelId))
@@ -57,6 +55,9 @@ public static class NewLoungeHelper
 
             break;
         }
+        
+        if (channelExists == false)
+            return;
 
         if (ReferenceEquals(loungeNamePattern, null))
         {
@@ -90,10 +91,6 @@ public static class NewLoungeHelper
                     LoungeSystemPlugin.GetStaticPluginName());
             }
         }
-
-
-        if (channelExists == false)
-            return;
 
         originalChannel.Guild.Members.TryGetValue(owningUser.Id, out var discordMember);
         if (ReferenceEquals(discordMember, null))

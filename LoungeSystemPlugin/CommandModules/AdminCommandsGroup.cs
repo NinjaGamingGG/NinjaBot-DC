@@ -11,7 +11,8 @@ using StackExchange.Redis;
 
 namespace LoungeSystemPlugin.CommandModules;
 
-[Command("lounge")]
+// ReSharper disable once StringLiteralTypo
+[Command("loungesystem")]
 public static class AdminCommandsGroup
 {
     [Command("setup")]

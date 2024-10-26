@@ -134,7 +134,7 @@ public class LoungeSystemPlugin : DefaultPlugin
         {
             if (ex.Message == "Index already exists")
             {
-                Log.Information("[{PluginName}] Index {indexName} already exists!",_staticPluginName, indexName);
+                Log.Debug("[{PluginName}] Index {indexName} already exists!",_staticPluginName, indexName);
                 return;
             }
 

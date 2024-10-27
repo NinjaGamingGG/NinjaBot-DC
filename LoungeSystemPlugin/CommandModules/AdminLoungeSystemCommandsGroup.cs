@@ -13,7 +13,7 @@ namespace LoungeSystemPlugin.CommandModules;
 
 // ReSharper disable once StringLiteralTypo
 [Command("loungesystem")]
-public static class AdminCommandsGroup
+public static class AdminLoungeSystemCommandsGroup
 {
     [Command("setup")]
     public static async Task LoungeSetupCommand(CommandContext context)

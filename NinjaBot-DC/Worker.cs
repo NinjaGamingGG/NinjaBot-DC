@@ -221,7 +221,7 @@ public sealed class Worker : BackgroundService
             return Task.CompletedTask;
 
         var pluginsArray = _loadedPluginsArray;
-        var commandsExtension = Worker.GetServiceCommandsExtension();
+        var commandsExtension = GetServiceCommandsExtension();
 
         for (var i = 0; i < pluginsArray.Length; i++)
         {

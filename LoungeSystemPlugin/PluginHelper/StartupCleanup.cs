@@ -11,8 +11,8 @@ public static class StartupCleanup
 {
     public static async Task Execute()
     {
-        await NewUserCheck();
-        await EmptyChannelCheck();
+        var startupTasks = new List<Task>([EmptyChannelCheck(), NewUserCheck()]);
+        await Task.WhenAll(startupTasks);
     }
 
     /// <summary>
@@ -85,7 +85,7 @@ public static class StartupCleanup
 
             await foreach (var member in allGuildUsers)
             {
-                if (ReferenceEquals(member.VoiceState.Channel, null))
+                if (ReferenceEquals(member.VoiceState?.Channel, null))
                     continue;
 
                 if (member.VoiceState.Channel.Id != guildConfig.TargetChannelId)

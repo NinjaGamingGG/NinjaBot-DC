@@ -2,6 +2,7 @@
 using DSharpPlus.EventArgs;
 using DSharpPlus.Net.Models;
 using LoungeSystemPlugin.PluginHelper;
+using LoungeSystemPlugin.PluginHelper.LoungeInterface;
 using LoungeSystemPlugin.PluginHelper.UserInterface;
 
 namespace LoungeSystemPlugin.Events.ComponentInteractions.LoungeInterface;

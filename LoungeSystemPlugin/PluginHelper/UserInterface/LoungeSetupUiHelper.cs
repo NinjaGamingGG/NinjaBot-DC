@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using LoungeSystemPlugin.PluginHelper.LoungeInterface;
 using LoungeSystemPlugin.Records.Cache;
 using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;

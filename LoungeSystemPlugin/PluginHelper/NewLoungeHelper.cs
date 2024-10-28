@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using DSharpPlus.Entities;
+using LoungeSystemPlugin.PluginHelper.LoungeInterface;
 using LoungeSystemPlugin.Records.MySQL;
 using MySqlConnector;
 using NinjaBot_DC;

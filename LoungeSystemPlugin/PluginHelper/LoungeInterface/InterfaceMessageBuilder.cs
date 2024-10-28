@@ -1,7 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 
-namespace LoungeSystemPlugin.PluginHelper;
+namespace LoungeSystemPlugin.PluginHelper.LoungeInterface;
 
 /// <summary>
 /// Provides methods to build interface messages for the lounge system plugin.

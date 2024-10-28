@@ -4,7 +4,7 @@ using DSharpPlus.Entities;
 using MySqlConnector;
 using Serilog;
 
-namespace LoungeSystemPlugin.PluginHelper;
+namespace LoungeSystemPlugin.PluginHelper.LoungeInterface;
 
 public static class InterfaceTargetHelper
 {

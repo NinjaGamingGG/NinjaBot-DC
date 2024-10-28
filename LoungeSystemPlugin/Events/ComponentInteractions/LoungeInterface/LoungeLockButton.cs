@@ -2,6 +2,7 @@
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.PluginHelper;
+using LoungeSystemPlugin.PluginHelper.LoungeInterface;
 using LoungeSystemPlugin.PluginHelper.UserInterface;
 using MySqlConnector;
 using Serilog;

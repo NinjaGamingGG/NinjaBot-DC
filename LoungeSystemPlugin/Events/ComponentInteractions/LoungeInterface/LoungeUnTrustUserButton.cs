@@ -47,7 +47,7 @@ public static class LoungeUnTrustUserButton
         
         var sortedList = optionsList.OrderBy(x => x.Label);
         
-        var dropdown = new DiscordSelectComponent(CustomComponentIdHelper.LoungeInterface.UnTrustSelectComponent, "Please select an user", sortedList);
+        var dropdown = new DiscordSelectComponent(CustomComponentIdHelper.LoungeInterface.UnTrustSelectComponentId, "Please select an user", sortedList);
 
         var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Please select an user below").AddComponents(dropdown);
 

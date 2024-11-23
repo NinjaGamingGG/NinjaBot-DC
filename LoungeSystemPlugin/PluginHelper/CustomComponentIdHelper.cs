@@ -9,7 +9,7 @@ public static class CustomComponentIdHelper
         public const string ResizeDropdownId = "lounge_resize_dropdown";
         public const string ResizeLabel = "lounge_resize_label_";
         public const string TrustSelectComponentId = "lounge_trust_user-selection";
-        public const string UnTrustSelectComponent = "lounge_un-trust_dropdown";
+        public const string UnTrustSelectComponentId = "lounge_un-trust_dropdown";
         
         public static class Buttons
         {
@@ -26,7 +26,7 @@ public static class CustomComponentIdHelper
 
         
     }
-    
+
     public static class LoungeConfig
     {
         public const string Reset = "lounge_config_reset";
@@ -37,21 +37,20 @@ public static class CustomComponentIdHelper
         public const string ResetPatternModalNameComponent = "lounge_config_reset-pattern_modal_name";
         public const string ResetPatternModalDecoratorComponent = "lounge_config_reset-pattern_modal_decorator";
     }
-    
+
     public static class LoungeSetup
     {
         public const string ChannelSelector = "lounge_setup_channel_select";
-        public const string NamePatternButton = "lounge_setup_name-pattern_button";
-        public const string NamePatternModal = "lounge_setup_name-pattern_modal";
-        public const string NamePatternModalNameComponent = "lounge_setup_name-pattern_modal_name";
-        public const string NamePatternModalDecoratorComponent = "lounge_setup_name-pattern_modal_decorator";
+        public const string NamePatternButton = "lounge_setup_name_pattern_button";
+        public const string NamePatternModal = "lounge_setup_name_pattern_modal";
+        public const string NamePatternModalNameComponent = "lounge_setup_name_pattern_modal_name";
+        public const string NamePatternModalDecoratorComponent = "lounge_setup_name_pattern_modal_decorator";
         public const string InterfaceSelector = "lounge_setup_interface_selector";
-        public const string InterfaceOptionSeparate = "separate_interface";
-        public const string InterfaceOptionInternal = "internal_interface";
+        public const string InterfaceOptionSeparate = "lounge_interface_separate";
+        public const string InterfaceOptionInternal = "lounge_interface_internal";
         public const string InterfaceChannelSelector = "lounge_setup_interface_channel_select";
     }
-    
-    
+
     public const string LoungeRenameModalId = "lounge_rename_modal";
     public const string LoungeRenameModalNewName = "lounge_new_name";
 

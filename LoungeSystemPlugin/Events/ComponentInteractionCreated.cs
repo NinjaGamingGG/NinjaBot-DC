@@ -73,7 +73,7 @@ public static class ComponentInteractionCreated
                 await LoungeResizeButton.DropdownInteracted(eventArgs, member);
                 break;
             
-            case CustomComponentIdHelper.LoungeInterface.UnTrustSelectComponent:
+            case CustomComponentIdHelper.LoungeInterface.UnTrustSelectComponentId:
                 await LoungeUnTrustUserButton.DropdownInteracted(eventArgs, member);
                 break;
             

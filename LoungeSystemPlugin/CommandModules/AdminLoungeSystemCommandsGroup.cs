@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using DSharpPlus.Commands;
 using DSharpPlus.Entities;
+using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.PluginHelper.UserInterface;
 using LoungeSystemPlugin.Records.Cache;
 using LoungeSystemPlugin.Records.MySQL;
@@ -147,7 +148,7 @@ public static class AdminLoungeSystemCommandsGroup
         await context.RespondAsync(new DiscordMessageBuilder()
             .WithContent("I found the following configurations for this Guild:")
             .AddEmbeds(embedList)
-            .AddComponents(new DiscordSelectComponent("lounge_config_selector", "Select a channel here for more options", selectComponentOptions, maxOptions: 1)));
+            .AddComponents(new DiscordSelectComponent(CustomComponentIdHelper.LoungeConfig.EntrySelector, "Select a channel here for more options", selectComponentOptions, maxOptions: 1)));
 
     }
 }

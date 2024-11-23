@@ -57,8 +57,8 @@ public static class LoungeConfigResetNameModal
         }
         
         var parseIdSuccess = ulong.TryParse(hashFieldValue, out var targetChannelId);
-        var parseNameSuccess =eventArgs.Values.TryGetValue("lounge_config_reset-pattern_modal_name", out var namePatternString);
-        var parseDecoratorSuccess =eventArgs.Values.TryGetValue("lounge_config_reset-pattern_modal_decorator", out var nameDecoratorString);
+        var parseNameSuccess =eventArgs.Values.TryGetValue(CustomComponentIdHelper.LoungeConfig.ResetPatternModalNameComponent, out var namePatternString);
+        var parseDecoratorSuccess =eventArgs.Values.TryGetValue(CustomComponentIdHelper.LoungeConfig.ResetPatternModalDecoratorComponent, out var nameDecoratorString);
             
         if (!parseIdSuccess || !parseNameSuccess || !parseDecoratorSuccess)
         {

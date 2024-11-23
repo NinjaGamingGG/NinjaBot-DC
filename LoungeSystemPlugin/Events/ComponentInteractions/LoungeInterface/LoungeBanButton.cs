@@ -33,7 +33,7 @@ public static class LoungeBanButton
 
         var sortedList = optionsList.OrderBy(x => x.Label);
         
-        var dropdown = new DiscordSelectComponent("lounge_ban_dropdown", "Please select an user to ban (from channel)", sortedList);
+        var dropdown = new DiscordSelectComponent(CustomComponentIdHelper.LoungeInterface.BanDropdownId, "Please select an user to ban (from channel)", sortedList);
 
         var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Please select an user below").AddComponents(dropdown);
         

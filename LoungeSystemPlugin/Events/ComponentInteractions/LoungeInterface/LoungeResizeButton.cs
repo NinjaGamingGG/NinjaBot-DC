@@ -37,14 +37,14 @@ public static class LoungeResizeButton
         {
             if (i == 4)
             {
-                optionsList.Add(new DiscordSelectComponentOption(i.ToString(),"lounge_resize_label_"+ i,isDefault: true));
+                optionsList.Add(new DiscordSelectComponentOption(i.ToString(),CustomComponentIdHelper.LoungeInterface.ResizeLabel+ i,isDefault: true));
                 continue;
             }
             
-            optionsList.Add(new DiscordSelectComponentOption(i.ToString(),"lounge_resize_label_"+ i));
+            optionsList.Add(new DiscordSelectComponentOption(i.ToString(),CustomComponentIdHelper.LoungeInterface.ResizeLabel+ i));
         }
         
-        var dropdown = new DiscordSelectComponent("lounge_resize_dropdown", "Select a new Size Below", optionsList);
+        var dropdown = new DiscordSelectComponent(CustomComponentIdHelper.LoungeInterface.ResizeDropdownId, "Select a new Size Below", optionsList);
 
         var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Select a new Size Below").AddComponents(dropdown);
 
@@ -75,7 +75,7 @@ public static class LoungeResizeButton
         var message = await targetChannel.GetMessageAsync(interactionId);
         await message.DeleteAsync();
 
-        var newSizeString = eventArgs.Interaction.Data.Values[0].Replace("lounge_resize_label_", "");
+        var newSizeString = eventArgs.Interaction.Data.Values[0].Replace(CustomComponentIdHelper.LoungeInterface.ResizeLabel, "");
         
         var parseSuccess = int.TryParse(newSizeString, out var parseResult);
         

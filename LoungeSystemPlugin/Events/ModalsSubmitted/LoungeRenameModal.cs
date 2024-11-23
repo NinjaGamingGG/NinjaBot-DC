@@ -13,7 +13,7 @@ public static class LoungeRenameModal
     {
         await eventArgs.Interaction.DeferAsync();
         
-        var isValuePresent = eventArgs.Values.TryGetValue("lounge_new_name", out var userValue);
+        var isValuePresent = eventArgs.Values.TryGetValue(CustomComponentIdHelper.LoungeRenameModalNewName, out var userValue);
         
         if (isValuePresent == false || string.IsNullOrEmpty(userValue) )
             return;

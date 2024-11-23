@@ -26,7 +26,7 @@ public static class LoungeTrustUserButton
         if (existsAsOwner == false)
             return;
         
-        var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Please select an user below").AddComponents(new DiscordUserSelectComponent("lounge_trust_user-selection",""));
+        var followUpMessageBuilder = new DiscordFollowupMessageBuilder().WithContent("Please select an user below").AddComponents(new DiscordUserSelectComponent(CustomComponentIdHelper.LoungeInterface.TrustSelectComponentId,""));
         
         await ThrowAwayFollowupMessage.HandleAsync(followUpMessageBuilder, eventArgs.Interaction);
     }

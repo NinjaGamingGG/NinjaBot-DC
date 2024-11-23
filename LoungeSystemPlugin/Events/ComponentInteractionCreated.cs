@@ -4,6 +4,8 @@ using DSharpPlus.EventArgs;
 using LoungeSystemPlugin.Events.ComponentInteractions.LoungeConfigEditor;
 using LoungeSystemPlugin.Events.ComponentInteractions.LoungeInterface;
 using LoungeSystemPlugin.Events.ComponentInteractions.LoungeSetupUi;
+using LoungeSystemPlugin.PluginHelper;
+using Serilog;
 
 
 namespace LoungeSystemPlugin.Events;
@@ -23,91 +25,91 @@ public static class ComponentInteractionCreated
         
         switch (eventArgs.Interaction.Data.CustomId)
         {
-            case "lounge_rename_button":
+            case CustomComponentIdHelper.LoungeInterface.Buttons.RenameButtonId:
                 await RenameButton.ButtonInteracted(eventArgs, member);
                 break;
             
-            case "lounge_resize_button":
+            case CustomComponentIdHelper.LoungeInterface.Buttons.ResizeButtonId:
                 await LoungeResizeButton.ButtonInteracted(eventArgs, member);
                 break;
             
-            case "lounge_trust_button":
+            case CustomComponentIdHelper.LoungeInterface.Buttons.TrustButtonId:
                 await LoungeTrustUserButton.ButtonInteracted(eventArgs, member);
                 break;
             
-            case "lounge_un-trust_button":
+            case CustomComponentIdHelper.LoungeInterface.Buttons.UnTrustButtonId:
                 await LoungeUnTrustUserButton.ButtonInteracted(eventArgs, member);
                 break;
             
-            case "lounge_claim_button":
+            case CustomComponentIdHelper.LoungeInterface.Buttons.ClaimButtonId:
                 await LoungeClaimButton.ButtonInteracted(eventArgs, member);
                 break;
             
-            case "lounge_kick_button":
+            case CustomComponentIdHelper.LoungeInterface.Buttons.KickButtonId:
                 await LoungeKickButton.ButtonInteraction(eventArgs, member);
                 break;
             
-            case "lounge_lock_button":
+            case CustomComponentIdHelper.LoungeInterface.Buttons.LockButtonId:
                 await LoungeLockButton.ButtonInteracted(eventArgs, member);
                 break;
             
-            case "lounge_ban_button":
+            case CustomComponentIdHelper.LoungeInterface.Buttons.BanButtonId:
                 await LoungeBanButton.ButtonInteracted(eventArgs, member);
                 break;
-            
-            case "lounge_delete_button":
+                
+            case CustomComponentIdHelper.LoungeInterface.Buttons.DeleteButtonId:
                 await LoungeDeleteButtonLogic.ButtonInteracted(eventArgs, member);
                 break;
             
-            case "lounge_ban_dropdown":
+            case CustomComponentIdHelper.LoungeInterface.BanDropdownId:
                 await LoungeBanButton.DropdownInteracted (eventArgs, member);
                 break;
             
-            case "lounge_kick_dropdown":
+            case CustomComponentIdHelper.LoungeInterface.KickDropdownId:
                 await LoungeKickButton.DropdownInteraction(eventArgs, member);
                 break;
             
-            case "lounge_resize_dropdown":
+            case CustomComponentIdHelper.LoungeInterface.ResizeDropdownId:
                 await LoungeResizeButton.DropdownInteracted(eventArgs, member);
                 break;
             
-            case "lounge_un-trust_dropdown":
+            case CustomComponentIdHelper.LoungeInterface.UnTrustSelectComponent:
                 await LoungeUnTrustUserButton.DropdownInteracted(eventArgs, member);
                 break;
             
-            case "lounge_trust_user-selection":
+            case CustomComponentIdHelper.LoungeInterface.TrustSelectComponentId:
                 await LoungeTrustUserButton.UserSelected(eventArgs, member);
                 break;
             
-            case "lounge_setup_channel_select":
+            case CustomComponentIdHelper.LoungeSetup.ChannelSelector:
                 await LoungeSetupChannelSelect.ChannelSelected(eventArgs, member);
                 break;
             
-            case "lounge_setup_name-pattern_button":
+            case CustomComponentIdHelper.LoungeSetup.NamePatternButton:
                 await LoungeSetupNamePatternButton.ButtonPressed(eventArgs, member);
                 break;
             
-            case "lounge_setup_interface_selector":
+            case CustomComponentIdHelper.LoungeSetup.InterfaceSelector:
                 await LoungeSetupInterfaceSelector.SelectionMade(eventArgs, member);
                 break;
             
-            case "lounge_setup_interface_channel_select":
+            case CustomComponentIdHelper.LoungeSetup.InterfaceChannelSelector:
                 await LoungeSetupInterfaceChannelSelection.SelectionMade(eventArgs, member);
                 break;
             
-            case "lounge_config_selector":
+            case CustomComponentIdHelper.LoungeConfig.EntrySelector:
                 await LoungeConfigurationSelected.ChannelSelectionMade(eventArgs, member);
                 break;
             
-            case "lounge_config_reset":
+            case CustomComponentIdHelper.LoungeConfig.Reset:
                 await LoungeConfigurationSelected.ResetInterfaceButton(eventArgs, member);
                 break;
             
-            case "lounge_config_update_name_pattern":
+            case CustomComponentIdHelper.LoungeConfig.UpdateNamePattern:
                 await LoungeConfigurationSelected.ResetNamePatternButton(eventArgs, member);
                 break;
             
-            case "lounge_config_delete":
+            case CustomComponentIdHelper.LoungeConfig.Delete:
                 await LoungeConfigurationSelected.DeleteButton(eventArgs, member);
                 break;
             

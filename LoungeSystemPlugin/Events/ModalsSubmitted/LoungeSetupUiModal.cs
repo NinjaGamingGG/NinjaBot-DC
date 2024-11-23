@@ -1,7 +1,6 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using LoungeSystemPlugin.PluginHelper;
 using LoungeSystemPlugin.PluginHelper.UserInterface;
 using LoungeSystemPlugin.Records.Cache;
 using Newtonsoft.Json;

@@ -63,14 +63,5 @@ public static class LoungeCommandGroup
             .AddField("The Channel belongs to:", originalChannel.Mention)
             .AddField("The Channel Owner is:", owningUser.Mention)
             .AddField("The Channel is:" , privacyStatus));
-        
-
-
-
-
-        //YOure Currently in {loungename}.
-        //The Channel Belongs to #original channel
-        //The Channel Owner is #usermention.
-        //The Channel is Public/Private
     }
 }

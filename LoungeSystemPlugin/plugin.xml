@@ -3,5 +3,5 @@
   <PluginName>LoungeSystem Plugin</PluginName>
   <EnvironmentVariablePrefix>lounge_system-plugin</EnvironmentVariablePrefix>
   <Description>Simple Discord LoungeSystem Plugin</Description>
-  <PluginVersion>0.1</PluginVersion>
+  <PluginVersion>1.0</PluginVersion>
 </PluginInfo>

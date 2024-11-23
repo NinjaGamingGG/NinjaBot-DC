@@ -45,7 +45,7 @@ public static class LoungeSetupInterfaceChannelSelection
             if (!parseSuccess)
                 return;
             
-            LoungeSetupUiHelper.CompleteSetup(deserializedRecord,eventArgs.Guild.Id,setupChannelId);
+            await LoungeSetupUiHelper.CompleteSetup(deserializedRecord,eventArgs.Guild.Id,setupChannelId);
 
         }
         catch (Exception ex)

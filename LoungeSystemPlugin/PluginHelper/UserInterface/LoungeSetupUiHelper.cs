@@ -10,7 +10,7 @@ namespace LoungeSystemPlugin.PluginHelper.UserInterface;
 
 public static class LoungeSetupUiHelper
 {
-    public static async void CompleteSetup(LoungeSetupRecord setupRecord,ulong guildId, ulong interfaceChannelId = 0)
+    public static async Task CompleteSetup(LoungeSetupRecord setupRecord,ulong guildId, ulong interfaceChannelId = 0)
     {
         var parseSuccess = ulong.TryParse(setupRecord.ChannelId, out var targetChannelId);
 
@@ -62,11 +62,11 @@ public static class LoungeSetupUiHelper
         }
         
         if (interfaceChannelId != 0)
-            PrintExternalLoungeInterface(interfaceChannelId, targetChannelId);
+            await PrintExternalLoungeInterface(interfaceChannelId, targetChannelId);
         
     }
 
-    private static async void PrintExternalLoungeInterface(ulong interfaceChannelId, ulong targetChannelId)
+    private static async Task PrintExternalLoungeInterface(ulong interfaceChannelId, ulong targetChannelId)
     {
         var discordClient = Worker.GetServiceDiscordClient();
         var interfaceChannel = await discordClient.GetChannelAsync(interfaceChannelId);

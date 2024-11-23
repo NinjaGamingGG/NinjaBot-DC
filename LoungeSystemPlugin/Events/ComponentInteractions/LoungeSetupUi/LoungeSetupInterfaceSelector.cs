@@ -52,7 +52,7 @@ public static class LoungeSetupInterfaceSelector
                 case ("internal_interface"):
                     await eventArgs.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
                         UIMessageBuilders.LoungeSetupComplete);
-                    LoungeSetupUiHelper.CompleteSetup(deserializedRecord, eventArgs.Guild.Id);
+                    await LoungeSetupUiHelper.CompleteSetup(deserializedRecord, eventArgs.Guild.Id);
                     break;
             
                 default:

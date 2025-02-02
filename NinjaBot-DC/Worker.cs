@@ -106,11 +106,13 @@ public sealed class Worker : BackgroundService
         return ClientBuilder;
     }
     
+    // ReSharper disable once MemberCanBePrivate.Global
     public static CommandsExtension GetServiceCommandsExtension()
     {
         return CommandsExtension;
     }
     
+    // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public static CancellationToken? BotCancellationToken { get; private set; }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

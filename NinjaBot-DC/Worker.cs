@@ -19,8 +19,6 @@ public sealed class Worker : BackgroundService
 
     private static readonly DiscordClientBuilder ClientBuilder;
     
-    private static readonly CommandsExtension CommandsExtension;
-
     private static IPlugin[]? _loadedPluginsArray;
     
     private static IConfigurationRoot LoadServiceConfig()
@@ -68,25 +66,16 @@ public sealed class Worker : BackgroundService
         ClientBuilder = DiscordClientBuilder.CreateDefault(token,
             DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents |
             DiscordIntents.GuildMembers | DiscordIntents.GuildPresences | DiscordIntents.GuildVoiceStates)
-            .ConfigureLogging(builder => builder.ClearProviders().AddSerilog() );
+            .ConfigureLogging(builder => builder.ClearProviders().AddSerilog() ).UseInteractivity(new InteractivityConfiguration()
+            {
+                Timeout = TimeSpan.FromSeconds(60)
+            });
         
         LoadPlugins();
+
+        ClientBuilder.UseCommands(RegisterPluginCommands);
         
         DiscordClient = ClientBuilder.Build();
-        
-
-        CommandsExtension = DiscordClient.UseCommands(new CommandsConfiguration()
-        {
-            DebugGuildId = Configuration.GetValue<ulong>("ninja-bot:debug-guild"),
-            RegisterDefaultCommandProcessors = true
-        });
-        
-        DiscordClient.UseInteractivity(new InteractivityConfiguration()
-        {
-        
-            Timeout = TimeSpan.FromSeconds(60)
-            
-        });
         
     }
 
@@ -106,24 +95,13 @@ public sealed class Worker : BackgroundService
         return ClientBuilder;
     }
     
-    public static CommandsExtension GetServiceCommandsExtension()
-    {
-        return CommandsExtension;
-    }
-    
     public static CancellationToken? BotCancellationToken { get; private set; }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         BotCancellationToken = stoppingToken;
-
-        var slashCommandProcessor = new SlashCommandProcessor();
-
-        await CommandsExtension.AddProcessorAsync(slashCommandProcessor);
         
         DiscordActivity status = new("/help", DiscordActivityType.Watching);
-
-        await RegisterPluginCommands();
         
         Log.Information("Starting up the Bot");
         await DiscordClient.ConnectAsync(status, DiscordUserStatus.Online);
@@ -142,7 +120,7 @@ public sealed class Worker : BackgroundService
             UnloadPlugins()
         };
         
-        //If Cancellation was requested dispose (disconnect) the discord-client
+        //If Cancellation was requested, dispose (disconnect) the discord-client
         DiscordClient.Dispose();
         
         await Task.WhenAll(unloadTasks);
@@ -207,31 +185,28 @@ public sealed class Worker : BackgroundService
 
         var pluginsArray = _loadedPluginsArray;
 
-        for (var i = 0; i < pluginsArray.Length; i++)
+        foreach (var plugin in pluginsArray)
         {
-            pluginsArray[i].OnUnload();
+            plugin.OnUnload();
         }
         
         return Task.CompletedTask;
     }
 
-    private static Task RegisterPluginCommands()
+    private static void RegisterPluginCommands(IServiceProvider serviceProvider, CommandsExtension commandsExtension)
     {
-        if (_loadedPluginsArray == null) 
-            return Task.CompletedTask;
+        if (_loadedPluginsArray == null)
+            return;
 
         var pluginsArray = _loadedPluginsArray;
-        var commandsExtension = GetServiceCommandsExtension();
 
-        for (var i = 0; i < pluginsArray.Length; i++)
+        foreach (var plugin in pluginsArray)
         {
-            var pluginType = pluginsArray[i].GetType();
+            var pluginType = plugin.GetType();
             commandsExtension.AddCommands(pluginType.Assembly);
-
-
         }
         
-        return Task.CompletedTask;
+        commandsExtension.AddProcessor(new SlashCommandProcessor());
     }
     
 }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-NinjaBot_DC-7FA8566D-75E1-4039-93D2-870D8477E668</UserSecretsId>
@@ -12,11 +12,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02329" />
-        <PackageReference Include="DSharpPlus.Commands" Version="5.0.0-nightly-02329" />
-        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-02329" />
+        <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02516" />
+        <PackageReference Include="DSharpPlus.Commands" Version="5.0.0-nightly-02516" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-02516" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0-preview.6.24327.7" />
         <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.0-preview.6.24327.7" />
+        <PackageReference Include="NRedisStack" Version="0.13.1" />
         <PackageReference Include="Serilog" Version="4.0.1-dev-02205" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.1-dev-10391" />

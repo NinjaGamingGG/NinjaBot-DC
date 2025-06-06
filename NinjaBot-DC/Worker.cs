@@ -66,10 +66,11 @@ public sealed class Worker : BackgroundService
         ClientBuilder = DiscordClientBuilder.CreateDefault(token,
             DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents |
             DiscordIntents.GuildMembers | DiscordIntents.GuildPresences | DiscordIntents.GuildVoiceStates)
-            .ConfigureLogging(builder => builder.ClearProviders().AddSerilog() ).UseInteractivity(new InteractivityConfiguration()
-            {
-                Timeout = TimeSpan.FromSeconds(60)
-            });
+                .ConfigureLogging(builder => builder.ClearProviders()
+                .AddSerilog() ).UseInteractivity(new InteractivityConfiguration()
+                {
+                    Timeout = TimeSpan.FromSeconds(60) 
+                });
         
         LoadPlugins();
 

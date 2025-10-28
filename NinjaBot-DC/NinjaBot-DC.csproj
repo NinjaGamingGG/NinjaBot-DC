@@ -35,4 +35,10 @@
       <ProjectReference Include="..\CommonPluginHelpers\CommonPluginHelpers.csproj" />
       <ProjectReference Include="..\PluginBase\PluginBase.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
 </Project>

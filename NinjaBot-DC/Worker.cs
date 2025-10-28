@@ -102,7 +102,7 @@ public sealed class Worker : BackgroundService
     {
         BotCancellationToken = stoppingToken;
         
-        DiscordActivity status = new("/help", DiscordActivityType.Watching);
+        DiscordActivity status = new("/help", DiscordActivityType.ListeningTo);
         
         Log.Information("Starting up the Bot");
         await DiscordClient.ConnectAsync(status, DiscordUserStatus.Online);

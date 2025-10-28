@@ -24,7 +24,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: .
-        file: ./Dockerfile
+        file: ./NinjaBot-DC/Dockerfile
         push: true
         tags: |
           ninjagaminggg/ninjabot_dc:latest

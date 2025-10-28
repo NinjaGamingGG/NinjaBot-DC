@@ -27,5 +27,5 @@ jobs:
         file: ./Dockerfile
         push: true
         tags: |
-          ninjagaminggg/ninjabot-dc:latest
-          ninjagaminggg/ninjabot-dc:{{ github.run_id }}
+          ninjagaminggg/ninjabot_dc:latest
+          ninjagaminggg/ninjabot_dc:{{ github.run_id }}

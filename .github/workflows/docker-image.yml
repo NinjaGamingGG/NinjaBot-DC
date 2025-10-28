@@ -28,4 +28,4 @@ jobs:
         push: true
         tags: |
           ninjagaminggg/ninjabot-dc:latest
-          ninjagaminggg/ninjabot-dc:$(date +%s)
+          ninjagaminggg/ninjabot-dc:{{ github.run_id }}

@@ -61,7 +61,9 @@ public sealed class Worker : BackgroundService
     {
         Configuration = LoadServiceConfig();
         var token = Configuration.GetValue<string>("ninja-bot:token");
-        token ??= "";
+        
+        if (string.IsNullOrEmpty(token))
+            throw new Exception("No token specified in config.json");
 
         ClientBuilder = DiscordClientBuilder.CreateDefault(token,
             DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents |

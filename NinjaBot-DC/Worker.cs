@@ -64,6 +64,11 @@ public sealed class Worker : BackgroundService
         
         if (string.IsNullOrEmpty(token))
             throw new Exception("No token specified in config.json");
+        else
+        {
+            Log.Debug("Token-Länge: {TokenLength}", token.Length);
+            Log.Debug("Token-Start: {TokenStart}", token.Substring(0, Math.Min(10, token.Length)));
+        }
 
         ClientBuilder = DiscordClientBuilder.CreateDefault(token,
             DiscordIntents.Guilds | DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents |

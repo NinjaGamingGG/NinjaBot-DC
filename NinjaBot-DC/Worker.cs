@@ -27,7 +27,7 @@ public sealed class Worker : BackgroundService
 
         configurationBuilder.AddJsonFile("config.json", true);
         
-        configurationBuilder.AddEnvironmentVariables("ninja-bot");
+        configurationBuilder.AddEnvironmentVariables();
 
         if (!Program.IsDebugEnabled) 
             return configurationBuilder.Build();
@@ -60,14 +60,14 @@ public sealed class Worker : BackgroundService
     static Worker()
     {
         Configuration = LoadServiceConfig();
-        var token = Configuration.GetValue<string>("ninja-bot:token");
+        var token = Configuration.GetValue<string>("ninja_bot:token");
         
         if (string.IsNullOrEmpty(token))
             throw new Exception("No token specified in config.json");
         else
         {
             Log.Debug("Token-Länge: {TokenLength}", token.Length);
-            Log.Debug("Token-Start: {TokenStart}", token.Substring(0, Math.Min(10, token.Length)));
+            Log.Debug("Token-Start: {TokenStart}", token[..Math.Min(10, token.Length)]);
         }
 
         ClientBuilder = DiscordClientBuilder.CreateDefault(token,
@@ -143,7 +143,7 @@ public sealed class Worker : BackgroundService
     private static void LoadPlugins()
     {
         
-        var pluginFolderConfig = Configuration.GetValue<string>("ninja-bot:plugin-folder");
+        var pluginFolderConfig = Configuration.GetValue<string>("ninja_bot:plugin-folder");
         if (ReferenceEquals(pluginFolderConfig, null))
         {
             Log.Fatal("Unable to load Plugin Path from Config");

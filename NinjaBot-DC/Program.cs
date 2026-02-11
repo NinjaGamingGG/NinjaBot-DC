@@ -28,7 +28,7 @@ public static class Program
         }
         
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.Is(IsDebugEnabled ? Serilog.Events.LogEventLevel.Debug : Serilog.Events.LogEventLevel.Information)
             .WriteTo.Console(outputTemplate: OutputTemplate )
             .WriteTo.File(Path.Combine(BasePath, "service.log"),outputTemplate: OutputTemplate)
             .CreateLogger();
